@@ -1,23 +1,38 @@
 import { z } from "zod";
+import { isAllowedPolyuEmail } from "@/constants/auth";
+import { STUDENT_GRADES } from "@/constants/profileOptions";
 
-export const loginSchema = z.object({
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(1, "请输入密码"),
+const gradeIds = STUDENT_GRADES.map((item) => item.id) as [string, ...string[]];
+
+export const polyuEmailSchema = z.object({
+  email: z
+    .string()
+    .email("请输入有效的邮箱地址")
+    .refine(isAllowedPolyuEmail, {
+      message: "仅支持理大学生邮箱（@connect.polyu.hk）",
+    }),
 });
 
-export const signupSchema = z
-  .object({
-    email: z.string().email("请输入有效的邮箱地址"),
-    password: z
-      .string()
-      .min(8, "密码至少 8 位")
-      .max(72, "密码过长"),
-    confirmPassword: z.string().min(1, "请确认密码"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "两次输入的密码不一致",
-    path: ["confirmPassword"],
-  });
+export type PolyuEmailFormValues = z.infer<typeof polyuEmailSchema>;
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
-export type SignupFormValues = z.infer<typeof signupSchema>;
+export const onboardingSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(2, "昵称至少 2 个字符")
+    .max(30, "昵称过长"),
+  username: z
+    .string()
+    .trim()
+    .min(2, "用户名至少 2 个字符")
+    .max(30, "用户名过长")
+    .regex(/^[a-zA-Z0-9_]+$/, "用户名仅可包含字母、数字和下划线"),
+  grade: z.enum(gradeIds, { message: "请选择年级" }),
+  major: z
+    .string()
+    .trim()
+    .min(1, "请填写专业")
+    .max(100, "专业名称过长"),
+});
+
+export type OnboardingFormValues = z.infer<typeof onboardingSchema>;

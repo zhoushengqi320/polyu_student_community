@@ -1,0 +1,150 @@
+"use client";
+
+import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
+import { Flag } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  FORUM_REPORT_TARGET_TYPES,
+  REPORT_REASONS,
+  type ForumReportTargetType,
+} from "@/constants/reportReasons";
+import { ROUTES } from "@/constants/routes";
+import {
+  createReportAction,
+  type InteractionActionState,
+} from "@/lib/interaction/actions";
+
+type ReportDialogProps = {
+  targetType: ForumReportTargetType;
+  targetId: string;
+  isLoggedIn: boolean;
+  revalidatePath?: string;
+  triggerLabel?: string;
+  triggerVariant?: "default" | "outline" | "ghost" | "destructive";
+  triggerSize?: "default" | "sm" | "lg" | "icon";
+};
+
+const initialState: InteractionActionState = {};
+
+export function ReportDialog({
+  targetType,
+  targetId,
+  isLoggedIn,
+  revalidatePath,
+  triggerLabel = "举报",
+  triggerVariant = "ghost",
+  triggerSize = "sm",
+}: ReportDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [state, formAction, pending] = useActionState(createReportAction, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      const timer = setTimeout(() => setOpen(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [state.success]);
+
+  const targetLabel =
+    targetType === FORUM_REPORT_TARGET_TYPES.post ? "帖子" : "评论";
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant={triggerVariant} size={triggerSize} className="gap-1.5">
+          <Flag className="h-3.5 w-3.5" aria-hidden="true" />
+          {triggerLabel}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>举报{targetLabel}</DialogTitle>
+          <DialogDescription>
+            请选择举报原因。管理员会尽快审核处理，恶意举报可能导致账号受限。
+          </DialogDescription>
+        </DialogHeader>
+
+        {!isLoggedIn ? (
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">举报需要先登录。</p>
+            <Button asChild>
+              <Link href={ROUTES.login}>去登录</Link>
+            </Button>
+          </div>
+        ) : (
+          <form action={formAction} className="space-y-4">
+            <input type="hidden" name="targetType" value={targetType} />
+            <input type="hidden" name="targetId" value={targetId} />
+            {revalidatePath ? (
+              <input type="hidden" name="revalidatePath" value={revalidatePath} />
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor={`reason-${targetId}`}>举报原因</Label>
+              <select
+                id={`reason-${targetId}`}
+                name="reason"
+                required
+                defaultValue=""
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="" disabled>
+                  请选择原因
+                </option>
+                {REPORT_REASONS.map((reason) => (
+                  <option key={reason.id} value={reason.id}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`description-${targetId}`}>补充说明（可选）</Label>
+              <textarea
+                id={`description-${targetId}`}
+                name="description"
+                rows={3}
+                maxLength={500}
+                placeholder="请简要说明举报理由..."
+                className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+
+            {state.error ? (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {state.error}
+              </p>
+            ) : null}
+
+            {state.success ? (
+              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                {state.success}
+              </p>
+            ) : null}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending ? "提交中..." : "提交举报"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

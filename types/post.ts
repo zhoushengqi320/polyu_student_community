@@ -43,6 +43,7 @@ export type CreateCommentInput = {
   targetId: string;
   userId: string;
   content: string;
+  parentId?: string | null;
 };
 
 export type PostFilters = {
@@ -57,6 +58,7 @@ export type Comment = {
   id: string;
   targetType: string;
   targetId: string;
+  parentId: string | null;
   userId: string;
   content: string;
   status: ContentStatus;
@@ -67,4 +69,8 @@ export type Comment = {
 
 export type CommentWithAuthor = Comment & {
   author: ProfileListItem;
+};
+
+export type CommentThreadItem = CommentWithAuthor & {
+  replies: CommentThreadItem[];
 };

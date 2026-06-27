@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Shield, User } from "lucide-react";
 import { logoutAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
+import { isAdmin } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { type SessionUser } from "@/types/user";
 
@@ -28,6 +29,7 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   const roleLabel = user.profile
     ? USER_ROLE_LABELS[user.profile.role]
     : "用户";
+  const showAdminLink = isAdmin(user);
 
   if (variant === "mobile") {
     return (
@@ -42,6 +44,14 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
             个人主页
           </Link>
         </Button>
+        {showAdminLink ? (
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <Link href={ROUTES.admin}>
+              <Shield className="mr-2 h-4 w-4" />
+              管理后台
+            </Link>
+          </Button>
+        ) : null}
         <form action={logoutAction}>
           <Button
             type="submit"
@@ -58,6 +68,11 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
 
   return (
     <div className="flex items-center gap-2">
+      {showAdminLink ? (
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={ROUTES.admin}>管理后台</Link>
+        </Button>
+      ) : null}
       <Button variant="ghost" size="sm" asChild>
         <Link href={profileHref} className="max-w-[140px] truncate">
           {displayName}

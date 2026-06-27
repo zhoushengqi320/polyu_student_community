@@ -16,6 +16,7 @@ export function mapComment(row: CommentRow): Comment {
     id: row.id,
     targetType: row.target_type,
     targetId: row.target_id,
+    parentId: row.parent_id ?? null,
     userId: row.user_id,
     content: row.content,
     status: row.status as ContentStatus,

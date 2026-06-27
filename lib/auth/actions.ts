@@ -2,11 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { loginSchema, signupSchema } from "@/lib/validations/authSchema";
-import {
-  mapAuthErrorMessage,
-  mapAuthFieldErrors,
-} from "@/lib/auth/errors";
+import { polyuEmailSchema } from "@/lib/validations/authSchema";
+import { mapAuthErrorMessage } from "@/lib/auth/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { ROUTES } from "@/constants/routes";
@@ -14,7 +11,7 @@ import { type ActionResult } from "@/types/common";
 
 export type AuthFormState = {
   error?: string;
-  fieldErrors?: Partial<Record<"email" | "password" | "confirmPassword", string>>;
+  fieldErrors?: Partial<Record<"email", string>>;
   success?: string;
 };
 
@@ -24,48 +21,11 @@ function authUnavailableState(): AuthFormState {
   };
 }
 
-export async function loginAction(
-  _prevState: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  if (!isSupabaseConfigured()) {
-    return authUnavailableState();
-  }
-
-  const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-
-  if (!parsed.success) {
-    const fieldErrors: AuthFormState["fieldErrors"] = {};
-    for (const issue of parsed.error.issues) {
-      const field = issue.path[0];
-      if (field === "email" || field === "password") {
-        fieldErrors[field] = issue.message;
-      }
-    }
-    return { fieldErrors, error: "请检查表单输入" };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-  });
-
-  if (error) {
-    return {
-      error: mapAuthErrorMessage(error.message),
-      fieldErrors: mapAuthFieldErrors(error.message),
-    };
-  }
-
-  revalidatePath("/", "layout");
-  redirect(ROUTES.home);
+function getAuthCallbackUrl(): string {
+  return `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`;
 }
 
-export async function signupAction(
+export async function sendMagicLinkAction(
   _prevState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
@@ -73,51 +33,41 @@ export async function signupAction(
     return authUnavailableState();
   }
 
-  const parsed = signupSchema.safeParse({
+  const parsed = polyuEmailSchema.safeParse({
     email: formData.get("email"),
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!parsed.success) {
     const fieldErrors: AuthFormState["fieldErrors"] = {};
     for (const issue of parsed.error.issues) {
-      const field = issue.path[0];
-      if (
-        field === "email" ||
-        field === "password" ||
-        field === "confirmPassword"
-      ) {
-        fieldErrors[field] = issue.message;
+      if (issue.path[0] === "email") {
+        fieldErrors.email = issue.message;
       }
     }
-    return { fieldErrors, error: "请检查表单输入" };
+    return { fieldErrors, error: "请检查邮箱地址" };
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
+  const { error } = await supabase.auth.signInWithOtp({
+    email: parsed.data.email.trim().toLowerCase(),
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
+      shouldCreateUser: true,
     },
   });
 
   if (error) {
     return {
       error: mapAuthErrorMessage(error.message),
-      fieldErrors: mapAuthFieldErrors(error.message),
+      fieldErrors: error.message.toLowerCase().includes("email")
+        ? { email: mapAuthErrorMessage(error.message) }
+        : undefined,
     };
   }
 
-  if (data.user && !data.session) {
-    return {
-      success: "注册成功，请查收验证邮件后再登录。",
-    };
-  }
-
-  revalidatePath("/", "layout");
-  redirect(ROUTES.home);
+  return {
+    success: "登录链接已发送，请查收理大邮箱（含垃圾邮件文件夹）。",
+  };
 }
 
 export async function logoutAction(): Promise<ActionResult> {

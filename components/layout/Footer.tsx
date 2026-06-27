@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { NAV_ITEMS, ROUTES } from "@/constants/routes";
 import { SITE_NAME, SCHOOL_NAME } from "@/constants/site";
+import { getSessionUser } from "@/lib/auth/session";
+import { isAdmin } from "@/lib/utils/permissions";
 
-export function Footer() {
+export async function Footer() {
+  const user = await getSessionUser();
+  const showAdminLink = isAdmin(user);
+
   return (
     <footer className="border-t bg-muted/30">
       <div className="container flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
@@ -18,9 +23,11 @@ export function Footer() {
               {item.label}
             </Link>
           ))}
-          <Link href={ROUTES.admin} className="hover:text-foreground">
-            管理后台
-          </Link>
+          {showAdminLink ? (
+            <Link href={ROUTES.admin} className="hover:text-foreground">
+              管理后台
+            </Link>
+          ) : null}
         </div>
       </div>
     </footer>

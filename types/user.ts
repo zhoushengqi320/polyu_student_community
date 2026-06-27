@@ -10,6 +10,9 @@ export type Profile = {
   schoolId: string;
   polyuVerifiedAt: string | null;
   bio: string | null;
+  grade: string | null;
+  major: string | null;
+  onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 };

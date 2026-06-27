@@ -1,0 +1,199 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import {
+  FORUM_CATEGORIES,
+  FORUM_MAX_TOPICS,
+  FORUM_TOPIC_SUGGESTIONS,
+} from "@/constants/forum";
+import { createForumPostAction, type ForumPostFormState } from "@/lib/forum/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils/cn";
+
+const initialState: ForumPostFormState = {};
+
+export function ForumPostForm() {
+  const [state, formAction, pending] = useActionState(createForumPostAction, initialState);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [topicInput, setTopicInput] = useState("");
+
+  function addTopic(raw: string) {
+    const value = raw.trim();
+    if (!value) {
+      return;
+    }
+    if (value.length > 30) {
+      return;
+    }
+    if (topics.includes(value)) {
+      setTopicInput("");
+      return;
+    }
+    if (topics.length >= FORUM_MAX_TOPICS) {
+      return;
+    }
+    setTopics((current) => [...current, value]);
+    setTopicInput("");
+  }
+
+  function removeTopic(topic: string) {
+    setTopics((current) => current.filter((item) => item !== topic));
+  }
+
+  return (
+    <Card className="mx-auto w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle>发布帖子</CardTitle>
+        <CardDescription>分享课程求助、考试复习、实习 RA、校园生活等内容</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form action={formAction} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="categoryId">分类</Label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              defaultValue=""
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="" disabled>
+                请选择分类
+              </option>
+              {FORUM_CATEGORIES.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            {state.fieldErrors?.categoryId ? (
+              <p className="text-sm text-destructive">{state.fieldErrors.categoryId}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="title">标题</Label>
+            <Input
+              id="title"
+              name="title"
+              placeholder="输入帖子标题（5–120 字）"
+              maxLength={120}
+              required
+            />
+            {state.fieldErrors?.title ? (
+              <p className="text-sm text-destructive">{state.fieldErrors.title}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="content">内容</Label>
+            <textarea
+              id="content"
+              name="content"
+              rows={8}
+              placeholder="写下你想分享的内容（10–5000 字）..."
+              required
+              className="flex min-h-40 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            {state.fieldErrors?.content ? (
+              <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="topicInput">
+              话题（最多 {FORUM_MAX_TOPICS} 个，每个最多 30 字）
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="topicInput"
+                value={topicInput}
+                onChange={(event) => setTopicInput(event.target.value)}
+                placeholder="输入话题后按添加"
+                maxLength={30}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTopic(topicInput);
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => addTopic(topicInput)}
+                disabled={topics.length >= FORUM_MAX_TOPICS}
+              >
+                添加
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {FORUM_TOPIC_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => addTopic(suggestion)}
+                  disabled={topics.includes(suggestion) || topics.length >= FORUM_MAX_TOPICS}
+                  className={cn(
+                    "rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 disabled:opacity-50",
+                  )}
+                >
+                  #{suggestion}
+                </button>
+              ))}
+            </div>
+            {topics.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {topics.map((topic) => (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => removeTopic(topic)}
+                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20"
+                  >
+                    #{topic} ×
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <input type="hidden" name="topics" value={topics.join(",")} />
+            {state.fieldErrors?.topics ? (
+              <p className="text-sm text-destructive">{state.fieldErrors.topics}</p>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="isAnonymous"
+              name="isAnonymous"
+              type="checkbox"
+              className="h-4 w-4 rounded border-input"
+            />
+            <Label htmlFor="isAnonymous" className="font-normal">
+              匿名发帖（其他用户将看到「匿名用户」）
+            </Label>
+          </div>
+
+          {state.error ? (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {state.error}
+            </p>
+          ) : null}
+
+          <Button type="submit" disabled={pending}>
+            {pending ? "发布中..." : "发布帖子"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

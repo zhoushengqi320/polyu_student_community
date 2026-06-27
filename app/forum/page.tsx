@@ -1,37 +1,56 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { MODULE_REGISTRY } from "@/constants/modules";
+import { Suspense } from "react";
+import { FORUM_DESCRIPTION } from "@/constants/forum";
+import {
+  isForumCategoryId,
+  isForumSortId,
+} from "@/constants/forumHelpers";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
-import { listPosts } from "@/lib/db/posts";
+import {
+  getForumPosts,
+  getForumTopics,
+  getHotForumPosts,
+} from "@/lib/db/forum";
 import { ROUTES } from "@/constants/routes";
-import { isForumCategoryId } from "@/constants/forumHelpers";
 import { canCreateInModule } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
 
 type ForumPageProps = {
-  searchParams: Promise<{ category?: string; page?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    topic?: string;
+    category?: string;
+    sort?: string;
+    page?: string;
+  }>;
 };
 
 export default async function ForumPage({ searchParams }: ForumPageProps) {
   const params = await searchParams;
-  const category = params.category && isForumCategoryId(params.category)
-    ? params.category
-    : undefined;
+  const query = params.q?.trim() || undefined;
+  const topic = params.topic?.trim() || undefined;
+  const category =
+    params.category && isForumCategoryId(params.category)
+      ? params.category
+      : undefined;
+  const sort = params.sort && isForumSortId(params.sort) ? params.sort : "latest";
   const page = Number(params.page) || 1;
 
-  const [user, result] = await Promise.all([
+  const [user, result, hotPosts, popularTopics] = await Promise.all([
     getSessionUser(),
-    listPosts({ module: "forum", categoryId: category, page }),
+    getForumPosts({ query, topic, category, sort, page }),
+    getHotForumPosts(5),
+    getForumTopics(12),
   ]);
 
   const canCreate = canCreateInModule(user, "forum");
 
   return (
     <ModulePageShell
-      title={MODULE_REGISTRY.forum.label}
-      description={MODULE_REGISTRY.forum.description}
+      title="自由讨论区"
+      description={FORUM_DESCRIPTION}
       actions={
         canCreate ? (
           <Button asChild>
@@ -46,12 +65,19 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
         )
       }
     >
-      <ForumList
-        result={result}
-        activeCategory={category}
-        canCreate={canCreate}
-        isLoggedIn={Boolean(user)}
-      />
+      <Suspense>
+        <ForumList
+          result={result}
+          hotPosts={hotPosts}
+          popularTopics={popularTopics}
+          activeQuery={query}
+          activeTopic={topic}
+          activeCategory={category}
+          activeSort={sort}
+          canCreate={canCreate}
+          isLoggedIn={Boolean(user)}
+        />
+      </Suspense>
     </ModulePageShell>
   );
 }

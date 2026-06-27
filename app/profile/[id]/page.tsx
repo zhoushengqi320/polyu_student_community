@@ -6,6 +6,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { getProfileById } from "@/lib/db/profiles";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
+import { getStudentGradeLabel } from "@/constants/profileOptions";
 import { formatDate } from "@/lib/utils/formatDate";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,9 +37,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       title={profile.displayName ?? profile.username}
       description={`@${profile.username}`}
       actions={
-        isOwnProfile ? (
-          <Button variant="outline" disabled>
-            编辑资料（即将上线）
+        isOwnProfile && !profile.onboardingCompleted ? (
+          <Button variant="outline" asChild>
+            <Link href={ROUTES.onboarding}>完善资料</Link>
           </Button>
         ) : null
       }
@@ -53,6 +54,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {profile.bio ? <p>{profile.bio}</p> : null}
+          {profile.grade ? (
+            <p className="text-muted-foreground">
+              年级：{getStudentGradeLabel(profile.grade)}
+            </p>
+          ) : null}
+          {profile.major ? (
+            <p className="text-muted-foreground">专业：{profile.major}</p>
+          ) : null}
           <p className="text-muted-foreground">
             加入时间：{formatDate(profile.createdAt)}
           </p>
@@ -74,9 +83,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <Link href={ROUTES.profile(sessionUser.id)}>返回我的主页</Link>
             </Button>
           )}
-          {sessionUser && isOwnProfile && profile.role === "user" && (
-            <p className="rounded-md bg-muted px-3 py-2 text-muted-foreground">
-              完成理大认证后即可发布课程评价、找搭子帖与讨论帖。
+          {sessionUser && isOwnProfile && !profile.onboardingCompleted && (
+            <p className="rounded-md bg-amber-50 px-3 py-2 text-amber-900">
+              请先{" "}
+              <Link href={ROUTES.onboarding} className="font-medium underline">
+                完善个人资料
+              </Link>{" "}
+              后再使用完整功能。
             </p>
           )}
         </CardContent>

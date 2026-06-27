@@ -24,22 +24,25 @@ export function formatDateTime(value: string | Date): string {
 
 export function formatRelativeTime(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
-  const diffMs = date.getTime() - Date.now();
-  const diffMinutes = Math.round(diffMs / (1000 * 60));
-  const rtf = new Intl.RelativeTimeFormat("zh-HK", { numeric: "auto" });
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
 
-  if (Math.abs(diffMinutes) < 60) {
-    return rtf.format(diffMinutes, "minute");
+  if (diffMinutes < 1) {
+    return "剛剛";
   }
 
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) {
-    return rtf.format(diffHours, "hour");
+  if (diffMinutes < 60) {
+    return `${diffMinutes}分鐘前`;
   }
 
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 30) {
-    return rtf.format(diffDays, "day");
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}小時前`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) {
+    return `${diffDays}天前`;
   }
 
   return formatDate(date);

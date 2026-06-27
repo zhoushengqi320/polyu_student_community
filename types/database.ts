@@ -87,6 +87,9 @@ export type Database = {
           school_id: string;
           polyu_verified_at: string | null;
           bio: string | null;
+          grade: string | null;
+          major: string | null;
+          onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -100,6 +103,9 @@ export type Database = {
           school_id?: string;
           polyu_verified_at?: string | null;
           bio?: string | null;
+          grade?: string | null;
+          major?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -113,6 +119,9 @@ export type Database = {
           school_id?: string;
           polyu_verified_at?: string | null;
           bio?: string | null;
+          grade?: string | null;
+          major?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -125,6 +134,13 @@ export type Database = {
           user_id: string;
           title: string;
           content: string;
+          excerpt: string | null;
+          topics: string[];
+          like_count: number;
+          comment_count: number;
+          view_count: number;
+          hot_score: number;
+          is_anonymous: boolean;
           status: "draft" | "published" | "hidden" | "removed";
           deleted_at: string | null;
           school_id: string;
@@ -138,6 +154,13 @@ export type Database = {
           user_id: string;
           title: string;
           content: string;
+          excerpt?: string | null;
+          topics?: string[];
+          like_count?: number;
+          comment_count?: number;
+          view_count?: number;
+          hot_score?: number;
+          is_anonymous?: boolean;
           status?: "draft" | "published" | "hidden" | "removed";
           deleted_at?: string | null;
           school_id?: string;
@@ -151,6 +174,13 @@ export type Database = {
           user_id?: string;
           title?: string;
           content?: string;
+          excerpt?: string | null;
+          topics?: string[];
+          like_count?: number;
+          comment_count?: number;
+          view_count?: number;
+          hot_score?: number;
+          is_anonymous?: boolean;
           status?: "draft" | "published" | "hidden" | "removed";
           deleted_at?: string | null;
           school_id?: string;
@@ -163,6 +193,7 @@ export type Database = {
           id: string;
           target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
+          parent_id: string | null;
           user_id: string;
           content: string;
           status: "draft" | "published" | "hidden" | "removed";
@@ -174,6 +205,7 @@ export type Database = {
           id?: string;
           target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
+          parent_id?: string | null;
           user_id: string;
           content: string;
           status?: "draft" | "published" | "hidden" | "removed";
@@ -185,6 +217,7 @@ export type Database = {
           id?: string;
           target_type?: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
+          parent_id?: string | null;
           user_id?: string;
           content?: string;
           status?: "draft" | "published" | "hidden" | "removed";
@@ -219,9 +252,92 @@ export type Database = {
           created_at?: string;
         };
       };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_id: string;
+          reason: string;
+          description: string | null;
+          status: "pending" | "reviewing" | "resolved" | "dismissed";
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_id: string;
+          reason: string;
+          description?: string | null;
+          status?: "pending" | "reviewing" | "resolved" | "dismissed";
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          target_type?: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_id?: string;
+          reason?: string;
+          description?: string | null;
+          status?: "pending" | "reviewing" | "resolved" | "dismissed";
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      admin_action_logs: {
+        Row: {
+          id: string;
+          admin_id: string;
+          action: string;
+          target_type: string;
+          target_id: string;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_id: string;
+          action: string;
+          target_type: string;
+          target_id: string;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_id?: string;
+          action?: string;
+          target_type?: string;
+          target_id?: string;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      increment_post_view_count: {
+        Args: { post_id: string };
+        Returns: undefined;
+      };
+      resolve_reports_for_target: {
+        Args: {
+          p_target_type: string;
+          p_target_id: string;
+          p_admin_id: string;
+        };
+        Returns: undefined;
+      };
+    };
     Enums: {
       user_role: "user" | "verified_polyu_user" | "admin";
       user_status: "active" | "banned";

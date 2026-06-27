@@ -11,7 +11,7 @@ export const SITE_DESCRIPTION =
 
 export const SITE_TAGLINE = SITE_SLOGAN;
 
-export const EMAIL_PLACEHOLDER = "例如：name@connect.polyu.edu.hk";
+export const EMAIL_PLACEHOLDER = "例如：name@connect.polyu.hk";
 
 export const ENV_FILE_EXAMPLE = ".env.example";
 export const ENV_FILE_LOCAL = ".env.local";

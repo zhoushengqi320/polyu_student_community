@@ -3,7 +3,8 @@ import { MODULE_REGISTRY } from "@/constants/modules";
 export const ROUTES = {
   home: "/",
   login: "/auth/login",
-  signup: "/auth/signup",
+  signup: "/auth/login",
+  onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
   admin: "/admin",
   courses: {
@@ -43,6 +44,5 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const AUTH_NAV_ITEMS = [
-  { label: "登录", href: ROUTES.login },
-  { label: "注册", href: ROUTES.signup },
+  { label: "理大邮箱登录", href: ROUTES.login },
 ] as const;

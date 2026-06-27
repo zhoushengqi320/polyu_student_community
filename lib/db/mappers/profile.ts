@@ -15,6 +15,9 @@ export function mapProfile(row: ProfileRow): Profile {
     schoolId: row.school_id,
     polyuVerifiedAt: row.polyu_verified_at,
     bio: row.bio,
+    grade: row.grade ?? null,
+    major: row.major ?? null,
+    onboardingCompleted: row.onboarding_completed ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
