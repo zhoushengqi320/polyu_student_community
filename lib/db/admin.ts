@@ -8,6 +8,7 @@ import { DbError, getPagination } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
+  type AdminCourseReviewListItem,
   type AdminForumCommentListItem,
   type AdminForumPostListItem,
   type AdminListFilters,
@@ -276,7 +277,10 @@ export async function getAllForumComments(
     .eq("module", FORUM_MODULE);
 
   const postMap = new Map(
-    (forumPosts ?? []).map((post) => [post.id, post.title as string]),
+    ((forumPosts ?? []) as Array<Record<string, unknown>>).map((post) => [
+      String(post.id),
+      String(post.title),
+    ]),
   );
   const forumPostIds = [...postMap.keys()];
 
@@ -306,6 +310,50 @@ export async function getAllForumComments(
       author: mapProfileListItem(profile),
       postId,
       postTitle: postMap.get(postId) ?? "未知帖子",
+      createdAt: String(row.created_at),
+      deletedAt: (row.deleted_at as string | null) ?? null,
+      status: String(row.status),
+    };
+  });
+}
+
+export async function getAllCourseReviews(
+  filters: AdminListFilters = {},
+): Promise<AdminCourseReviewListItem[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const { page = 1, pageSize = 50 } = filters;
+  const pagination = getPagination(page, pageSize);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("course_reviews")
+    .select("*, profiles(*), courses(id, code, name)")
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (error || !data) {
+    console.error("Failed to get course reviews for admin:", error);
+    return [];
+  }
+
+  return (data as Array<Record<string, unknown>>).map((row) => {
+    const profile = row.profiles as ProfileRow;
+    const course = row.courses as Record<string, unknown> | null;
+
+    return {
+      id: String(row.id),
+      courseId: String(row.course_id),
+      courseCode: String(course?.code ?? "UNKNOWN"),
+      courseName: String(course?.name ?? "未知课程"),
+      author: mapProfileListItem(profile),
+      overallRating: Number(row.overall_rating ?? 0),
+      difficultyRating: Number(row.difficulty_rating ?? 0),
+      tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
+      reviewText: String(row.review_text ?? row.content ?? ""),
+      isAnonymous: Boolean(row.is_anonymous),
       createdAt: String(row.created_at),
       deletedAt: (row.deleted_at as string | null) ?? null,
       status: String(row.status),
@@ -374,6 +422,46 @@ export async function adminDeleteForumComment(
   });
 
   await resolveReportsForTarget(TARGET_TYPES.comment, commentId, adminId);
+}
+
+export async function adminDeleteCourseReview(
+  reviewId: string,
+  adminId: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const deletedAt = new Date().toISOString();
+  const courseReviews = supabase.from("course_reviews") as ReturnType<
+    typeof supabase.from
+  > & {
+    update: (payload: Record<string, unknown>) => ReturnType<
+      ReturnType<typeof supabase.from>["update"]
+    >;
+  };
+
+  const { error } = await courseReviews
+    .update({
+      status: CONTENT_STATUS.hidden,
+      deleted_at: deletedAt,
+    })
+    .eq("id", reviewId);
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  await createAdminAction({
+    adminId,
+    action: "delete_course_review",
+    targetType: TARGET_TYPES.course_review,
+    targetId: reviewId,
+    metadata: { deletedAt },
+  });
+
+  await resolveReportsForTarget(TARGET_TYPES.course_review, reviewId, adminId);
 }
 
 export async function getAdminActions(

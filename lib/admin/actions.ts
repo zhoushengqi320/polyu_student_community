@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin/session";
 import {
+  adminDeleteCourseReview,
   adminDeleteForumComment,
   adminDeleteForumPost,
   banUser,
@@ -132,6 +133,23 @@ export async function adminDeleteForumCommentAction(
   return runAdminAction(
     () => adminDeleteForumComment(commentId, admin.id),
     "评论已删除",
+  );
+}
+
+export async function adminDeleteCourseReviewAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const reviewId = String(formData.get("reviewId") ?? "");
+
+  if (!reviewId) {
+    return { error: "无效的课程评价 ID" };
+  }
+
+  return runAdminAction(
+    () => adminDeleteCourseReview(reviewId, admin.id),
+    "课程评价已删除",
   );
 }
 

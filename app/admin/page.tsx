@@ -5,6 +5,7 @@ import { getAdminAccessState } from "@/lib/admin/session";
 import {
   getAdminActions,
   getAdminStats,
+  getAllCourseReviews,
   getAllForumComments,
   getAllForumPosts,
   listUsers,
@@ -19,6 +20,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   reports: [],
   forumPosts: [],
   forumComments: [],
+  courseReviews: [],
   adminActions: [],
   isDatabaseConfigured: false,
 };
@@ -39,13 +41,22 @@ export default async function AdminPage() {
 
   if (isDatabaseConfigured) {
     try {
-      const [stats, users, reports, forumPosts, forumComments, adminActions] =
+      const [
+        stats,
+        users,
+        reports,
+        forumPosts,
+        forumComments,
+        courseReviews,
+        adminActions,
+      ] =
         await Promise.all([
           getAdminStats(),
           listUsers({ pageSize: 50 }),
           getReports({ pageSize: 100 }),
           getAllForumPosts({ pageSize: 100 }),
           getAllForumComments({ pageSize: 100 }),
+          getAllCourseReviews({ pageSize: 100 }),
           getAdminActions({ pageSize: 100 }),
         ]);
 
@@ -55,6 +66,7 @@ export default async function AdminPage() {
         reports,
         forumPosts,
         forumComments,
+        courseReviews,
         adminActions,
         isDatabaseConfigured,
       };

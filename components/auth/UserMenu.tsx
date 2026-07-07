@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LogOut, Shield, User } from "lucide-react";
-import { logoutAction } from "@/lib/auth/actions";
+import { logoutFormAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
 import { isAdmin } from "@/lib/utils/permissions";
@@ -52,7 +52,7 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
             </Link>
           </Button>
         ) : null}
-        <form action={logoutAction}>
+        <form action={logoutFormAction}>
           <Button
             type="submit"
             variant="ghost"
@@ -78,7 +78,7 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
           {displayName}
         </Link>
       </Button>
-      <form action={logoutAction}>
+      <form action={logoutFormAction}>
         <Button type="submit" variant="outline" size="sm">
           退出
         </Button>

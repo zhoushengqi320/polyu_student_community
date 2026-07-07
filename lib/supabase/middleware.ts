@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { type Database } from "@/types/database";
 import { shouldBypassOnboardingRedirect } from "@/lib/auth/onboarding";
@@ -14,12 +14,18 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient<Database>(url, anonKey, {
+  const supabase = createServerClient<Database, "public">(url, anonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(
+        cookiesToSet: Array<{
+          name: string;
+          value: string;
+          options: CookieOptions;
+        }>,
+      ) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
@@ -29,7 +35,7 @@ export async function updateSession(request: NextRequest) {
         });
       },
     },
-  });
+  }) as any;
 
   const {
     data: { user },

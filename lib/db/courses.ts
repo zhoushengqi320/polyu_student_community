@@ -1,25 +1,288 @@
-import { type CourseFilters, type CourseWithStats } from "@/types/course";
+import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
+import { CONTENT_STATUS } from "@/constants/contentStatus";
+import { TARGET_TYPES } from "@/constants/reportReasons";
+import {
+  mapCourse,
+  mapCourseReviewWithAuthor,
+  mapCourseWithStats,
+  type CourseReviewWithProfileRow,
+  type CourseRow,
+  type CourseWithStatsRow,
+} from "@/lib/db/mappers/course";
 import { type PaginatedResult } from "@/types/common";
-import { toPaginatedResult, getPagination } from "@/lib/db/shared";
+import {
+  type CourseDetail,
+  type CourseFilters,
+  type CourseReviewWithAuthor,
+  type CourseWithStats,
+  type CreateCourseReviewInput,
+} from "@/types/course";
+import { DbError, toPaginatedResult, getPagination } from "@/lib/db/shared";
+import { buildSearchPattern } from "@/lib/utils/search";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-// TODO: 接入 Supabase 后替换占位实现
 export async function listCourses(
   filters: CourseFilters = {},
 ): Promise<PaginatedResult<CourseWithStats>> {
-  const { page = 1, pageSize = 20 } = filters;
+  const {
+    page = 1,
+    pageSize = 20,
+    search,
+    department,
+    faculty,
+    sort = "code",
+  } = filters;
   const pagination = getPagination(page, pageSize);
 
-  return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+  if (!isSupabaseConfigured()) {
+    return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+  }
+
+  const supabase = await createClient();
+  let query = supabase
+    .from("courses")
+    .select("*", { count: "exact" })
+    .eq("school_id", DEFAULT_SCHOOL_ID);
+
+  if (department) {
+    query = query.eq("department", department);
+  }
+
+  if (faculty) {
+    query = query.eq("faculty", faculty);
+  }
+
+  if (search?.trim()) {
+    const pattern = buildSearchPattern(search);
+    query = query.or(
+      `code.ilike.${pattern},name.ilike.${pattern},description.ilike.${pattern}`,
+    );
+  }
+
+  switch (sort) {
+    case "rating":
+      query = query.order("overall_rating", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "difficulty":
+      query = query.order("difficulty_rating", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "review_count":
+      query = query.order("review_count", { ascending: false });
+      break;
+    case "latest":
+      query = query.order("created_at", { ascending: false });
+      break;
+    case "code":
+    default:
+      query = query.order("code", { ascending: true });
+  }
+  query = query.range(pagination.from, pagination.to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error("Failed to list courses:", error);
+    return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+  }
+
+  const courses = ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats);
+  return toPaginatedResult(
+    courses,
+    count ?? 0,
+    pagination.page,
+    pagination.pageSize,
+  );
 }
 
-export async function getCourseByCode(_courseCode: string) {
-  return null;
+export async function getCourseByCode(courseCode: string) {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("school_id", DEFAULT_SCHOOL_ID)
+    .ilike("code", courseCode.trim())
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return mapCourse(data as CourseRow);
 }
 
-export async function listCourseReviews(_courseId: string) {
-  return [];
+export async function getCourseDetailByCode(
+  courseCode: string,
+  currentUserId?: string,
+): Promise<CourseDetail | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("school_id", DEFAULT_SCHOOL_ID)
+    .ilike("code", courseCode.trim())
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const course = mapCourseWithStats(data as CourseWithStatsRow);
+  const reviews = await listCourseReviews(course.id, currentUserId);
+
+  return {
+    ...course,
+    reviews,
+  };
 }
 
-export async function createCourseReview(_input: unknown) {
-    throw new Error("功能尚未开放，请先配置数据库");
+export async function listCourseReviews(
+  courseId: string,
+  currentUserId?: string,
+): Promise<CourseReviewWithAuthor[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("course_reviews")
+    .select("*, profiles(*)")
+    .eq("course_id", courseId)
+    .eq("status", CONTENT_STATUS.published)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to list course reviews:", error);
+    return [];
+  }
+
+  const reviews = ((data ?? []) as CourseReviewWithProfileRow[]).map(
+    mapCourseReviewWithAuthor,
+  );
+  const reviewIds = reviews.map((review) => review.id);
+
+  if (reviewIds.length === 0) {
+    return reviews;
+  }
+
+  const { data: reactions, error: reactionsError } = await supabase
+    .from("reactions")
+    .select("target_id, user_id")
+    .eq("target_type", TARGET_TYPES.course_review)
+    .eq("type", "like")
+    .in("target_id", reviewIds);
+
+  if (reactionsError) {
+    console.error("Failed to list course review reactions:", reactionsError);
+    return reviews;
+  }
+
+  const usefulCounts = new Map<string, number>();
+  const usefulByCurrentUser = new Set<string>();
+
+  for (const reaction of (reactions ?? []) as Array<Record<string, unknown>>) {
+    const targetId = String(reaction.target_id);
+    usefulCounts.set(targetId, (usefulCounts.get(targetId) ?? 0) + 1);
+    if (currentUserId && reaction.user_id === currentUserId) {
+      usefulByCurrentUser.add(targetId);
+    }
+  }
+
+  return reviews.map((review) => ({
+    ...review,
+    usefulCount: usefulCounts.get(review.id) ?? 0,
+    isMarkedUseful: usefulByCurrentUser.has(review.id),
+  }));
+}
+
+export async function createCourseReview(
+  input: CreateCourseReviewInput,
+): Promise<CourseReviewWithAuthor> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const courseReviews = supabase.from("course_reviews") as ReturnType<
+    typeof supabase.from
+  > & {
+    insert: (payload: Record<string, unknown>) => ReturnType<
+      ReturnType<typeof supabase.from>["insert"]
+    >;
+  };
+  const { data, error } = await courseReviews
+    .insert({
+      course_id: input.courseId,
+      user_id: input.userId,
+      semester: "unknown",
+      teacher_name: null,
+      overall_rating: input.overallRating,
+      difficulty_rating: input.difficultyRating,
+      workload_rating: input.overallRating,
+      grading_rating: input.overallRating,
+      exam_difficulty: null,
+      teaching_rating: input.overallRating,
+      exam_type: null,
+      assignment_type: null,
+      attendance_required: null,
+      content: input.reviewText,
+      review_text: input.reviewText,
+      tips: null,
+      is_anonymous: input.isAnonymous,
+      tags: input.tags,
+      status: CONTENT_STATUS.published,
+    })
+    .select("*, profiles(*)")
+    .single();
+
+  if (error || !data) {
+    throw new DbError(error?.message ?? "发布课程评价失败", "VALIDATION");
+  }
+
+  return mapCourseReviewWithAuthor(data as CourseReviewWithProfileRow);
+}
+
+export async function softDeleteCourseReview(
+  reviewId: string,
+  userId: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const courseReviews = supabase.from("course_reviews") as ReturnType<
+    typeof supabase.from
+  > & {
+    update: (payload: Record<string, unknown>) => ReturnType<
+      ReturnType<typeof supabase.from>["update"]
+    >;
+  };
+  const { error } = await courseReviews
+    .update({
+      status: CONTENT_STATUS.hidden,
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", reviewId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new DbError(error.message);
+  }
 }

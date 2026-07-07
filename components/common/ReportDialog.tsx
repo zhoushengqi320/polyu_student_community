@@ -15,9 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  FORUM_REPORT_TARGET_TYPES,
   REPORT_REASONS,
-  type ForumReportTargetType,
+  TARGET_TYPES,
+  type TargetType,
 } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -26,7 +26,7 @@ import {
 } from "@/lib/interaction/actions";
 
 type ReportDialogProps = {
-  targetType: ForumReportTargetType;
+  targetType: TargetType;
   targetId: string;
   isLoggedIn: boolean;
   revalidatePath?: string;
@@ -56,8 +56,16 @@ export function ReportDialog({
     }
   }, [state.success]);
 
-  const targetLabel =
-    targetType === FORUM_REPORT_TARGET_TYPES.post ? "帖子" : "评论";
+  const targetLabelMap: Record<TargetType, string> = {
+    [TARGET_TYPES.post]: "帖子",
+    [TARGET_TYPES.comment]: "评论",
+    [TARGET_TYPES.course]: "课程",
+    [TARGET_TYPES.course_review]: "课程评价",
+    [TARGET_TYPES.food_recommendation]: "美食推荐",
+    [TARGET_TYPES.buddy_post]: "找搭子内容",
+    [TARGET_TYPES.profile]: "用户资料",
+  };
+  const targetLabel = targetLabelMap[targetType];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

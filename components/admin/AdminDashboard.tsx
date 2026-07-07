@@ -8,6 +8,7 @@ import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { ReportTable } from "@/components/admin/ReportTable";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
+import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
 import { type AdminDashboardData } from "@/types/admin";
 import { cn } from "@/lib/utils/cn";
 
@@ -73,6 +74,10 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
 
       {activeTab === "forum-comments" ? (
         <ForumCommentsTable comments={data.forumComments} />
+      ) : null}
+
+      {activeTab === "course-reviews" ? (
+        <CourseReviewsTable reviews={data.courseReviews} />
       ) : null}
 
       {activeTab === "users" ? (

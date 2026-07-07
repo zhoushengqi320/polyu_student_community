@@ -53,6 +53,22 @@ export type AdminForumCommentListItem = {
   status: string;
 };
 
+export type AdminCourseReviewListItem = {
+  id: string;
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  author: ProfileListItem;
+  overallRating: number;
+  difficultyRating: number;
+  tags: string[];
+  reviewText: string;
+  isAnonymous: boolean;
+  createdAt: string;
+  deletedAt: string | null;
+  status: string;
+};
+
 export type AdminListFilters = {
   page?: number;
   pageSize?: number;
@@ -69,6 +85,7 @@ export type AdminDashboardData = {
   reports: ReportWithReporter[];
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
+  courseReviews: AdminCourseReviewListItem[];
   adminActions: AdminActionLogWithAdmin[];
   isDatabaseConfigured: boolean;
 };

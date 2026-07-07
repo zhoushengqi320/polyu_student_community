@@ -34,6 +34,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       resources: {
         Row: {
@@ -75,6 +76,166 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      courses: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          department: string;
+          faculty: string | null;
+          level: string | null;
+          credits: number | null;
+          description: string | null;
+          objectives: string | null;
+          prerequisites: string | null;
+          teaching_pattern: string | null;
+          semester_offered: string | null;
+          assessment_json: Json;
+          pdf_url: string | null;
+          pdf_storage_path: string | null;
+          source_file_name: string | null;
+          source_updated_at: string | null;
+          overall_rating: number | null;
+          difficulty_rating: number | null;
+          review_count: number;
+          top_tags: Json;
+          school_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          department: string;
+          faculty?: string | null;
+          level?: string | null;
+          credits?: number | null;
+          description?: string | null;
+          objectives?: string | null;
+          prerequisites?: string | null;
+          teaching_pattern?: string | null;
+          semester_offered?: string | null;
+          assessment_json?: Json;
+          pdf_url?: string | null;
+          pdf_storage_path?: string | null;
+          source_file_name?: string | null;
+          source_updated_at?: string | null;
+          overall_rating?: number | null;
+          difficulty_rating?: number | null;
+          review_count?: number;
+          top_tags?: Json;
+          school_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          name?: string;
+          department?: string;
+          faculty?: string | null;
+          level?: string | null;
+          credits?: number | null;
+          description?: string | null;
+          objectives?: string | null;
+          prerequisites?: string | null;
+          teaching_pattern?: string | null;
+          semester_offered?: string | null;
+          assessment_json?: Json;
+          pdf_url?: string | null;
+          pdf_storage_path?: string | null;
+          source_file_name?: string | null;
+          source_updated_at?: string | null;
+          overall_rating?: number | null;
+          difficulty_rating?: number | null;
+          review_count?: number;
+          top_tags?: Json;
+          school_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      course_reviews: {
+        Row: {
+          id: string;
+          course_id: string;
+          user_id: string;
+          semester: string;
+          teacher_name: string | null;
+          overall_rating: number;
+          difficulty_rating: number;
+          workload_rating: number;
+          grading_rating: number;
+          exam_difficulty: number | null;
+          teaching_rating: number;
+          exam_type: string | null;
+          assignment_type: string | null;
+          attendance_required: string | null;
+          content: string;
+          review_text: string | null;
+          tips: string | null;
+          is_anonymous: boolean;
+          tags: string[];
+          status: "draft" | "published" | "hidden" | "removed";
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          course_id: string;
+          user_id: string;
+          semester: string;
+          teacher_name?: string | null;
+          overall_rating: number;
+          difficulty_rating: number;
+          workload_rating: number;
+          grading_rating: number;
+          exam_difficulty?: number | null;
+          teaching_rating: number;
+          exam_type?: string | null;
+          assignment_type?: string | null;
+          attendance_required?: string | null;
+          content: string;
+          review_text?: string | null;
+          tips?: string | null;
+          is_anonymous?: boolean;
+          tags?: string[];
+          status?: "draft" | "published" | "hidden" | "removed";
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          course_id?: string;
+          user_id?: string;
+          semester?: string;
+          teacher_name?: string | null;
+          overall_rating?: number;
+          difficulty_rating?: number;
+          workload_rating?: number;
+          grading_rating?: number;
+          exam_difficulty?: number | null;
+          teaching_rating?: number;
+          exam_type?: string | null;
+          assignment_type?: string | null;
+          attendance_required?: string | null;
+          content?: string;
+          review_text?: string | null;
+          tips?: string | null;
+          is_anonymous?: boolean;
+          tags?: string[];
+          status?: "draft" | "published" | "hidden" | "removed";
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -125,6 +286,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       posts: {
         Row: {
@@ -187,11 +349,51 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      guides_meta: {
+        Row: {
+          post_id: string;
+          stage: string;
+          category: string | null;
+          target_audience: string | null;
+          estimated_reading_time: number | null;
+          last_verified_at: string | null;
+          source_links: Json;
+          is_pinned: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          post_id: string;
+          stage: string;
+          category?: string | null;
+          target_audience?: string | null;
+          estimated_reading_time?: number | null;
+          last_verified_at?: string | null;
+          source_links?: Json;
+          is_pinned?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          post_id?: string;
+          stage?: string;
+          category?: string | null;
+          target_audience?: string | null;
+          estimated_reading_time?: number | null;
+          last_verified_at?: string | null;
+          source_links?: Json;
+          is_pinned?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       comments: {
         Row: {
           id: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           parent_id: string | null;
           user_id: string;
@@ -203,7 +405,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           parent_id?: string | null;
           user_id: string;
@@ -215,7 +417,7 @@ export type Database = {
         };
         Update: {
           id?: string;
-          target_type?: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           parent_id?: string | null;
           user_id?: string;
@@ -225,12 +427,13 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       reactions: {
         Row: {
           id: string;
           user_id: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           type: "like" | "favorite";
           created_at: string;
@@ -238,7 +441,7 @@ export type Database = {
         Insert: {
           id?: string;
           user_id: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           type: "like" | "favorite";
           created_at?: string;
@@ -246,17 +449,18 @@ export type Database = {
         Update: {
           id?: string;
           user_id?: string;
-          target_type?: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           type?: "like" | "favorite";
           created_at?: string;
         };
+        Relationships: [];
       };
       reports: {
         Row: {
           id: string;
           reporter_id: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           reason: string;
           description: string | null;
@@ -269,7 +473,7 @@ export type Database = {
         Insert: {
           id?: string;
           reporter_id: string;
-          target_type: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           reason: string;
           description?: string | null;
@@ -282,7 +486,7 @@ export type Database = {
         Update: {
           id?: string;
           reporter_id?: string;
-          target_type?: "post" | "comment" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           reason?: string;
           description?: string | null;
@@ -292,6 +496,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       admin_action_logs: {
         Row: {
@@ -321,6 +526,7 @@ export type Database = {
           metadata?: Json | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -343,7 +549,18 @@ export type Database = {
       user_status: "active" | "banned";
       content_status: "draft" | "published" | "hidden" | "removed";
       module_key: "courses" | "guides" | "food" | "resources" | "buddy" | "forum";
+      target_type:
+        | "post"
+        | "comment"
+        | "course"
+        | "course_review"
+        | "food_recommendation"
+        | "buddy_post"
+        | "profile";
+      reaction_type: "like" | "favorite";
+      report_status: "pending" | "reviewing" | "resolved" | "dismissed";
     };
+    CompositeTypes: Record<string, never>;
   };
 };
 

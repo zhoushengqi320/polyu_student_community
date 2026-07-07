@@ -1,5 +1,8 @@
+import { notFound } from "next/navigation";
 import { MODULE_REGISTRY } from "@/constants/modules";
+import { GuideDetailView } from "@/components/guides/GuideDetailView";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
+import { getSessionUser } from "@/lib/auth/session";
 import { getGuideById } from "@/lib/db/guides";
 
 type GuideDetailPageProps = {
@@ -8,12 +11,19 @@ type GuideDetailPageProps = {
 
 export default async function GuideDetailPage({ params }: GuideDetailPageProps) {
   const { id } = await params;
-  await getGuideById(id);
+  const user = await getSessionUser();
+  const guide = await getGuideById(id, user?.id);
+
+  if (!guide) {
+    notFound();
+  }
 
   return (
     <ModulePageShell
-      title="攻略详情"
+      title={guide.title}
       description={`${MODULE_REGISTRY.guides.label} · 详情页`}
-    />
+    >
+      <GuideDetailView guide={guide} />
+    </ModulePageShell>
   );
 }

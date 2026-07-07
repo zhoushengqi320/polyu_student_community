@@ -7,7 +7,12 @@ import { mapResource, mapResourceCategory } from "@/lib/db/mappers/resource";
 import { matchesSearch } from "@/lib/utils/search";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { type ResourceFilters, type ResourceGroup } from "@/types/resource";
+import {
+  type Resource,
+  type ResourceCategory,
+  type ResourceFilters,
+  type ResourceGroup,
+} from "@/types/resource";
 
 const FALLBACK_RESOURCES = [
   {
@@ -184,25 +189,25 @@ export async function listResourceGroups(
 
     const filteredResources = searchQuery
       ? mappedResources.filter(
-          (resource) =>
+          (resource: Resource) =>
             matchesSearch(resource.title, searchQuery) ||
             matchesSearch(resource.description, searchQuery),
         )
       : mappedResources;
 
-    const groups = (categories ?? []).map(mapResourceCategory).map((category) => ({
+    const groups = (categories ?? []).map(mapResourceCategory).map((category: ResourceCategory) => ({
       ...category,
       resources: filteredResources.filter(
-        (resource) => resource.categoryId === category.id,
+        (resource: Resource) => resource.categoryId === category.id,
       ),
     }));
 
     if (filters.categoryId) {
-      return groups.filter((group) => group.id === filters.categoryId);
+      return groups.filter((group: ResourceGroup) => group.id === filters.categoryId);
     }
 
     if (searchQuery) {
-      return groups.filter((group) => group.resources.length > 0);
+      return groups.filter((group: ResourceGroup) => group.resources.length > 0);
     }
 
     return groups;

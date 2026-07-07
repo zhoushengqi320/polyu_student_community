@@ -39,6 +39,7 @@ export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];
 export const TARGET_TYPES = {
   post: "post",
   comment: "comment",
+  course: "course",
   course_review: "course_review",
   food_recommendation: "food_recommendation",
   buddy_post: "buddy_post",

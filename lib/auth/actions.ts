@@ -85,3 +85,15 @@ export async function logoutAction(): Promise<ActionResult> {
   revalidatePath("/", "layout");
   redirect(ROUTES.home);
 }
+
+export async function logoutFormAction(): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    return;
+  }
+
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+
+  revalidatePath("/", "layout");
+  redirect(ROUTES.home);
+}
