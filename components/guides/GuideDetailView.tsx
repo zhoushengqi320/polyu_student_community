@@ -1,4 +1,7 @@
 import { Bookmark, CalendarCheck, Clock, UserRound } from "lucide-react";
+import { ReportDialog } from "@/components/common/ReportDialog";
+import { GuideCommentSection } from "@/components/guides/GuideCommentSection";
+import { GuideFavoriteButton } from "@/components/guides/GuideFavoriteButton";
 import { MarkdownContent } from "@/components/guides/MarkdownContent";
 import {
   Card,
@@ -7,15 +10,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { getGuideCategoryLabel } from "@/constants/guides";
 import { formatDate } from "@/lib/utils/formatDate";
 import { type GuideDetail } from "@/types/guide";
+import { type CommentThreadItem } from "@/types/post";
 
 type GuideDetailViewProps = {
   guide: GuideDetail;
+  favoriteCount: number;
+  commentThread: CommentThreadItem[];
+  totalCommentCount: number;
+  isLoggedIn: boolean;
+  canComment: boolean;
+  canFavorite: boolean;
+  isAdmin: boolean;
+  currentUserId?: string;
+  revalidatePath: string;
 };
 
-export function GuideDetailView({ guide }: GuideDetailViewProps) {
+export function GuideDetailView({
+  guide,
+  favoriteCount,
+  commentThread,
+  totalCommentCount,
+  isLoggedIn,
+  canComment,
+  canFavorite,
+  isAdmin,
+  currentUserId,
+  revalidatePath,
+}: GuideDetailViewProps) {
   const categoryLabel = getGuideCategoryLabel(
     guide.meta?.category ?? guide.categoryId,
   );
@@ -48,20 +73,42 @@ export function GuideDetailView({ guide }: GuideDetailViewProps) {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-          {guide.meta?.targetAudience ? (
-            <span className="inline-flex items-center gap-1">
-              <UserRound className="h-4 w-4" aria-hidden="true" />
-              {guide.meta.targetAudience}
-            </span>
-          ) : null}
-          {guide.meta?.lastVerifiedAt ? (
-            <span className="inline-flex items-center gap-1">
-              <CalendarCheck className="h-4 w-4" aria-hidden="true" />
-              更新核对：{formatDate(guide.meta.lastVerifiedAt)}
-            </span>
-          ) : null}
-          <span>评论数：{guide.commentCount}</span>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
+            {guide.meta?.targetAudience ? (
+              <span className="inline-flex items-center gap-1">
+                <UserRound className="h-4 w-4" aria-hidden="true" />
+                {guide.meta.targetAudience}
+              </span>
+            ) : null}
+            {guide.meta?.lastVerifiedAt ? (
+              <span className="inline-flex items-center gap-1">
+                <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                更新核对：{formatDate(guide.meta.lastVerifiedAt)}
+              </span>
+            ) : null}
+            <span>评论数：{totalCommentCount}</span>
+          </div>
+
+          <div className="flex flex-wrap items-start gap-3 border-t pt-4">
+            <GuideFavoriteButton
+              guideId={guide.id}
+              isFavorited={guide.isFavorited}
+              favoriteCount={favoriteCount}
+              isLoggedIn={isLoggedIn}
+              canFavorite={canFavorite}
+              revalidatePath={revalidatePath}
+            />
+            <ReportDialog
+              targetType={TARGET_TYPES.post}
+              targetId={guide.id}
+              isLoggedIn={isLoggedIn}
+              revalidatePath={revalidatePath}
+              triggerLabel="举报攻略"
+              triggerVariant="outline"
+              triggerSize="default"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -91,6 +138,17 @@ export function GuideDetailView({ guide }: GuideDetailViewProps) {
           </CardContent>
         </Card>
       ) : null}
+
+      <GuideCommentSection
+        guideId={guide.id}
+        commentThread={commentThread}
+        totalCommentCount={totalCommentCount}
+        isLoggedIn={isLoggedIn}
+        canComment={canComment}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+        revalidatePath={revalidatePath}
+      />
     </div>
   );
 }

@@ -74,3 +74,28 @@ export async function hasReaction(input: {
 
   return Boolean(data);
 }
+
+export async function countReactions(input: {
+  targetType: TargetType;
+  targetId: string;
+  type: ReactionType;
+}): Promise<number> {
+  if (!isSupabaseConfigured()) {
+    return 0;
+  }
+
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("reactions")
+    .select("*", { count: "exact", head: true })
+    .eq("target_type", input.targetType)
+    .eq("target_id", input.targetId)
+    .eq("type", input.type);
+
+  if (error) {
+    console.error("Failed to count reactions:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+}

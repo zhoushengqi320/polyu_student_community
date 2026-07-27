@@ -10,6 +10,7 @@ type CommentReplyFormProps = {
   parentCommentId: string;
   replyToName: string;
   canComment: boolean;
+  revalidatePath?: string;
   onCancel?: () => void;
 };
 
@@ -20,6 +21,7 @@ export function CommentReplyForm({
   parentCommentId,
   replyToName,
   canComment,
+  revalidatePath,
   onCancel,
 }: CommentReplyFormProps) {
   const boundAction = createCommentAction.bind(null, postId);
@@ -58,6 +60,9 @@ export function CommentReplyForm({
   return (
     <form ref={formRef} action={formAction} className="mt-3 space-y-2 rounded-md border bg-background p-3">
       <input type="hidden" name="parentId" value={parentCommentId} />
+      {revalidatePath ? (
+        <input type="hidden" name="revalidatePath" value={revalidatePath} />
+      ) : null}
       <div className="space-y-1.5">
         <Label htmlFor={`reply-${parentCommentId}`} className="text-xs">
           回复 @{replyToName}

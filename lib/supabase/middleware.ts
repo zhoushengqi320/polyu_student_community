@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { type Database } from "@/types/database";
+import { type AppSupabaseClient } from "@/lib/supabase/types";
 import { shouldBypassOnboardingRedirect } from "@/lib/auth/onboarding";
 import { ROUTES } from "@/constants/routes";
 
@@ -14,28 +15,32 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient<Database, "public">(url, anonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(
-        cookiesToSet: Array<{
-          name: string;
-          value: string;
-          options: CookieOptions;
-        }>,
-      ) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          supabaseResponse.cookies.set(name, value, options);
-        });
+  const supabase = createServerClient<Database, "public">(
+    url,
+    anonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(
+          cookiesToSet: Array<{
+            name: string;
+            value: string;
+            options: CookieOptions;
+          }>,
+        ) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+        },
       },
     },
-  }) as any;
+  ) as unknown as AppSupabaseClient;
 
   const {
     data: { user },

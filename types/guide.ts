@@ -1,6 +1,8 @@
+import { type ContentStatus } from "@/constants/contentStatus";
 import { type GuideCategoryId } from "@/constants/guides";
 import { type PaginatedResult } from "@/types/common";
 import { type PostDetail, type PostListItem } from "@/types/post";
+import { type ProfileListItem } from "@/types/user";
 
 export type GuideSourceLink = {
   label: string;
@@ -39,3 +41,32 @@ export type GuideFilters = {
 };
 
 export type GuideListResult = PaginatedResult<GuideListItem>;
+
+export type CreateGuideInput = {
+  userId: string;
+  title: string;
+  excerpt?: string | null;
+  content: string;
+  category: GuideCategoryId;
+  targetAudience?: string | null;
+  estimatedReadingTime?: number | null;
+  sourceLinks: GuideSourceLink[];
+};
+
+export type UpdateGuideInput = CreateGuideInput & {
+  id: string;
+};
+
+export type AdminGuideDetail = {
+  id: string;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  categoryId: string | null;
+  status: ContentStatus;
+  deletedAt: string | null;
+  author: ProfileListItem;
+  meta: GuideMeta | null;
+  createdAt: string;
+  updatedAt: string;
+};

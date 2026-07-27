@@ -129,14 +129,13 @@ export async function getPostById(
     .select("*, profiles(*)")
     .eq("id", id)
     .eq("status", CONTENT_STATUS.published)
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
 
   if (module) {
     query = query.eq("module", module);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.maybeSingle();
 
   if (error || !data) {
     return null;

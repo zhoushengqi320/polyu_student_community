@@ -2,6 +2,8 @@ import { MODULE_REGISTRY } from "@/constants/modules";
 
 export const ROUTES = {
   home: "/",
+  search: (query?: string) =>
+    query?.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : "/search",
   login: "/auth/login",
   signup: "/auth/login",
   onboarding: "/onboarding",

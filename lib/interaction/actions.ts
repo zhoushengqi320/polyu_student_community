@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
+import { adminDeleteForumComment } from "@/lib/db/admin";
+import { softDeleteComment } from "@/lib/db/comments";
 import { toggleReaction, type ReactionType } from "@/lib/db/reactions";
 import { createReport } from "@/lib/db/reports";
 import { reportSchema } from "@/lib/validations/reportSchema";
-import { assertCan } from "@/lib/utils/permissions";
+import { assertCan, isAdmin } from "@/lib/utils/permissions";
 import { type TargetType, type ReportReasonId } from "@/constants/reportReasons";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -106,6 +108,47 @@ export async function createReportAction(
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "举报失败，请稍后重试",
+    };
+  }
+}
+
+export async function deleteCommentAction(
+  _prevState: InteractionActionState,
+  formData: FormData,
+): Promise<InteractionActionState> {
+  if (!isSupabaseConfigured()) {
+    return { error: "数据库未配置" };
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    return { error: "请先登录" };
+  }
+
+  const commentId = String(formData.get("commentId") ?? "");
+  const revalidatePathValue = String(formData.get("revalidatePath") ?? "/");
+
+  if (!commentId) {
+    return { error: "无效的评论 ID" };
+  }
+
+  try {
+    if (isAdmin(user)) {
+      await adminDeleteForumComment(commentId, user.id);
+    } else {
+      try {
+        assertCan(user, "interaction:comment");
+      } catch {
+        return { error: "当前账号无法删除评论" };
+      }
+      await softDeleteComment(commentId, user.id);
+    }
+
+    revalidatePath(revalidatePathValue);
+    return { success: "评论已删除" };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "删除失败，请稍后重试",
     };
   }
 }

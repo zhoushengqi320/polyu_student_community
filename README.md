@@ -1,6 +1,6 @@
 # PolyUHub
 
-PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校园信息社区。项目目标不是单纯做论坛，而是把课程评价、入学攻略、美食推荐、常用网站、找搭子和自由讨论区整合成一个可搜索、可互动、可长期维护的信息平台。
+PolyUHub 是一个面向香港理工大学学生的 Web 社区平台，提供课程评价、入学攻略、美食推荐、常用网站导航、找搭子和自由讨论区等校园生活功能。
 
 核心定位：**PolyU 学生自己的校园信息社区。**
 
@@ -10,7 +10,18 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 
 ### 已完成 / 基础可用
 
-- 首页六大模块入口
+- **首页流量入口（Phase E）**
+  - Hero：标题 **PolyUHub**，副标题 **PolyU 学生自己的校园信息社区**，slogan「选课前，先查 PolyUHub」
+  - 全站搜索框（GET → `/search?q=`）
+  - 六大模块入口网格
+  - 热门课程（按评价数 Top 6）
+  - 最新课程评价（Top 5，点击进入 `/courses/[courseCode]`，暂不实现 review anchor）
+  - 最新讨论（论坛最新帖 Top 5）
+  - 精选攻略（置顶优先 + 更新时间 Top 4）
+  - 常用资源快捷入口（eStudent、Blackboard、Library 等 5 项）
+  - Footer 非官方免责声明
+  - `/search` 占位页（第一版提示「全站搜索开发中」，避免首页搜索 404）
+  - 首页数据查询集中在 `lib/db/home.ts`；`app/loading.tsx` 提供骨架屏
 - Supabase Magic Link 登录
 - PolyU 邮箱限制与 onboarding
 - 用户角色与权限模型
@@ -40,6 +51,11 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
   - 删除论坛帖子
   - 删除论坛评论
   - 删除课程评价
+  - **入学攻略管理（Guides CRUD）**
+    - 查看全部 draft / published / hidden / 已删除攻略
+    - 创建草稿、编辑内容、发布、隐藏、重新发布、软删除
+    - Tab 内视图切换（列表 / 创建 / 编辑），无需独立后台路由
+    - 所有操作写入 `admin_action_logs`
   - 查看管理员操作日志
 - 课程评价增强版
   - `/courses` 课程列表
@@ -72,6 +88,21 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
   - `guides_meta` 存储分类、目标读者、阅读时间、核对时间和来源链接
   - 基础 Markdown 展示
   - `supabase/seed_guides.sql` 提供 8 篇短版测试攻略
+- 入学攻略管理后台（Phase D）
+  - `/admin` → **攻略管理** Tab
+  - 创建攻略默认保存为 **draft**，需手动发布后才出现在前台
+  - 状态流转：`draft → 发布`、`published → 隐藏`、`hidden → 重新发布`、软删除
+  - 前台 `/guides` 仅展示 `published` 且 `deleted_at IS NULL` 的内容
+  - 管理员可编辑：标题、摘要、正文、分类、目标读者、阅读时长、参考链接
+  - Server Actions：`lib/guides/actions.ts`（Zod 校验 + `requireAdmin()`）
+  - 操作日志：`create_guide` / `update_guide` / `publish_guide` / `hide_guide` / `delete_guide`
+- 入学攻略互动（Phase D+）
+  - 攻略详情页收藏 / 取消收藏，显示收藏数
+  - 攻略评论：发表、回复、两层结构（与论坛一致）
+  - 删除自己的评论；管理员可删除任意评论
+  - 举报攻略与举报评论
+  - 未登录用户可浏览，收藏 / 评论需登录
+  - 复用 `reactions`、`comments`、`reports`，不新建 guide 专用表
 
 ### 开发中 / 待完善
 
@@ -81,18 +112,17 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
   - 个人主页展示“我的收藏课程”
 - 入学攻略后续增强
   - JSONL 真实数据导入脚本
-  - 攻略收藏按钮与评论区 UI
-  - 管理员发布 / 编辑 / 删除攻略
+  - 后台攻略筛选 / 分页 / 置顶
+  - 独立后台路由（如 `/admin/guides/new`）与更完善的 Markdown 编辑器
+  - 攻略详情页相关推荐
 - 美食推荐 Food Recommendations
 - 找搭子 Buddy Matching
-- 全站搜索 `/search`
+- 全站搜索 `/search` 真实检索（当前仅为占位页）
 - 社区行为守则页面 `/about/community-rules`
-- 首页升级为流量入口
-  - 全站搜索框
-  - 热门课程
-  - 最新讨论
-  - 最新找搭子
-  - 新生攻略入口
+- 首页后续增强
+  - 最新找搭子区块
+  - 课程评价 review anchor（待评价详情页增强后）
+  - 全站搜索聚合课程、攻略、帖子、资源等模块
 
 ## 技术栈
 
@@ -114,25 +144,35 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 ```text
 app/                         Next.js 路由页面
   course-pdfs/[...path]/      本地课程 PDF 预览与下载路由
+  search/                     全站搜索占位页（第一版）
 components/                  UI 组件与业务组件
+  admin/guides/              攻略管理后台 UI（列表、表单、编辑器）
+  guides/                    攻略前台 UI（列表、详情、收藏、评论区）
+  home/                      首页各 Section（Hero、搜索框、动态区块）
+  posts/                     通用评论组件（CommentForm、DeleteCommentButton）
 constants/                   路由、模块、角色、分类、状态等常量
+  home.ts                    首页 Hero、免责声明、区块数量限制
 hooks/                       前端 hooks
 lib/
   admin/                     管理后台 session 与 Server Actions
   auth/                      登录、session、onboarding
   course/                    课程评价 Server Actions
+  guides/                    入学攻略管理 Server Actions
   db/                        Supabase 查询
+  db/home.ts                 首页聚合数据查询
   db/mappers/                DB row 到业务类型的映射
   forum/                     论坛 Server Actions
   interaction/               点赞、收藏、举报 Server Actions
   supabase/                  Supabase client/server/middleware
   utils/                     权限、日期、搜索等工具
-  validations/               Zod 表单校验
+  validations/               Zod 表单校验（含 guideSchema）
 scripts/                     本地维护脚本
 supabase/
   migrations/                数据库迁移
   seed.sql                   初始数据
+  seed_guides.sql            入学攻略测试数据
 types/                       TypeScript 类型
+  home.ts                    首页聚合数据类型
 middleware.ts                Supabase session 刷新与 onboarding 跳转
 ```
 
@@ -188,7 +228,7 @@ npm run typecheck        # TypeScript 类型检查
 npm run import:courses   # 从 学科/ 文件夹导入课程 PDF
 ```
 
-当前 `npm run typecheck` 已通过。
+当前 `npm run typecheck` 与 `npm run build` 均已通过。
 
 ## Supabase 设置
 
@@ -325,20 +365,100 @@ npm run import:courses -- --dir="/path/to/course-pdfs"
 
 - 课程评价“有用”：`target_type = course_review`，`type = like`
 - 课程收藏：`target_type = course`，`type = favorite`
+- 攻略收藏：`target_type = post`，`type = favorite`（guide post id）
+
+## 首页 Homepage
+
+首页定位为 PolyUHub 的流量入口，品牌统一使用 **PolyUHub**（不再使用「理大社区」作为站点名称）。
+
+### 页面结构
+
+1. **Hero**：PolyUHub 标题 +「PolyU 学生自己的校园信息社区」副标题 + 搜索框 + CTA
+2. **六大模块**：课程评价、入学攻略、美食、常用网站、找搭子、自由讨论区
+3. **热门课程**：`review_count` 排序 Top 6
+4. **最新课程评价**：跨课程查询 Top 5，卡片链接 `/courses/[courseCode]`
+5. **最新讨论**：论坛 `latest` 排序 Top 5
+6. **精选攻略**：置顶优先，再按 `updated_at` Top 4
+7. **常用资源**：eStudent、Learn@PolyU / Blackboard、PolyU Library、Academic Calendar、Campus Map
+
+Footer 展示非官方免责声明（`constants/home.ts` → `HOME_DISCLAIMER`）。
+
+### 数据层
+
+- 聚合查询：`lib/db/home.ts` → `getHomePageData()`
+- 类型定义：`types/home.ts`
+- 常量：`constants/home.ts`（`HOME_LIMITS`、`HOME_HERO`、`QUICK_RESOURCE_TITLES`）
+
+首页为动态渲染（依赖 Supabase session cookies）。未配置数据库时，Hero 与模块入口仍可用，动态区块显示空状态并提示配置 `.env.local`。
+
+### 搜索占位页
+
+- 路由：`/search?q=关键词`
+- 第一版仅展示关键词与「全站搜索功能开发中」提示，并提供课程 / 攻略 / 首页快捷入口
+- 首页 `HomeSearchBox` 通过 GET 跳转，避免 404
+
+### 测试首页
+
+1. 访问 `/`，确认 Hero 标题为 PolyUHub、副标题与 Footer 免责声明正确。
+2. 在搜索框输入关键词，应跳转到 `/search?q=...` 占位页。
+3. 配置 Supabase 并有数据时，确认热门课程、最新评价、最新讨论、精选攻略、常用资源各区块有内容或空状态。
+4. 点击最新课程评价卡片，应进入 `/courses/[courseCode]`（无 `#review` anchor）。
+5. 窄屏下检查各区块布局与骨架屏（刷新时 `app/loading.tsx`）。
 
 ## 入学攻略 Freshman Guides
 
-第一阶段目标是搭建可维护的攻略系统，不追求内容完整。
+目标是搭建可维护、可互动的攻略系统。Phase D 已完成管理员后台 CRUD，Phase D+ 已完成前台收藏与评论闭环。
 
-当前实现：
+### 前台
 
 - 攻略正文复用 `posts` 表，`module = guides`。
 - 攻略扩展信息存放在 `guides_meta`。
-- `/guides` 支持列表展示、分类筛选和关键词搜索。
-- `/guides/[id]` 支持详情展示和基础 Markdown 渲染。
-- `supabase/seed_guides.sql` 提供 8 篇短版 seed 攻略，用来测试页面和数据流程。
+- `/guides` 支持列表展示、分类筛选和关键词搜索；列表页显示评论数与收藏状态。
+- `/guides/[id]` 支持详情展示、基础 Markdown 渲染、收藏、评论与举报。
+- 仅展示 `status = published` 且 `deleted_at IS NULL` 的攻略。
 
-当前攻略分类：
+### 互动（复用通用模型）
+
+攻略详情页不新建 `guide_comments` / `guide_favorites` / `guide_reports`，全部复用：
+
+| 功能 | 数据表 | 关键字段 |
+| --- | --- | --- |
+| 收藏 | `reactions` | `target_type = post`，`target_id = guide post id`，`type = favorite` |
+| 评论 / 回复 | `comments` | `target_type = post`，`target_id = guide post id`，`parent_id` 表示回复 |
+| 举报攻略 | `reports` | `target_type = post`，`target_id = guide post id` |
+| 举报评论 | `reports` | `target_type = comment`，`target_id = comment id` |
+
+评论区复用论坛同一套两层结构：一级评论 + 扁平回复层，显示「回复 @谁」。
+
+Server Actions 复用：
+
+- `toggleReactionAction`（`lib/interaction/actions.ts`）— 收藏
+- `createCommentAction`（`lib/forum/actions.ts`）— 评论 / 回复，支持 `revalidatePath` 刷新攻略页
+- `deleteCommentAction`（`lib/interaction/actions.ts`）— 用户删自己的评论，admin 删任意评论
+- `createReportAction`（`lib/interaction/actions.ts`）— 举报
+
+`posts.comment_count` 由数据库 trigger 自动维护，攻略评论数与列表页同步。
+
+### 后台（`/admin` → 攻略管理）
+
+- 列表展示全部 draft / published / hidden / 已删除攻略。
+- Tab 内视图切换：列表 ↔ 创建 ↔ 编辑（第一版不拆独立路由）。
+- 创建攻略默认保存为 **draft**，避免半成品内容出现在前台。
+- 状态切换：
+  - `draft` → 点击「发布」
+  - `published` → 点击「隐藏」
+  - `hidden` → 点击「重新发布」
+  - 任意未删除状态 → 点击「删除」（软删除，`deleted_at = now()`）
+- 编辑时可修改：标题、摘要、正文、分类、目标读者、预计阅读时长、参考链接。
+- 编辑保存时会更新 `guides_meta.last_verified_at`。
+- 所有管理员操作写入 `admin_action_logs`。
+
+### 测试数据
+
+- `supabase/seed_guides.sql` 提供 8 篇短版 seed 攻略，用来测试页面和数据流程。
+- seed 数据默认 `status = published`，可直接在前台看到；后台新建的内容默认为 draft。
+
+### 攻略分类
 
 - 申请入学
 - 行前准备
@@ -349,6 +469,10 @@ npm run import:courses -- --dir="/path/to/course-pdfs"
 - 银行卡 / 电话卡
 - 生活适应
 
+分类稳定 ID 定义在 `constants/guides.ts`，前后台共用。
+
+### 后续计划
+
 `seed_guides.sql` 是开发测试数据，不是未来真实内容导入方式。未来真实攻略数据计划以 JSONL 文件导入，建议后续新增：
 
 ```text
@@ -356,6 +480,23 @@ scripts/import-guides-from-jsonl.mjs
 ```
 
 真实 JSONL 导入时继续写入 `posts` 和 `guides_meta`，并使用稳定的 external id / slug / source id，避免与 seed UUID 冲突。
+
+### 测试攻略后台
+
+1. 将账户设为 `admin`（见上文「设置管理员」）。
+2. 访问 `/admin` → **攻略管理**。
+3. 点击「创建攻略」，填写表单后保存为 draft。
+4. 确认前台 `/guides` 看不到该攻略。
+5. 在列表点击「发布」，确认前台可见。
+6. 测试「隐藏」「重新发布」「删除」，并在 **操作记录** Tab 查看日志。
+
+### 测试攻略互动
+
+1. 打开一篇已发布攻略 `/guides/[id]`。
+2. **未登录**：可浏览正文和评论；点击收藏 / 评论会提示登录。
+3. **登录用户**：收藏 / 取消收藏，观察收藏数变化；发表评论和回复。
+4. 删除自己的评论；管理员账号可删除任意评论。
+5. 测试「举报攻略」和评论「举报」按钮。
 
 ## 权限模型
 
@@ -366,7 +507,7 @@ scripts/import-guides-from-jsonl.mjs
 | `guest` | 浏览公开内容 |
 | `user` | 浏览、评论、点赞、收藏、举报 |
 | `verified_polyu_user` | 发帖、发布课程评价、参与需要认证的模块 |
-| `admin` | 进入后台，管理用户、内容、举报和课程评价 |
+| `admin` | 进入后台，管理用户、内容、举报、课程评价和入学攻略 |
 | `banned` | 只能浏览，不能互动 |
 
 ## 核心数据表
@@ -379,7 +520,7 @@ scripts/import-guides-from-jsonl.mjs
 | `posts` | 论坛与攻略等内容 |
 | `guides_meta` | 入学攻略扩展信息 |
 | `comments` | 跨模块评论 |
-| `reactions` | 点赞、收藏、课程评价“有用”、课程收藏 |
+| `reactions` | 点赞、收藏、课程评价“有用”、课程收藏、攻略收藏 |
 | `reports` | 举报 |
 | `admin_action_logs` | 管理员操作日志 |
 | `resources` / `resource_categories` | 常用网站导航 |
@@ -413,6 +554,7 @@ npm run typecheck
 - `UserMenu` logout form action 返回类型与 React form action 不匹配。
 - Supabase server / middleware cookie 回调的隐式 `any`。
 - `types/database.ts` 补充 Supabase 表结构需要的 `Relationships`、`Enums`、`CompositeTypes`。
+- `lib/supabase/types.ts` 引入 `AppSupabaseClient`，消除 server / client / middleware 中的隐式 `any`。
 - 由于当前 `types/database.ts` 仍是手写维护，`lib/supabase/server.ts` 和 `lib/supabase/client.ts` 对 Supabase 查询层做了保守类型放宽，业务层仍通过 `types/` 和 mapper 保持类型约束。
 
 后续如果接入 Supabase CLI，建议用官方命令重新生成数据库类型并替换 `types/database.ts`：
@@ -425,7 +567,9 @@ supabase gen types typescript --project-id <project-id> --schema public > types/
 
 - 课程 PDF 自动解析已支持本地 PDF 预览、目标正文清洗和 Assessment 原始分类展示，但不同学院 PDF 格式仍可能需要后续微调。
 - 课程评价后台筛选、评价排序和个人主页“我的收藏课程”入口仍待增强。
-- 入学攻略目前只有基础列表、详情和 seed 数据，收藏按钮、评论区、管理员 CRUD 和 JSONL 导入脚本仍待增强。
+- 入学攻略 JSONL 批量导入脚本、后台筛选分页、相关推荐仍待实现。
+- 全站搜索 `/search` 当前为占位页，尚未实现跨模块检索。
+- 首页因 Supabase cookies 为动态渲染；构建时若未连上数据库，动态区块日志可能报 `Dynamic server usage`，不影响页面正常访问。
 
 ## Git 注意事项
 

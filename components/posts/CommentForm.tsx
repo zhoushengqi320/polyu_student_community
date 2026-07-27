@@ -11,11 +11,17 @@ type CommentFormProps = {
   postId: string;
   canComment: boolean;
   isLoggedIn: boolean;
+  revalidatePath?: string;
 };
 
 const initialState: CommentFormState = {};
 
-export function CommentForm({ postId, canComment, isLoggedIn }: CommentFormProps) {
+export function CommentForm({
+  postId,
+  canComment,
+  isLoggedIn,
+  revalidatePath,
+}: CommentFormProps) {
   const boundAction = createCommentAction.bind(null, postId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -49,6 +55,9 @@ export function CommentForm({ postId, canComment, isLoggedIn }: CommentFormProps
 
   return (
     <form ref={formRef} action={formAction} className="space-y-3">
+      {revalidatePath ? (
+        <input type="hidden" name="revalidatePath" value={revalidatePath} />
+      ) : null}
       <div className="space-y-2">
         <Label htmlFor="content">发表评论</Label>
         <textarea

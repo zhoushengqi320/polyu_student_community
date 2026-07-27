@@ -6,6 +6,7 @@ import {
   type OnboardingFormState,
 } from "@/lib/profile/actions";
 import { STUDENT_GRADES } from "@/constants/profileOptions";
+import { SITE_NAME } from "@/constants/site";
 import { type Profile } from "@/types/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,7 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
       <CardHeader>
         <CardTitle>完善个人资料</CardTitle>
         <CardDescription>
-          欢迎加入理大社区！请填写以下信息，完成后即可发帖、评论与互动。
+          欢迎加入{SITE_NAME}！请填写以下信息，完成后即可发帖、评论与互动。
         </CardDescription>
       </CardHeader>
       <CardContent>

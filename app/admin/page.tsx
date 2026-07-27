@@ -10,6 +10,7 @@ import {
   getAllForumPosts,
   listUsers,
 } from "@/lib/db/admin";
+import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { getReports } from "@/lib/db/reports";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type AdminDashboardData } from "@/types/admin";
@@ -21,6 +22,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   forumPosts: [],
   forumComments: [],
   courseReviews: [],
+  guides: [],
   adminActions: [],
   isDatabaseConfigured: false,
 };
@@ -49,6 +51,7 @@ export default async function AdminPage() {
         forumComments,
         courseReviews,
         adminActions,
+        guides,
       ] =
         await Promise.all([
           getAdminStats(),
@@ -58,6 +61,7 @@ export default async function AdminPage() {
           getAllForumComments({ pageSize: 100 }),
           getAllCourseReviews({ pageSize: 100 }),
           getAdminActions({ pageSize: 100 }),
+          getAllGuidesForAdmin({ pageSize: 100 }),
         ]);
 
       dashboardData = {
@@ -68,6 +72,7 @@ export default async function AdminPage() {
         forumComments,
         courseReviews,
         adminActions,
+        guides,
         isDatabaseConfigured,
       };
     } catch (error) {

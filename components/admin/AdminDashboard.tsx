@@ -9,6 +9,7 @@ import { ReportTable } from "@/components/admin/ReportTable";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
 import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
+import { GuidesAdminPanel } from "@/components/admin/guides/GuidesAdminPanel";
 import { type AdminDashboardData } from "@/types/admin";
 import { cn } from "@/lib/utils/cn";
 
@@ -58,6 +59,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>在「举报中心」可审核用户举报，删除违规内容或更新举报状态。</li>
               <li>在「帖子管理」「评论管理」中可查看含已删除内容在内的全部讨论区数据。</li>
+              <li>在「攻略管理」中可创建草稿、编辑内容、发布或隐藏攻略。</li>
               <li>所有管理操作会写入操作记录，便于后续审计。</li>
             </ul>
           </section>
@@ -78,6 +80,10 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
 
       {activeTab === "course-reviews" ? (
         <CourseReviewsTable reviews={data.courseReviews} />
+      ) : null}
+
+      {activeTab === "guides" ? (
+        <GuidesAdminPanel guides={data.guides} />
       ) : null}
 
       {activeTab === "users" ? (

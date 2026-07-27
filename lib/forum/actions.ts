@@ -229,7 +229,9 @@ export async function createCommentAction(
       parentId: parsed.data.parentId ?? null,
     });
 
-    revalidatePath(ROUTES.forum.detail(postId));
+    const revalidatePathValue =
+      String(formData.get("revalidatePath") ?? "") || ROUTES.forum.detail(postId);
+    revalidatePath(revalidatePathValue);
     return {};
   } catch (error) {
     return {

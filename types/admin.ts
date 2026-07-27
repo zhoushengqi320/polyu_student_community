@@ -3,6 +3,7 @@ import {
   type AdminActionLogWithAdmin,
   type ReportWithReporter,
 } from "@/types/report";
+import { type AdminGuideDetail } from "@/types/guide";
 import { type ProfileListItem } from "@/types/user";
 
 export type AdminStats = {
@@ -86,6 +87,7 @@ export type AdminDashboardData = {
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
   courseReviews: AdminCourseReviewListItem[];
+  guides: AdminGuideDetail[];
   adminActions: AdminActionLogWithAdmin[];
   isDatabaseConfigured: boolean;
 };

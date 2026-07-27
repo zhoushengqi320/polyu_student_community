@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { CommentReplyForm } from "@/components/forum/CommentReplyForm";
+import { DeleteCommentButton } from "@/components/posts/DeleteCommentButton";
 import { FORUM_REPORT_TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
@@ -15,6 +16,9 @@ type ForumCommentListProps = {
   isLoggedIn: boolean;
   canComment: boolean;
   totalCount: number;
+  revalidatePath?: string;
+  currentUserId?: string;
+  isAdmin?: boolean;
 };
 
 function getAuthorName(comment: CommentThreadItem): string {
@@ -26,6 +30,9 @@ type CommentThreadNodeProps = {
   postId: string;
   isLoggedIn: boolean;
   canComment: boolean;
+  revalidatePath: string;
+  currentUserId?: string;
+  isAdmin?: boolean;
 };
 
 function flattenReplies(comment: CommentThreadItem): CommentThreadItem[] {
@@ -40,8 +47,12 @@ function CommentActions({
   postId,
   isLoggedIn,
   canComment,
+  revalidatePath,
+  currentUserId,
+  isAdmin = false,
 }: CommentThreadNodeProps) {
-  const revalidatePath = ROUTES.forum.detail(postId);
+  const canDelete =
+    isLoggedIn && (isAdmin || (currentUserId != null && comment.userId === currentUserId));
 
   return (
     <div className="flex items-center gap-1">
@@ -51,6 +62,13 @@ function CommentActions({
           parentCommentId={comment.id}
           replyToName={getAuthorName(comment)}
           canComment={canComment}
+          revalidatePath={revalidatePath}
+        />
+      ) : null}
+      {canDelete ? (
+        <DeleteCommentButton
+          commentId={comment.id}
+          revalidatePath={revalidatePath}
         />
       ) : null}
       <ReportDialog
@@ -71,6 +89,9 @@ function CommentThreadNode({
   postId,
   isLoggedIn,
   canComment,
+  revalidatePath,
+  currentUserId,
+  isAdmin,
 }: CommentThreadNodeProps) {
   const replies = flattenReplies(comment);
   const commentsById = new Map(
@@ -96,6 +117,9 @@ function CommentThreadNode({
           postId={postId}
           isLoggedIn={isLoggedIn}
           canComment={canComment}
+          revalidatePath={revalidatePath}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       </div>
 
@@ -133,6 +157,9 @@ function CommentThreadNode({
                   postId={postId}
                   isLoggedIn={isLoggedIn}
                   canComment={canComment}
+                  revalidatePath={revalidatePath}
+                  currentUserId={currentUserId}
+                  isAdmin={isAdmin}
                 />
               </div>
 
@@ -151,6 +178,9 @@ export function ForumCommentList({
   isLoggedIn,
   canComment,
   totalCount,
+  revalidatePath = ROUTES.forum.detail(postId),
+  currentUserId,
+  isAdmin = false,
 }: ForumCommentListProps) {
   if (comments.length === 0) {
     return (
@@ -175,6 +205,9 @@ export function ForumCommentList({
             postId={postId}
             isLoggedIn={isLoggedIn}
             canComment={canComment}
+            revalidatePath={revalidatePath}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
           />
         ))}
       </ul>
