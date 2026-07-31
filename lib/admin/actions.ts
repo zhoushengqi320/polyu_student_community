@@ -6,11 +6,16 @@ import {
   adminDeleteCourseReview,
   adminDeleteForumComment,
   adminDeleteForumPost,
+  adminDeleteReportedPost,
   banUser,
   hideContent,
   unbanUser,
   verifyPolyuUser,
 } from "@/lib/db/admin";
+import {
+  adminHideFoodPlace,
+  adminSoftDeleteFoodRecommendation,
+} from "@/lib/db/food";
 import { updateReportStatus } from "@/lib/db/reports";
 import { REPORT_STATUS } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
@@ -119,6 +124,23 @@ export async function adminDeleteForumPostAction(
   );
 }
 
+export async function adminDeleteReportedPostAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const postId = String(formData.get("postId") ?? "");
+
+  if (!postId) {
+    return { error: "无效的内容 ID" };
+  }
+
+  return runAdminAction(
+    () => adminDeleteReportedPost(postId, admin.id),
+    "内容已删除",
+  );
+}
+
 export async function adminDeleteForumCommentAction(
   _prevState: AdminActionState,
   formData: FormData,
@@ -151,6 +173,53 @@ export async function adminDeleteCourseReviewAction(
     () => adminDeleteCourseReview(reviewId, admin.id),
     "课程评价已删除",
   );
+}
+
+export async function adminHideFoodPlaceAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const placeId = String(formData.get("placeId") ?? "");
+
+  if (!placeId) {
+    return { error: "无效的地点 ID" };
+  }
+
+  try {
+    await adminHideFoodPlace(placeId, admin.id);
+    revalidatePath(ROUTES.admin);
+    revalidatePath(ROUTES.food.list);
+    revalidatePath(ROUTES.food.detail(placeId));
+    return { success: "地点已隐藏" };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "操作失败，请稍后重试",
+    };
+  }
+}
+
+export async function adminDeleteFoodRecommendationAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const recommendationId = String(formData.get("recommendationId") ?? "");
+
+  if (!recommendationId) {
+    return { error: "无效的推荐 ID" };
+  }
+
+  try {
+    await adminSoftDeleteFoodRecommendation(recommendationId, admin.id);
+    revalidatePath(ROUTES.admin);
+    revalidatePath(ROUTES.food.list);
+    return { success: "推荐已删除" };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "操作失败，请稍后重试",
+    };
+  }
 }
 
 export async function resolveReportAction(

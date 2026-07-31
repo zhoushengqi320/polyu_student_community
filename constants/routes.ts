@@ -1,49 +1,64 @@
-import { MODULE_REGISTRY } from "@/constants/modules";
+import {
+  MODULE_REGISTRY,
+  PERMANENT_MODULES,
+  SEASONAL_MODULES,
+} from "@/constants/modules";
+import { isFeatureEnabled } from "@/constants/features";
 
 export const ROUTES = {
   home: "/",
-  search: (query?: string) =>
-    query?.trim() ? `/search?q=${encodeURIComponent(query.trim())}` : "/search",
   login: "/auth/login",
   signup: "/auth/login",
   onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
   admin: "/admin",
+  search: (q?: string, type?: string) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (type && type !== "all") params.set("type", type);
+    const query = params.toString();
+    return query ? `/search?${query}` : "/search";
+  },
+  about: {
+    privacy: "/about/privacy",
+    terms: "/about/terms",
+    copyright: "/about/copyright",
+    communityRules: "/about/community-rules",
+  },
   courses: {
     list: MODULE_REGISTRY.courses.route,
     detail: (courseCode: string) => `/courses/${courseCode}`,
     review: (courseCode: string) => `/courses/${courseCode}/review`,
   },
-  guides: {
-    list: MODULE_REGISTRY.guides.route,
-    detail: (id: string) => `/guides/${id}`,
-  },
   food: {
     list: MODULE_REGISTRY.food.route,
     detail: (id: string) => `/food/${id}`,
+    new: `${MODULE_REGISTRY.food.route}/new`,
   },
-  resources: {
-    list: MODULE_REGISTRY.resources.route,
+  study: {
+    list: MODULE_REGISTRY.study.route,
+    detail: (id: string) => `/study/${id}`,
   },
-  buddy: {
-    list: MODULE_REGISTRY.buddy.route,
-    detail: (id: string) => `/buddy/${id}`,
+  life: {
+    list: MODULE_REGISTRY.life.route,
+    detail: (id: string) => `/life/${id}`,
   },
   forum: {
     list: MODULE_REGISTRY.forum.route,
     detail: (id: string) => `/forum/${id}`,
     new: `${MODULE_REGISTRY.forum.route}/new`,
+    edit: (id: string) => `/forum/${id}/edit`,
+  },
+  guides: {
+    list: MODULE_REGISTRY.guides.route,
+    detail: (id: string) => `/guides/${id}`,
   },
 } as const;
 
-export const NAV_ITEMS = [
-  MODULE_REGISTRY.courses,
-  MODULE_REGISTRY.guides,
-  MODULE_REGISTRY.food,
-  MODULE_REGISTRY.resources,
-  MODULE_REGISTRY.buddy,
-  MODULE_REGISTRY.forum,
-] as const;
+/** 顶栏 / 移动端导航：常驻模块 +（可选）开学季临时板块置右 */
+export const NAV_ITEMS = isFeatureEnabled("seasonalGuides")
+  ? [...PERMANENT_MODULES, ...SEASONAL_MODULES]
+  : [...PERMANENT_MODULES];
 
 export const AUTH_NAV_ITEMS = [
   { label: "理大邮箱登录", href: ROUTES.login },

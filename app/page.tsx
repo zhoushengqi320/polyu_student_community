@@ -1,14 +1,16 @@
 import { getHomePageData } from "@/lib/db/home";
+import { isFeatureEnabled } from "@/constants/features";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CoreModuleGrid } from "@/components/home/CoreModuleGrid";
 import { FeaturedCoursesSection } from "@/components/home/FeaturedCoursesSection";
 import { LatestCourseReviewsSection } from "@/components/home/LatestCourseReviewsSection";
 import { LatestForumPostsSection } from "@/components/home/LatestForumPostsSection";
 import { FeaturedGuidesSection } from "@/components/home/FeaturedGuidesSection";
-import { QuickResourcesSection } from "@/components/home/QuickResourcesSection";
+import { HomeValueSection } from "@/components/home/HomeValueSection";
 
 export default async function HomePage() {
   const data = await getHomePageData();
+  const showSeasonalGuides = isFeatureEnabled("seasonalGuides");
 
   return (
     <div>
@@ -21,12 +23,14 @@ export default async function HomePage() {
           </div>
         ) : null}
 
+        <HomeValueSection />
         <CoreModuleGrid />
         <FeaturedCoursesSection result={data.featuredCourses} />
         <LatestCourseReviewsSection result={data.latestReviews} />
         <LatestForumPostsSection result={data.latestPosts} />
-        <FeaturedGuidesSection result={data.featuredGuides} />
-        <QuickResourcesSection result={data.quickResources} />
+        {showSeasonalGuides ? (
+          <FeaturedGuidesSection result={data.featuredGuides} />
+        ) : null}
       </div>
     </div>
   );

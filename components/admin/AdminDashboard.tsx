@@ -9,7 +9,8 @@ import { ReportTable } from "@/components/admin/ReportTable";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
 import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
-import { GuidesAdminPanel } from "@/components/admin/guides/GuidesAdminPanel";
+import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel";
+import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
 import { type AdminDashboardData } from "@/types/admin";
 import { cn } from "@/lib/utils/cn";
 
@@ -59,7 +60,8 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>在「举报中心」可审核用户举报，删除违规内容或更新举报状态。</li>
               <li>在「帖子管理」「评论管理」中可查看含已删除内容在内的全部讨论区数据。</li>
-              <li>在「攻略管理」中可创建草稿、编辑内容、发布或隐藏攻略。</li>
+              <li>在「课程目录」中可新增或编辑课程基础信息。</li>
+              <li>在「内容管理」中可维护入学攻略、学习指南、生活指南（支持 Markdown 预览与图片上传）。</li>
               <li>所有管理操作会写入操作记录，便于后续审计。</li>
             </ul>
           </section>
@@ -78,12 +80,20 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
         <ForumCommentsTable comments={data.forumComments} />
       ) : null}
 
+      {activeTab === "courses" ? (
+        <CoursesAdminPanel courses={data.courses} />
+      ) : null}
+
       {activeTab === "course-reviews" ? (
         <CourseReviewsTable reviews={data.courseReviews} />
       ) : null}
 
       {activeTab === "guides" ? (
-        <GuidesAdminPanel guides={data.guides} />
+        <ContentCmsPanel
+          guides={data.guides}
+          studyArticles={data.studyArticles}
+          lifeArticles={data.lifeArticles}
+        />
       ) : null}
 
       {activeTab === "users" ? (

@@ -35,12 +35,7 @@ export default async function NewForumPostPage() {
   return (
     <ModulePageShell
       title="发布帖子"
-      description="自由讨论区 · 分享你的经验与问题"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.forum.list}>返回讨论区</Link>
-        </Button>
-      }
+      description="自由讨论区 · 分享经验、提问，或发布找搭子信息"
     >
       <ForumPostForm />
     </ModulePageShell>

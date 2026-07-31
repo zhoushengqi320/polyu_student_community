@@ -61,7 +61,8 @@ export function ReportDialog({
     [TARGET_TYPES.comment]: "评论",
     [TARGET_TYPES.course]: "课程",
     [TARGET_TYPES.course_review]: "课程评价",
-    [TARGET_TYPES.food_recommendation]: "美食推荐",
+    [TARGET_TYPES.food_place]: "地点",
+    [TARGET_TYPES.food_recommendation]: "推荐",
     [TARGET_TYPES.buddy_post]: "找搭子内容",
     [TARGET_TYPES.profile]: "用户资料",
   };

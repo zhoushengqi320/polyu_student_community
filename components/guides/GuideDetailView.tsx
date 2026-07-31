@@ -1,8 +1,8 @@
-import { Bookmark, CalendarCheck, Clock, UserRound } from "lucide-react";
+import { Bookmark, CalendarCheck, UserRound } from "lucide-react";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { GuideCommentSection } from "@/components/guides/GuideCommentSection";
 import { GuideFavoriteButton } from "@/components/guides/GuideFavoriteButton";
-import { MarkdownContent } from "@/components/guides/MarkdownContent";
+import { RichContent } from "@/components/common/RichContent";
 import {
   Card,
   CardContent,
@@ -53,12 +53,6 @@ export function GuideDetailView({
             <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
               {categoryLabel}
             </span>
-            {guide.meta?.estimatedReadingTime ? (
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-4 w-4" aria-hidden="true" />
-                {guide.meta.estimatedReadingTime} 分钟阅读
-              </span>
-            ) : null}
             {guide.isFavorited ? (
               <span className="inline-flex items-center gap-1 text-primary">
                 <Bookmark className="h-4 w-4" aria-hidden="true" />
@@ -67,8 +61,7 @@ export function GuideDetailView({
             ) : null}
           </div>
           <div>
-            <CardTitle className="text-2xl">{guide.title}</CardTitle>
-            <CardDescription className="mt-2">
+            <CardDescription>
               {guide.author.displayName ?? guide.author.username}
             </CardDescription>
           </div>
@@ -114,7 +107,7 @@ export function GuideDetailView({
 
       <Card>
         <CardContent className="pt-6">
-          <MarkdownContent content={guide.content} />
+          <RichContent content={guide.content} stripTitle={guide.title} />
         </CardContent>
       </Card>
 

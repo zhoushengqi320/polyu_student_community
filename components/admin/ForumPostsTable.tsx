@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Newspaper } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
 import { adminDeleteForumPostAction } from "@/lib/admin/actions";
-import { getForumCategoryLabel } from "@/constants/forum";
 import { ROUTES } from "@/constants/routes";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -28,12 +27,11 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[880px] text-left text-sm">
+      <table className="w-full min-w-[780px] text-left text-sm">
         <thead className="border-b bg-muted/40">
           <tr>
             <th className="px-4 py-3 font-medium">标题</th>
             <th className="px-4 py-3 font-medium">作者</th>
-            <th className="px-4 py-3 font-medium">分类</th>
             <th className="px-4 py-3 font-medium">状态</th>
             <th className="px-4 py-3 font-medium">发布时间</th>
             <th className="px-4 py-3 font-medium text-right">操作</th>
@@ -42,7 +40,6 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
         <tbody>
           {posts.map((post) => {
             const isDeleted = Boolean(post.deletedAt);
-            const categoryLabel = getForumCategoryLabel(post.categoryId);
 
             return (
               <tr key={post.id} className="border-b last:border-0">
@@ -57,7 +54,6 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
                 <td className="px-4 py-3">
                   {post.author.displayName ?? post.author.username}
                 </td>
-                <td className="px-4 py-3">{categoryLabel ?? "—"}</td>
                 <td className="px-4 py-3">
                   {isDeleted ? (
                     <TagBadge label="Deleted" className="bg-destructive/10 text-destructive" />

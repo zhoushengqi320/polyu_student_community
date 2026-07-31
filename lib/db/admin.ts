@@ -372,14 +372,21 @@ export async function adminDeleteForumPost(
   const supabase = await createClient();
   const deletedAt = new Date().toISOString();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .update({ deleted_at: deletedAt })
     .eq("id", postId)
-    .eq("module", FORUM_MODULE);
+    .eq("module", FORUM_MODULE)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     throw new DbError(error.message);
+  }
+
+  if (!data) {
+    throw new DbError("论坛帖不存在或已删除", "VALIDATION");
   }
 
   await createAdminAction({
@@ -391,6 +398,56 @@ export async function adminDeleteForumPost(
   });
 
   await resolveReportsForTarget(TARGET_TYPES.post, postId, adminId);
+}
+
+export async function adminDeleteReportedPost(
+  postId: string,
+  adminId: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("id, module, deleted_at")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  if (!data) {
+    throw new DbError("内容不存在", "VALIDATION");
+  }
+
+  if (data.deleted_at) {
+    await resolveReportsForTarget(TARGET_TYPES.post, postId, adminId);
+    return;
+  }
+
+  const postModule = String(data.module);
+
+  if (postModule === FORUM_MODULE) {
+    await adminDeleteForumPost(postId, adminId);
+    return;
+  }
+
+  if (postModule === "guides") {
+    const { adminDeleteGuide } = await import("@/lib/db/guides");
+    await adminDeleteGuide(postId, adminId);
+    return;
+  }
+
+  if (postModule === "study" || postModule === "life") {
+    const { deleteContentArticle } = await import("@/lib/db/contentCms");
+    await deleteContentArticle(postModule, postId, adminId);
+    return;
+  }
+
+  throw new DbError(`不支持删除 module=${postModule} 的内容`, "VALIDATION");
 }
 
 export async function adminDeleteForumComment(

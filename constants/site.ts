@@ -7,7 +7,7 @@ export const SCHOOL_SHORT = "理大";
 export const SITE_SLOGAN = "选课前，先查 PolyUHub";
 
 export const SITE_DESCRIPTION =
-  "PolyU 学生自己的校园信息社区 — 课程评价、入学攻略、美食推荐、找搭子";
+  "PolyU 学生自己的校园信息社区 — 课程评价、吃喝玩乐、学习指南、生活指南、自由讨论区";
 
 export const SITE_TAGLINE = SITE_SLOGAN;
 

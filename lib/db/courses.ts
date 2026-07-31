@@ -230,20 +230,20 @@ export async function createCourseReview(
     .insert({
       course_id: input.courseId,
       user_id: input.userId,
-      semester: "unknown",
-      teacher_name: null,
+      semester: input.semester,
+      teacher_name: input.teacherName,
       overall_rating: input.overallRating,
       difficulty_rating: input.difficultyRating,
-      workload_rating: input.overallRating,
-      grading_rating: input.overallRating,
-      exam_difficulty: null,
-      teaching_rating: input.overallRating,
-      exam_type: null,
-      assignment_type: null,
-      attendance_required: null,
+      workload_rating: input.workloadRating,
+      grading_rating: input.gradingRating,
+      exam_difficulty: input.examDifficulty,
+      teaching_rating: input.teachingRating,
+      exam_type: input.examType,
+      assignment_type: input.assignmentType,
+      attendance_required: input.attendanceRequired,
       content: input.reviewText,
       review_text: input.reviewText,
-      tips: null,
+      tips: input.tips,
       is_anonymous: input.isAnonymous,
       tags: input.tags,
       status: CONTENT_STATUS.published,
@@ -261,6 +261,7 @@ export async function createCourseReview(
 export async function softDeleteCourseReview(
   reviewId: string,
   userId: string,
+  options: { allowAdmin?: boolean } = {},
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -274,15 +275,132 @@ export async function softDeleteCourseReview(
       ReturnType<typeof supabase.from>["update"]
     >;
   };
-  const { error } = await courseReviews
+
+  let query = courseReviews
     .update({
       status: CONTENT_STATUS.hidden,
       deleted_at: new Date().toISOString(),
     })
     .eq("id", reviewId)
-    .eq("user_id", userId);
+    .is("deleted_at", null);
+
+  if (!options.allowAdmin) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query.select("id").maybeSingle();
 
   if (error) {
     throw new DbError(error.message);
   }
+  if (!data) {
+    throw new DbError("评价不存在或无权删除");
+  }
+}
+
+export async function listCoursesForAdmin(limit = 200): Promise<CourseWithStats[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("school_id", DEFAULT_SCHOOL_ID)
+    .order("code", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  return ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats);
+}
+
+export async function createCourse(input: {
+  code: string;
+  name: string;
+  department: string;
+  faculty?: string | null;
+  level?: string | null;
+  credits?: number | null;
+  description?: string | null;
+  prerequisites?: string | null;
+  teachingPattern?: string | null;
+  semesterOffered?: string | null;
+}): Promise<CourseWithStats> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .insert({
+      code: input.code.trim().toUpperCase(),
+      name: input.name.trim(),
+      department: input.department,
+      faculty: input.faculty ?? null,
+      level: input.level ?? null,
+      credits: input.credits ?? null,
+      description: input.description ?? null,
+      prerequisites: input.prerequisites ?? null,
+      teaching_pattern: input.teachingPattern ?? null,
+      semester_offered: input.semesterOffered ?? null,
+      school_id: DEFAULT_SCHOOL_ID,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new DbError(error?.message ?? "创建课程失败");
+  }
+
+  return mapCourseWithStats(data as CourseWithStatsRow);
+}
+
+export async function updateCourse(
+  courseId: string,
+  input: {
+    code: string;
+    name: string;
+    department: string;
+    faculty?: string | null;
+    level?: string | null;
+    credits?: number | null;
+    description?: string | null;
+    prerequisites?: string | null;
+    teachingPattern?: string | null;
+    semesterOffered?: string | null;
+  },
+): Promise<CourseWithStats> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .update({
+      code: input.code.trim().toUpperCase(),
+      name: input.name.trim(),
+      department: input.department,
+      faculty: input.faculty ?? null,
+      level: input.level ?? null,
+      credits: input.credits ?? null,
+      description: input.description ?? null,
+      prerequisites: input.prerequisites ?? null,
+      teaching_pattern: input.teachingPattern ?? null,
+      semester_offered: input.semesterOffered ?? null,
+    })
+    .eq("id", courseId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new DbError(error?.message ?? "更新课程失败");
+  }
+
+  return mapCourseWithStats(data as CourseWithStatsRow);
 }

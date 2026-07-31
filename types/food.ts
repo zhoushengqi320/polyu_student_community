@@ -34,9 +34,27 @@ export type FoodRecommendationWithAuthor = FoodRecommendation & {
   author: ProfileListItem;
 };
 
+export type FoodPlaceDetail = FoodPlaceWithStats & {
+  recommendations: FoodRecommendationWithAuthor[];
+};
+
 export type FoodFilters = {
   area?: FoodAreaId;
   search?: string;
   page?: number;
   pageSize?: number;
+};
+
+export type CreateFoodPlaceInput = {
+  name: string;
+  area: FoodAreaId;
+  address?: string | null;
+  tags?: string[];
+};
+
+export type CreateFoodRecommendationInput = {
+  placeId: string;
+  userId: string;
+  rating: number;
+  content: string;
 };

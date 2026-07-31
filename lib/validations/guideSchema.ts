@@ -40,7 +40,7 @@ const guideFieldsSchema = {
     .string()
     .trim()
     .min(10, "正文至少 10 个字")
-    .max(50000, "正文最多 50000 个字"),
+    .max(100000, "正文最多 100000 个字"),
   category: z.enum(categoryIds, { message: "请选择有效分类" }),
   targetAudience: z
     .string()

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Shield, User } from "lucide-react";
+import { LogOut, Shield, User, Bookmark } from "lucide-react";
 import { logoutFormAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
@@ -44,6 +44,12 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
             个人主页
           </Link>
         </Button>
+        <Button variant="ghost" className="w-full justify-start" asChild>
+          <Link href={`${profileHref}#favorites`}>
+            <Bookmark className="mr-2 h-4 w-4" />
+            我的收藏
+          </Link>
+        </Button>
         {showAdminLink ? (
           <Button variant="ghost" className="w-full justify-start" asChild>
             <Link href={ROUTES.admin}>
@@ -77,6 +83,9 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
         <Link href={profileHref} className="max-w-[140px] truncate">
           {displayName}
         </Link>
+      </Button>
+      <Button variant="ghost" size="sm" asChild>
+        <Link href={`${profileHref}#favorites`}>收藏</Link>
       </Button>
       <form action={logoutFormAction}>
         <Button type="submit" variant="outline" size="sm">

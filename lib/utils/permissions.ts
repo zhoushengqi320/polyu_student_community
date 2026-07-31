@@ -10,7 +10,8 @@ export type Permission =
   | "interaction:comment"
   | "content:create:forum"
   | "content:create:guide"
-  | "content:create:buddy"
+  | "content:create:study"
+  | "content:create:life"
   | "content:create:course_review"
   | "content:create:food"
   | "admin:access"
@@ -37,7 +38,8 @@ const ROLE_PERMISSIONS: Record<
     "content:create:food",
     "content:create:forum",
     "content:create:guide",
-    "content:create:buddy",
+    "content:create:study",
+    "content:create:life",
     "content:create:course_review",
   ],
   admin: [
@@ -48,7 +50,8 @@ const ROLE_PERMISSIONS: Record<
     "content:create:food",
     "content:create:forum",
     "content:create:guide",
-    "content:create:buddy",
+    "content:create:study",
+    "content:create:life",
     "content:create:course_review",
     "admin:access",
     "admin:manage_users",
@@ -60,8 +63,9 @@ const ROLE_PERMISSIONS: Record<
 const MODULE_CREATE_PERMISSION: Partial<Record<ModuleKey, Permission>> = {
   courses: "content:create:course_review",
   guides: "content:create:guide",
+  study: "content:create:study",
+  life: "content:create:life",
   food: "content:create:food",
-  buddy: "content:create:buddy",
   forum: "content:create:forum",
 };
 
@@ -126,6 +130,13 @@ export function canCreateInModule(
 
 export function isAdmin(user: SessionUser | null): boolean {
   return getEffectiveRole(user) === USER_ROLES.admin;
+}
+
+export function canManageOwnContent(
+  user: SessionUser | null,
+  ownerId: string,
+): boolean {
+  return Boolean(user && (user.id === ownerId || isAdmin(user)));
 }
 
 export function isBanned(user: SessionUser | null): boolean {

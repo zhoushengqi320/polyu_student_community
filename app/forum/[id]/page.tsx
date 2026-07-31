@@ -17,7 +17,7 @@ import {
 } from "@/lib/db/forum";
 import { hasReaction } from "@/lib/db/reactions";
 import { ROUTES } from "@/constants/routes";
-import { can } from "@/lib/utils/permissions";
+import { can, canManageOwnContent } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
 
 type ForumDetailPageProps = {
@@ -85,6 +85,7 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
           isLiked={isLiked}
           isFavorited={isFavorited}
           canInteract={canInteract}
+          canManage={canManageOwnContent(user, post.userId)}
           isLoggedIn={Boolean(user)}
         />
 

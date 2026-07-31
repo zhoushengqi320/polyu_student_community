@@ -32,7 +32,7 @@ export function HomeSearchBox({ className }: HomeSearchBoxProps) {
           <Input
             name="q"
             type="search"
-            placeholder="搜索课程、攻略、帖子、资源…"
+            placeholder="搜索课程、指南、帖子、攻略…"
             className="h-11 pl-9"
           />
         </div>

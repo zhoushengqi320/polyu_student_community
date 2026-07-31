@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Eye, Flame, MessageSquare } from "lucide-react";
 import { ForumReactionButtons } from "@/components/forum/ForumReactionButtons";
+import { DeleteContentButton } from "@/components/common/DeleteContentButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { TopicBadge } from "@/components/forum/TopicBadge";
-import { TagBadge } from "@/components/common/TagBadge";
-import { buildForumUrl, getForumCategoryLabel } from "@/constants/forum";
+import { buildForumUrl } from "@/constants/forum";
 import { FORUM_REPORT_TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { deleteForumPostAction } from "@/lib/forum/actions";
 import { formatDateTime } from "@/lib/utils/formatDate";
 import { type ForumPostDetail } from "@/types/forum";
 
@@ -17,6 +19,7 @@ type ForumPostDetailViewProps = {
   isLiked: boolean;
   isFavorited: boolean;
   canInteract: boolean;
+  canManage: boolean;
   isLoggedIn: boolean;
 };
 
@@ -33,19 +36,15 @@ export function ForumPostDetailView({
   isLiked,
   isFavorited,
   canInteract,
+  canManage,
   isLoggedIn,
 }: ForumPostDetailViewProps) {
-  const categoryLabel = getForumCategoryLabel(post.categoryId);
-
   return (
     <Card>
       <CardHeader className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {categoryLabel ? <TagBadge label={categoryLabel} /> : null}
-          <span className="text-sm text-muted-foreground">
-            {formatDateTime(post.createdAt)}
-          </span>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          {formatDateTime(post.createdAt)}
+        </span>
         <CardTitle className="text-2xl">{post.title}</CardTitle>
 
         {post.topics.length > 0 ? (
@@ -94,14 +93,29 @@ export function ForumPostDetailView({
             canInteract={canInteract}
             revalidatePath={ROUTES.forum.detail(post.id)}
           />
-          <ReportDialog
-            targetType={FORUM_REPORT_TARGET_TYPES.post}
-            targetId={post.id}
-            isLoggedIn={isLoggedIn}
-            revalidatePath={ROUTES.forum.detail(post.id)}
-            triggerLabel="举报帖子"
-            triggerVariant="outline"
-          />
+          <div className="flex flex-wrap gap-2">
+            {canManage ? (
+              <>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={ROUTES.forum.edit(post.id)}>编辑</Link>
+                </Button>
+                <DeleteContentButton
+                  action={deleteForumPostAction.bind(null, post.id)}
+                  label="删除"
+                  title="确认删除帖子？"
+                  description="帖子删除后将不再公开显示，此操作无法在前台撤销。"
+                />
+              </>
+            ) : null}
+            <ReportDialog
+              targetType={FORUM_REPORT_TARGET_TYPES.post}
+              targetId={post.id}
+              isLoggedIn={isLoggedIn}
+              revalidatePath={ROUTES.forum.detail(post.id)}
+              triggerLabel="举报帖子"
+              triggerVariant="outline"
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

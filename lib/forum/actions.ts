@@ -5,37 +5,28 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { createComment } from "@/lib/db/comments";
-import { createForumPost } from "@/lib/db/forum";
-import { type CreateForumPostInput } from "@/types/forum";
+import {
+  createForumPost,
+  deleteForumPost,
+  getForumPostById,
+  updateForumPost,
+} from "@/lib/db/forum";
 import { DbError } from "@/lib/db/shared";
 import { commentSchema } from "@/lib/validations/commentSchema";
 import { forumPostSchema } from "@/lib/validations/forumPostSchema";
-import { postSchema } from "@/lib/validations/postSchema";
-import { createPost } from "@/lib/db/posts";
-import { assertCan } from "@/lib/utils/permissions";
+import { assertCan, canManageOwnContent } from "@/lib/utils/permissions";
 import { ROUTES } from "@/constants/routes";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
-export type PostFormState = {
-  error?: string;
-  fieldErrors?: Partial<Record<"title" | "content" | "categoryId", string>>;
-};
-
 export type ForumPostFormState = {
   error?: string;
-  fieldErrors?: Partial<
-    Record<"title" | "content" | "categoryId" | "topics", string>
-  >;
+  fieldErrors?: Partial<Record<"title" | "content" | "topics", string>>;
 };
 
 export type CommentFormState = {
   error?: string;
   fieldErrors?: Partial<Record<"content", string>>;
 };
-
-function unavailableState(): PostFormState {
-  return { error: "数据库未配置，无法发帖。" };
-}
 
 function unavailableForumState(): ForumPostFormState {
   return { error: "数据库未配置，无法发帖。" };
@@ -63,7 +54,6 @@ export async function createForumPostAction(
   const parsed = forumPostSchema.safeParse({
     title: formData.get("title"),
     content: formData.get("content"),
-    categoryId: formData.get("categoryId") || undefined,
     topics: formData.get("topics"),
     isAnonymous: formData.get("isAnonymous"),
   });
@@ -73,12 +63,7 @@ export async function createForumPostAction(
     const messages: string[] = [];
     for (const issue of parsed.error.issues) {
       const field = issue.path[0];
-      if (
-        field === "title" ||
-        field === "content" ||
-        field === "categoryId" ||
-        field === "topics"
-      ) {
+      if (field === "title" || field === "content" || field === "topics") {
         fieldErrors[field] = issue.message;
       }
       messages.push(issue.message);
@@ -94,7 +79,6 @@ export async function createForumPostAction(
       userId: user.id,
       title: parsed.data.title,
       content: parsed.data.content,
-      categoryId: parsed.data.categoryId as CreateForumPostInput["categoryId"],
       topics: parsed.data.topics,
       isAnonymous: parsed.data.isAnonymous,
     });
@@ -118,37 +102,39 @@ export async function createForumPostAction(
   }
 }
 
-/** @deprecated 使用 createForumPostAction */
-export async function createPostAction(
-  _prevState: PostFormState,
+export async function updateForumPostAction(
+  postId: string,
+  _prevState: ForumPostFormState,
   formData: FormData,
-): Promise<PostFormState> {
+): Promise<ForumPostFormState> {
   if (!isSupabaseConfigured()) {
-    return unavailableState();
+    return { error: "数据库未配置，无法编辑帖子。" };
   }
 
   const user = await getSessionUser();
   try {
     assertCan(user, "content:create:forum");
   } catch {
-    return { error: "需要理大认证用户才能发帖" };
+    return { error: "当前账号无法编辑帖子" };
   }
 
-  if (!user) {
-    return { error: "请先登录" };
+  const post = await getForumPostById(postId);
+  if (!user || !post || !canManageOwnContent(user, post.userId)) {
+    return { error: "帖子不存在或无权编辑" };
   }
 
-  const parsed = postSchema.safeParse({
+  const parsed = forumPostSchema.safeParse({
     title: formData.get("title"),
     content: formData.get("content"),
-    categoryId: formData.get("categoryId") || undefined,
+    topics: formData.get("topics"),
+    isAnonymous: formData.get("isAnonymous"),
   });
 
   if (!parsed.success) {
-    const fieldErrors: PostFormState["fieldErrors"] = {};
+    const fieldErrors: ForumPostFormState["fieldErrors"] = {};
     for (const issue of parsed.error.issues) {
       const field = issue.path[0];
-      if (field === "title" || field === "content" || field === "categoryId") {
+      if (field === "title" || field === "content" || field === "topics") {
         fieldErrors[field] = issue.message;
       }
     }
@@ -156,29 +142,48 @@ export async function createPostAction(
   }
 
   try {
-    const post = await createPost({
-      module: "forum",
-      userId: user.id,
-      title: parsed.data.title,
-      content: parsed.data.content,
-      categoryId: parsed.data.categoryId,
-    });
-
+    await updateForumPost(postId, post.userId, parsed.data);
     revalidatePath(ROUTES.forum.list);
-    redirect(ROUTES.forum.detail(post.id));
+    revalidatePath(ROUTES.forum.detail(postId));
+    redirect(ROUTES.forum.detail(postId));
   } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    console.error("Failed to create post:", error);
-
-    if (error instanceof DbError) {
-      return { error: error.message };
-    }
-
+    if (isRedirectError(error)) throw error;
     return {
-      error: "发帖失败，请稍后重试",
+      error: error instanceof DbError ? error.message : "更新帖子失败，请稍后重试",
+    };
+  }
+}
+
+export async function deleteForumPostAction(
+  postId: string,
+  _prevState: ForumPostFormState,
+  _formData: FormData,
+): Promise<ForumPostFormState> {
+  if (!isSupabaseConfigured()) {
+    return { error: "数据库未配置，无法删除帖子。" };
+  }
+
+  const user = await getSessionUser();
+  try {
+    assertCan(user, "content:create:forum");
+  } catch {
+    return { error: "当前账号无法删除帖子" };
+  }
+
+  const post = await getForumPostById(postId);
+  if (!user || !post || !canManageOwnContent(user, post.userId)) {
+    return { error: "帖子不存在或无权删除" };
+  }
+
+  try {
+    await deleteForumPost(postId, post.userId);
+    revalidatePath(ROUTES.forum.list);
+    revalidatePath(ROUTES.forum.detail(postId));
+    redirect(ROUTES.forum.list);
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return {
+      error: error instanceof DbError ? error.message : "删除帖子失败，请稍后重试",
     };
   }
 }
@@ -233,7 +238,7 @@ export async function createCommentAction(
       String(formData.get("revalidatePath") ?? "") || ROUTES.forum.detail(postId);
     revalidatePath(revalidatePathValue);
     return {};
-  } catch (error) {
+  } catch {
     return {
       error: "评论失败，请稍后重试",
     };

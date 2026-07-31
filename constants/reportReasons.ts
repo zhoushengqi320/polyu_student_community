@@ -41,6 +41,7 @@ export const TARGET_TYPES = {
   comment: "comment",
   course: "course",
   course_review: "course_review",
+  food_place: "food_place",
   food_recommendation: "food_recommendation",
   buddy_post: "buddy_post",
   profile: "profile",

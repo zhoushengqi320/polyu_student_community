@@ -1,19 +1,7 @@
-import { MODULE_REGISTRY } from "@/constants/modules";
-import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { getBuddyPostById } from "@/lib/db/buddy";
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
-type BuddyDetailPageProps = {
-  params: Promise<{ id: string }>;
-};
-
-export default async function BuddyDetailPage({ params }: BuddyDetailPageProps) {
-  const { id } = await params;
-  await getBuddyPostById(id);
-
-  return (
-    <ModulePageShell
-      title="找搭子详情"
-      description={`${MODULE_REGISTRY.buddy.label} · 详情页`}
-    />
-  );
+/** 找搭子已并入自由讨论区话题 */
+export default function BuddyDetailPage() {
+  redirect(ROUTES.forum.list);
 }

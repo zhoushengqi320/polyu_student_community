@@ -1,10 +1,12 @@
-import { type UserRole, type UserStatus } from "@/constants/userRoles";
+import { type AdminContentArticle } from "@/lib/db/contentCms";
+import { type AdminGuideDetail } from "@/types/guide";
+import { type CourseWithStats } from "@/types/course";
 import {
   type AdminActionLogWithAdmin,
   type ReportWithReporter,
 } from "@/types/report";
-import { type AdminGuideDetail } from "@/types/guide";
 import { type ProfileListItem } from "@/types/user";
+import { type UserRole, type UserStatus } from "@/constants/userRoles";
 
 export type AdminStats = {
   userCount: number;
@@ -87,7 +89,10 @@ export type AdminDashboardData = {
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
   courseReviews: AdminCourseReviewListItem[];
+  courses: CourseWithStats[];
   guides: AdminGuideDetail[];
+  studyArticles: AdminContentArticle[];
+  lifeArticles: AdminContentArticle[];
   adminActions: AdminActionLogWithAdmin[];
   isDatabaseConfigured: boolean;
 };

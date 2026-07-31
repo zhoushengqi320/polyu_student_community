@@ -1,5 +1,6 @@
 import {
   REPORT_STATUS,
+  TARGET_TYPES,
   type ReportReasonId,
   type ReportStatus,
   type TargetType,
@@ -74,6 +75,8 @@ export async function getReports(
 
   const { data, error } = await query;
 
+  let rows: ReportWithProfileRow[] = [];
+
   if (error) {
     const fallback = await supabase
       .from("reports")
@@ -86,14 +89,90 @@ export async function getReports(
       return [];
     }
 
-    return (fallback.data as ReportWithProfileRow[]).map(mapReportWithReporter);
+    rows = fallback.data as ReportWithProfileRow[];
+  } else {
+    rows = (data ?? []) as ReportWithProfileRow[];
   }
 
-  return ((data ?? []) as ReportWithProfileRow[]).map(mapReportWithReporter);
+  const reports = rows.map(mapReportWithReporter);
+  return attachReportTargets(reports);
 }
 
-/** @deprecated 使用 getReports */
-export const listReports = getReports;
+async function attachReportTargets(
+  reports: ReportWithReporter[],
+): Promise<ReportWithReporter[]> {
+  if (!isSupabaseConfigured() || reports.length === 0) {
+    return reports;
+  }
+
+  const supabase = await createClient();
+  let next = reports;
+
+  const postIds = [
+    ...new Set(
+      next
+        .filter((report) => report.targetType === TARGET_TYPES.post)
+        .map((report) => report.targetId),
+    ),
+  ];
+
+  if (postIds.length > 0) {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("id, module")
+      .in("id", postIds);
+
+    if (error || !data) {
+      console.error("Failed to load report post modules:", error);
+    } else {
+      const moduleById = new Map<string, string>();
+      for (const row of data as Array<{ id: string; module: string }>) {
+        moduleById.set(row.id, row.module);
+      }
+      next = next.map((report) =>
+        report.targetType === TARGET_TYPES.post
+          ? { ...report, postModule: moduleById.get(report.targetId) ?? null }
+          : report,
+      );
+    }
+  }
+
+  const recommendationIds = [
+    ...new Set(
+      next
+        .filter(
+          (report) => report.targetType === TARGET_TYPES.food_recommendation,
+        )
+        .map((report) => report.targetId),
+    ),
+  ];
+
+  if (recommendationIds.length > 0) {
+    const { data, error } = await supabase
+      .from("food_recommendations")
+      .select("id, place_id")
+      .in("id", recommendationIds);
+
+    if (error || !data) {
+      console.error("Failed to load report food places:", error);
+    } else {
+      const placeById = new Map<string, string>();
+      for (const row of data as Array<{ id: string; place_id: string }>) {
+        placeById.set(row.id, row.place_id);
+      }
+      next = next.map((report) =>
+        report.targetType === TARGET_TYPES.food_recommendation
+          ? {
+              ...report,
+              foodPlaceId: placeById.get(report.targetId) ?? null,
+            }
+          : report,
+      );
+    }
+  }
+
+  return next;
+}
 
 export async function getReportById(reportId: string): Promise<Report | null> {
   if (!isSupabaseConfigured()) {

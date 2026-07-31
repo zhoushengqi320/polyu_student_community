@@ -50,11 +50,6 @@ export default async function CourseReviewPage({ params }: CourseReviewPageProps
     <ModulePageShell
       title="撰写课程评价"
       description={`为 ${course.code.toUpperCase()} 撰写评价 · ${MODULE_REGISTRY.courses.label}`}
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.courses.detail(course.code)}>返回课程详情</Link>
-        </Button>
-      }
     >
       <CourseReviewForm courseCode={course.code} courseName={course.name} />
     </ModulePageShell>

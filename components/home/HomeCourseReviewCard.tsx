@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
+import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import { type HomeLatestCourseReview } from "@/types/home";
 
 type HomeCourseReviewCardProps = {
@@ -18,13 +19,13 @@ type HomeCourseReviewCardProps = {
 
 export function HomeCourseReviewCard({ review }: HomeCourseReviewCardProps) {
   return (
-    <Card className="h-full transition-shadow hover:shadow-md">
+    <Card className={interactiveCardClassName("h-full")}>
       <CardHeader className="space-y-2">
         <CardDescription>{formatRelativeTime(review.createdAt)}</CardDescription>
         <CardTitle className="line-clamp-2 text-base">
           <Link
             href={ROUTES.courses.detail(review.courseCode)}
-            className="hover:text-primary"
+            className="transition-colors hover:text-primary"
           >
             {review.courseCode} · {review.courseName}
           </Link>

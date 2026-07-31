@@ -1,35 +1,23 @@
-export const FORUM_CATEGORIES = [
-  { id: "course_help", label: "Course Help" },
-  { id: "exam_preparation", label: "Exam Preparation" },
-  { id: "internship_ra", label: "Internship / RA" },
-  { id: "housing", label: "Housing" },
-  { id: "second_hand", label: "Second-hand" },
-  { id: "campus_life", label: "Campus Life" },
-  { id: "lost_and_found", label: "Lost and Found" },
-  { id: "general_discussion", label: "General Discussion" },
-] as const;
-
-export type ForumCategoryId = (typeof FORUM_CATEGORIES)[number]["id"];
-
 export const FORUM_TOPIC_SUGGESTIONS = [
-  "Course Help",
-  "Exam Preparation",
-  "Internship / RA",
-  "Housing",
-  "Second-hand",
-  "Campus Life",
-  "Lost and Found",
-  "General Discussion",
+  "课程求助",
+  "考试复习",
+  "实习/RA",
+  "租房",
+  "二手",
+  "校园生活",
+  "失物招领",
+  "自由讨论",
+  "找搭子",
   "AMA3724",
   "COMP",
   "DSAI",
-  "Food",
-  "Hall",
+  "美食",
+  "宿舍",
 ] as const;
 
 export const FORUM_SORT_OPTIONS = [
   { id: "latest", label: "最新" },
-  { id: "hot", label: "热度" },
+  { id: "hot", label: "最热" },
   { id: "most_commented", label: "评论最多" },
   { id: "most_liked", label: "点赞最多" },
   { id: "most_viewed", label: "浏览最多" },
@@ -42,28 +30,15 @@ export const FORUM_MAX_TOPICS = 5;
 export const FORUM_MAX_TOPIC_LENGTH = 30;
 
 export const FORUM_DESCRIPTION =
-  "课程求助、考试复习、实习 RA、租房二手、校园生活都可以在这里讨论";
-
-export function isForumCategoryId(value: string): value is ForumCategoryId {
-  return FORUM_CATEGORIES.some((item) => item.id === value);
-}
+  "课程求助、考试复习、实习 RA、租房二手、找搭子、校园生活都可以在这里讨论。找学习搭子、约饭、组队或室友，请带上「找搭子」话题。";
 
 export function isForumSortId(value: string): value is ForumSortId {
   return FORUM_SORT_OPTIONS.some((item) => item.id === value);
 }
 
-export function getForumCategoryLabel(categoryId: string | null): string | null {
-  if (!categoryId) {
-    return null;
-  }
-
-  return FORUM_CATEGORIES.find((item) => item.id === categoryId)?.label ?? categoryId;
-}
-
 export function buildForumUrl(params: {
   q?: string;
   topic?: string;
-  category?: string;
   sort?: ForumSortId;
   page?: number;
 }) {
@@ -74,9 +49,6 @@ export function buildForumUrl(params: {
   }
   if (params.topic?.trim()) {
     search.set("topic", params.topic.trim());
-  }
-  if (params.category) {
-    search.set("category", params.category);
   }
   if (params.sort && params.sort !== "latest") {
     search.set("sort", params.sort);

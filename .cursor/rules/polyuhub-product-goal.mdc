@@ -13,16 +13,21 @@ Core slogan: **选课前，先查 PolyUHub。**
 
 ## Product Scope
 
-Always preserve the six core modules:
+Preserve these permanent core modules (navbar order):
 
-1. Course Reviews
-2. Freshman Guides
-3. Food Recommendations
-4. Useful Links / Resources
-5. Buddy Matching
-6. Forum
+1. Course Reviews（课程评价）
+2. Food & Fun（吃喝玩乐）
+3. Study Guides（学习指南）
+4. Life Guides（生活指南）
+5. Forum（自由讨论区）— 含找搭子话题（学习/约饭/运动/项目组队等）
 
-Supporting systems are also part of the product: Profile/Auth, Reports, Admin, Community Rules, and Search.
+Seasonal / temporary module (navbar rightmost when enabled via `FEATURES.seasonalGuides`):
+
+6. Freshman Guides（入学攻略）— 开学季专题，非常驻
+
+Do **not** expose Useful Links / Resources as a site module. Legacy `resources` DB tables may remain unused by the app.
+
+Supporting systems are also part of the product: Profile/Auth, Reports, Admin, Community Rules, Legal pages, and Search.
 
 PolyUHub is not just a forum. It should become a structured, searchable, interactive, and maintainable campus information hub that consolidates information currently scattered across chats, social media, official websites, Blackboard, and word of mouth.
 
@@ -53,7 +58,7 @@ Do not rewrite the project architecture or perform broad refactors unless explic
 - `types/` contains TypeScript types.
 - `supabase/migrations/` contains database schema and RLS changes.
 
-Do not put large business logic into `page.tsx`. Do not break existing forum, resources, auth, reports, or admin features.
+Do not put large business logic into `page.tsx`. Do not break existing forum, auth, reports, or admin features.
 
 ## Roles And Permissions
 
@@ -61,8 +66,8 @@ Support and respect these roles:
 
 - `guest`: browse public content only.
 - `user`: browse, like, favorite, comment, and report.
-- `verified_polyu_user`: create forum posts, course reviews, buddy posts, and participate fully.
-- `admin`: access admin dashboard and manage users, content, reports, resources, and reviews.
+- `verified_polyu_user`: create forum posts, course reviews, study/life/guide content where allowed, and participate fully.
+- `admin`: access admin dashboard and manage users, content, reports, and reviews.
 - `banned`: browse only; cannot create, comment, react, favorite, or report.
 
 Permission checks must stay centralized. Avoid scattered role checks in pages and components.
@@ -73,13 +78,13 @@ Course Reviews is the highest-impact module. It should help students evaluate co
 
 Forum is the current mature community template. Preserve support for categories, topics, fuzzy search, hot ranking, comments, flattened reply display, likes, favorites, reports, and admin moderation.
 
-Freshman Guides should help students through application, pre-arrival, arrival, school integration, life integration, and student experience sharing. First version may be admin-maintained with user comments.
+Study Guides and Life Guides are permanent content hubs aligned with campus learning and daily-life materials. Prefer reusing `posts` with `module = study | life`.
 
-Food Recommendations should support campus and nearby restaurant discovery, filtering, ratings, comments, favorites, reports, and user submissions.
+Freshman Guides is a seasonal temporary entry for pre-semester onboarding. Toggle with `FEATURES.seasonalGuides`; keep it rightmost in the navbar when enabled.
 
-Resources should be a PolyU tools navigation center with categories, cards, search, favorites, and admin maintenance.
+Food & Fun should support campus and nearby restaurant / leisure discovery, filtering, ratings, comments, favorites, reports, and user submissions.
 
-Buddy Matching should support lightweight social coordination such as study buddies, meal buddies, gym buddies, project teammates, MCM/ICM teammates, hackathon teammates, and roommates. First version should not include real-time chat, private messages, or matching algorithms.
+Buddy matching is **not** a standalone navbar module. Users post under Forum with the 「找搭子」 topic for study buddies, meal buddies, gym buddies, project/MCM/hackathon teammates, roommates, etc. Do not add real-time chat, private messages, or matching algorithms unless explicitly requested. Legacy `buddy_posts` DB tables may remain unused by the app.
 
 ## Shared Community Model
 
@@ -99,7 +104,7 @@ Prefer soft deletion with `deleted_at = now()` for user-generated content. Admin
 
 Short term: module-level search is acceptable.
 
-Long term: implement `/search?q=keyword` with optional type filters for courses, guides, food, resources, buddy posts, and forum posts.
+Long term: implement `/search?q=keyword` with optional type filters for courses, study, life, food, forum posts, and seasonal guides.
 
 ## Community Safety
 
@@ -119,12 +124,10 @@ The homepage should become a traffic entry point, not just an introduction page.
 - Global search
 - Browse course reviews CTA
 - Write course review CTA
-- Six core module entries
+- Permanent core module entries
+- Optional seasonal freshman guide entry
 - Popular courses
 - Latest discussions
-- Latest buddy posts
-- Freshman guide entry
-- Useful links entry
 - Value explanation
 - Footer unofficial disclaimer
 

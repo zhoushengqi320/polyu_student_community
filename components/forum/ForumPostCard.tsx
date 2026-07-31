@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { Eye, Flame, MessageSquare, ThumbsUp } from "lucide-react";
 import { TopicBadge } from "@/components/forum/TopicBadge";
-import { TagBadge } from "@/components/common/TagBadge";
-import { buildForumUrl, getForumCategoryLabel } from "@/constants/forum";
+import { buildForumUrl } from "@/constants/forum";
 import { ROUTES } from "@/constants/routes";
 import {
   Card,
@@ -12,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
+import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import { type ForumPostListItem } from "@/types/forum";
 
 type ForumPostCardProps = {
@@ -26,17 +26,15 @@ function getAuthorName(post: ForumPostListItem): string {
 }
 
 export function ForumPostCard({ post }: ForumPostCardProps) {
-  const categoryLabel = getForumCategoryLabel(post.categoryId);
-
   return (
-    <Card className="h-full transition-shadow hover:shadow-md">
+    <Card className={interactiveCardClassName("h-full")}>
       <CardHeader className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {categoryLabel ? <TagBadge label={categoryLabel} /> : null}
-          <CardDescription>{formatRelativeTime(post.createdAt)}</CardDescription>
-        </div>
-        <Link href={ROUTES.forum.detail(post.id)} className="group block">
-          <CardTitle className="line-clamp-2 text-lg group-hover:text-primary">
+        <CardDescription>{formatRelativeTime(post.createdAt)}</CardDescription>
+        <Link
+          href={ROUTES.forum.detail(post.id)}
+          className="group block rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <CardTitle className="line-clamp-2 text-lg transition-colors group-hover:text-primary">
             {post.title}
           </CardTitle>
           {post.excerpt ? (

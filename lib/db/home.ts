@@ -1,16 +1,14 @@
 import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
 import { CONTENT_STATUS } from "@/constants/contentStatus";
-import { HOME_LIMITS, QUICK_RESOURCE_TITLES } from "@/constants/home";
+import { HOME_LIMITS } from "@/constants/home";
 import { GUIDE_MODULE } from "@/constants/guides";
 import { listCourses } from "@/lib/db/courses";
 import { getForumPosts } from "@/lib/db/forum";
-import { listResources } from "@/lib/db/resources";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   type HomeLatestCourseReview,
   type HomePageData,
-  type HomeQuickResource,
   type HomeSectionResult,
 } from "@/types/home";
 import { type GuideListItem, type GuideMeta } from "@/types/guide";
@@ -33,7 +31,6 @@ function getEmptyHomePageData(isDatabaseConfigured: boolean): HomePageData {
     latestReviews: emptySection(),
     latestPosts: emptySection(),
     featuredGuides: emptySection(),
-    quickResources: emptySection(),
     isDatabaseConfigured,
   };
 }
@@ -221,35 +218,6 @@ export async function getFeaturedGuides(
   }
 }
 
-export async function getQuickResources(): Promise<
-  HomeSectionResult<HomeQuickResource>
-> {
-  try {
-    const resources = await listResources();
-    const titleOrder = new Map<string, number>(
-      QUICK_RESOURCE_TITLES.map((title, index) => [title, index]),
-    );
-
-    const matched = resources
-      .filter((resource) => titleOrder.has(resource.title))
-      .sort(
-        (left, right) =>
-          (titleOrder.get(left.title) ?? 999) - (titleOrder.get(right.title) ?? 999),
-      )
-      .map((resource) => ({
-        id: resource.id,
-        title: resource.title,
-        description: resource.description,
-        url: resource.url,
-      }));
-
-    return { items: matched };
-  } catch (error) {
-    console.error("Failed to get quick resources:", error);
-    return errorSection();
-  }
-}
-
 export async function getHomePageData(): Promise<HomePageData> {
   const isDatabaseConfigured = isSupabaseConfigured();
 
@@ -257,26 +225,19 @@ export async function getHomePageData(): Promise<HomePageData> {
     return getEmptyHomePageData(false);
   }
 
-  const [
-    featuredCourses,
-    latestReviews,
-    latestPosts,
-    featuredGuides,
-    quickResources,
-  ] = await Promise.all([
-    getFeaturedCourses(),
-    getLatestCourseReviews(),
-    getLatestForumPosts(),
-    getFeaturedGuides(),
-    getQuickResources(),
-  ]);
+  const [featuredCourses, latestReviews, latestPosts, featuredGuides] =
+    await Promise.all([
+      getFeaturedCourses(),
+      getLatestCourseReviews(),
+      getLatestForumPosts(),
+      getFeaturedGuides(),
+    ]);
 
   return {
     featuredCourses,
     latestReviews,
     latestPosts,
     featuredGuides,
-    quickResources,
     isDatabaseConfigured: true,
   };
 }

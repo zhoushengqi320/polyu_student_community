@@ -1,5 +1,4 @@
 import { type ContentStatus } from "@/constants/contentStatus";
-import { type CourseAttendanceId, type CourseSemesterId } from "@/constants/courseOptions";
 import { mapProfileListItem, type ProfileRow } from "@/lib/db/mappers/profile";
 import { type Database, type Json } from "@/types/database";
 import {
@@ -127,7 +126,7 @@ export function mapCourseReview(row: CourseReviewRow): CourseReview {
     id: row.id,
     courseId: row.course_id,
     userId: row.user_id,
-    semester: row.semester as CourseSemesterId,
+    semester: row.semester,
     teacherName: row.teacher_name,
     overallRating: row.overall_rating,
     difficultyRating: row.difficulty_rating,

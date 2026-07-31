@@ -62,7 +62,6 @@ export async function getForumPosts(
   const {
     query,
     topic,
-    category,
     sort = "latest",
     page = 1,
     pageSize = FORUM_PAGE_SIZE,
@@ -76,10 +75,6 @@ export async function getForumPosts(
   const supabase = await createClient();
   let dbQuery = buildForumBaseQuery(supabase).range(pagination.from, pagination.to);
   dbQuery = applyForumSort(dbQuery, sort);
-
-  if (category) {
-    dbQuery = dbQuery.eq("category_id", category);
-  }
 
   const trimmedQuery = query?.trim();
   if (trimmedQuery) {
@@ -139,7 +134,7 @@ export async function createForumPost(
       title: input.title,
       content: input.content,
       excerpt,
-      category_id: input.categoryId,
+      category_id: null,
       topics: input.topics,
       is_anonymous: input.isAnonymous,
       status: CONTENT_STATUS.published,
@@ -174,9 +169,6 @@ export async function updateForumPost(
     payload.content = input.content;
     payload.excerpt = buildPostExcerpt(input.content);
   }
-  if (input.categoryId !== undefined) {
-    payload.category_id = input.categoryId;
-  }
   if (input.topics !== undefined) {
     payload.topics = input.topics;
   }
@@ -206,15 +198,18 @@ export async function deleteForumPost(id: string, userId: string): Promise<void>
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("posts")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", userId)
-    .eq("module", FORUM_MODULE);
+    .eq("module", FORUM_MODULE)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    throw new DbError(error.message);
+  if (error || !data) {
+    throw new DbError(error?.message ?? "帖子不存在或无权删除");
   }
 }
 
@@ -284,6 +279,3 @@ export async function getForumTopics(limit = 20): Promise<string[]> {
     .slice(0, limit)
     .map(([topic]) => topic);
 }
-
-/** @deprecated 使用 getForumPosts */
-export const getForumPostsAlias = getForumPosts;

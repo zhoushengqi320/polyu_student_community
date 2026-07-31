@@ -1,15 +1,9 @@
 import { z } from "zod";
 import {
-  FORUM_CATEGORIES,
   FORUM_MAX_TOPIC_LENGTH,
   FORUM_MAX_TOPICS,
   FORUM_TOPIC_SUGGESTIONS,
 } from "@/constants/forum";
-
-const forumCategoryIds = FORUM_CATEGORIES.map((item) => item.id) as [
-  string,
-  ...string[],
-];
 
 function normalizeTopics(raw: unknown): string[] {
   if (typeof raw === "string") {
@@ -45,7 +39,6 @@ export const forumPostSchema = z.object({
     .trim()
     .min(10, "内容至少 10 个字符")
     .max(5000, "内容最多 5000 个字符"),
-  categoryId: z.enum(forumCategoryIds, { message: "请选择分类" }),
   topics: z
     .preprocess(normalizeTopics, z.array(topicSchema))
     .refine((items) => items.length <= FORUM_MAX_TOPICS, {

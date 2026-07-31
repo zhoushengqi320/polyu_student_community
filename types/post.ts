@@ -30,14 +30,6 @@ export type PostDetail = Post & {
   likeCount: number;
 };
 
-export type CreatePostInput = {
-  module: ModuleKey;
-  userId: string;
-  title: string;
-  content: string;
-  categoryId?: string;
-};
-
 export type CreateCommentInput = {
   targetType: "post";
   targetId: string;

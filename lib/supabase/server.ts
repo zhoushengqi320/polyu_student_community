@@ -1,18 +1,20 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { type Database } from "@/types/database";
-import { type AppSupabaseClient } from "@/lib/supabase/types";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
-export async function createClient(): Promise<AppSupabaseClient> {
-  const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
+// Database Insert/Update 类型尚未完整生成，暂时放宽服务端返回类型
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createClient(): Promise<any> {
+  const config = getSupabasePublicConfig();
+  if (!config) {
     throw new Error(
-      "未配置数据库环境变量，请复制 .env.example 为 .env.local 并填入连接信息。",
+      "未配置数据库环境变量，请在 .env.local 填入真实的 NEXT_PUBLIC_SUPABASE_URL 与 NEXT_PUBLIC_SUPABASE_ANON_KEY。",
     );
   }
+
+  const cookieStore = await cookies();
+  const { url, anonKey } = config;
 
   return createServerClient<Database, "public">(url, anonKey, {
     cookies: {
@@ -35,5 +37,5 @@ export async function createClient(): Promise<AppSupabaseClient> {
         }
       },
     },
-  }) as unknown as AppSupabaseClient;
+  });
 }

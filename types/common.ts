@@ -1,10 +1,10 @@
 export type ModuleKey =
   | "courses"
-  | "guides"
   | "food"
-  | "resources"
-  | "buddy"
-  | "forum";
+  | "study"
+  | "life"
+  | "forum"
+  | "guides";
 
 export type PaginatedResult<T> = {
   data: T[];

@@ -15,9 +15,16 @@ type GuideEditorProps = {
   guide?: AdminGuideDetail | null;
   onCancel: () => void;
   onSuccess: (guideId?: string) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
-export function GuideEditor({ mode, guide, onCancel, onSuccess }: GuideEditorProps) {
+export function GuideEditor({
+  mode,
+  guide,
+  onCancel,
+  onSuccess,
+  onDirtyChange,
+}: GuideEditorProps) {
   const initialValues =
     mode === "edit" && guide
       ? {
@@ -38,7 +45,7 @@ export function GuideEditor({ mode, guide, onCancel, onSuccess }: GuideEditorPro
         <CardTitle>{mode === "create" ? "创建攻略" : "编辑攻略"}</CardTitle>
         <CardDescription>
           {mode === "create"
-            ? "新建内容会先保存为草稿，发布前不会出现在前台 /guides。"
+            ? "新建内容会先保存为草稿，发布前不会出现在前台 /guides。正文支持所见即所得编辑。"
             : "保存修改不会自动改变发布状态，请在列表中使用发布 / 隐藏按钮。"}
         </CardDescription>
       </CardHeader>
@@ -48,6 +55,7 @@ export function GuideEditor({ mode, guide, onCancel, onSuccess }: GuideEditorPro
           initialValues={initialValues}
           onCancel={onCancel}
           onSuccess={onSuccess}
+          onDirtyChange={onDirtyChange}
         />
       </CardContent>
     </Card>

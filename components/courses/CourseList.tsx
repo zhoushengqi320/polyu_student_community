@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { PagePagination } from "@/components/common/PagePagination";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,31 +21,6 @@ type CourseListProps = {
   sort: CourseSortId;
   canReview: boolean;
 };
-
-function buildCoursesUrl(params: {
-  q?: string;
-  department?: string;
-  sort?: CourseSortId;
-  page?: number;
-}) {
-  const search = new URLSearchParams();
-
-  if (params.q?.trim()) {
-    search.set("q", params.q.trim());
-  }
-  if (params.department) {
-    search.set("department", params.department);
-  }
-  if (params.sort && params.sort !== "code") {
-    search.set("sort", params.sort);
-  }
-  if (params.page && params.page > 1) {
-    search.set("page", String(params.page));
-  }
-
-  const query = search.toString();
-  return query ? `${ROUTES.courses.list}?${query}` : ROUTES.courses.list;
-}
 
 export function CourseList({
   result,
@@ -118,41 +94,17 @@ export function CourseList({
             ))}
           </div>
 
-          {result.total > result.pageSize ? (
-            <div className="flex justify-center gap-2">
-              {result.page > 1 ? (
-                <Button asChild variant="outline" size="sm">
-                  <Link
-                    href={buildCoursesUrl({
-                      q: query,
-                      department,
-                      sort,
-                      page: result.page - 1,
-                    })}
-                  >
-                    上一页
-                  </Link>
-                </Button>
-              ) : null}
-              <span className="flex items-center text-sm text-muted-foreground">
-                第 {result.page} 页 · 共 {result.total} 门课程
-              </span>
-              {result.hasMore ? (
-                <Button asChild variant="outline" size="sm">
-                  <Link
-                    href={buildCoursesUrl({
-                      q: query,
-                      department,
-                      sort,
-                      page: result.page + 1,
-                    })}
-                  >
-                    下一页
-                  </Link>
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
+          <PagePagination
+            page={result.page}
+            pageSize={result.pageSize}
+            total={result.total}
+            basePath={ROUTES.courses.list}
+            query={{
+              q: query,
+              department,
+              sort: sort === "code" ? undefined : sort,
+            }}
+          />
         </>
       )}
     </div>

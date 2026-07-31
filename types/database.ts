@@ -237,6 +237,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      food_places: {
+        Row: {
+          id: string;
+          name: string;
+          area: string;
+          address: string | null;
+          tags: Json;
+          status: "draft" | "published" | "hidden" | "removed";
+          school_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          area: string;
+          address?: string | null;
+          tags?: Json;
+          status?: "draft" | "published" | "hidden" | "removed";
+          school_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          area?: string;
+          address?: string | null;
+          tags?: Json;
+          status?: "draft" | "published" | "hidden" | "removed";
+          school_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      food_recommendations: {
+        Row: {
+          id: string;
+          place_id: string;
+          user_id: string;
+          rating: number;
+          content: string;
+          status: "draft" | "published" | "hidden" | "removed";
+          deleted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          place_id: string;
+          user_id: string;
+          rating: number;
+          content: string;
+          status?: "draft" | "published" | "hidden" | "removed";
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          place_id?: string;
+          user_id?: string;
+          rating?: number;
+          content?: string;
+          status?: "draft" | "published" | "hidden" | "removed";
+          deleted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -291,7 +363,15 @@ export type Database = {
       posts: {
         Row: {
           id: string;
-          module: "courses" | "guides" | "food" | "resources" | "buddy" | "forum";
+          module:
+            | "courses"
+            | "guides"
+            | "food"
+            | "resources"
+            | "study"
+            | "life"
+            | "buddy"
+            | "forum";
           category_id: string | null;
           user_id: string;
           title: string;
@@ -311,7 +391,15 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          module: "courses" | "guides" | "food" | "resources" | "buddy" | "forum";
+          module:
+            | "courses"
+            | "guides"
+            | "food"
+            | "resources"
+            | "study"
+            | "life"
+            | "buddy"
+            | "forum";
           category_id?: string | null;
           user_id: string;
           title: string;
@@ -331,7 +419,15 @@ export type Database = {
         };
         Update: {
           id?: string;
-          module?: "courses" | "guides" | "food" | "resources" | "buddy" | "forum";
+          module?:
+            | "courses"
+            | "guides"
+            | "food"
+            | "resources"
+            | "study"
+            | "life"
+            | "buddy"
+            | "forum";
           category_id?: string | null;
           user_id?: string;
           title?: string;
@@ -393,7 +489,7 @@ export type Database = {
       comments: {
         Row: {
           id: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           parent_id: string | null;
           user_id: string;
@@ -405,7 +501,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           parent_id?: string | null;
           user_id: string;
@@ -417,7 +513,7 @@ export type Database = {
         };
         Update: {
           id?: string;
-          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           parent_id?: string | null;
           user_id?: string;
@@ -433,7 +529,7 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           type: "like" | "favorite";
           created_at: string;
@@ -441,7 +537,7 @@ export type Database = {
         Insert: {
           id?: string;
           user_id: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           type: "like" | "favorite";
           created_at?: string;
@@ -449,7 +545,7 @@ export type Database = {
         Update: {
           id?: string;
           user_id?: string;
-          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           type?: "like" | "favorite";
           created_at?: string;
@@ -460,7 +556,7 @@ export type Database = {
         Row: {
           id: string;
           reporter_id: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           reason: string;
           description: string | null;
@@ -473,7 +569,7 @@ export type Database = {
         Insert: {
           id?: string;
           reporter_id: string;
-          target_type: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id: string;
           reason: string;
           description?: string | null;
@@ -486,7 +582,7 @@ export type Database = {
         Update: {
           id?: string;
           reporter_id?: string;
-          target_type?: "post" | "comment" | "course" | "course_review" | "food_recommendation" | "buddy_post" | "profile";
+          target_type?: "post" | "comment" | "course" | "course_review" | "food_place" | "food_recommendation" | "buddy_post" | "profile";
           target_id?: string;
           reason?: string;
           description?: string | null;
@@ -548,12 +644,21 @@ export type Database = {
       user_role: "user" | "verified_polyu_user" | "admin";
       user_status: "active" | "banned";
       content_status: "draft" | "published" | "hidden" | "removed";
-      module_key: "courses" | "guides" | "food" | "resources" | "buddy" | "forum";
+      module_key:
+        | "courses"
+        | "guides"
+        | "food"
+        | "resources"
+        | "study"
+        | "life"
+        | "buddy"
+        | "forum";
       target_type:
         | "post"
         | "comment"
         | "course"
         | "course_review"
+        | "food_place"
         | "food_recommendation"
         | "buddy_post"
         | "profile";

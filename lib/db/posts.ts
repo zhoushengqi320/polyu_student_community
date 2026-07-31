@@ -6,12 +6,11 @@ import {
   mapPostListItem,
   type PostWithProfileRow,
 } from "@/lib/db/mappers/post";
-import { DbError, getPagination, toPaginatedResult } from "@/lib/db/shared";
+import { getPagination, toPaginatedResult } from "@/lib/db/shared";
 import { buildSearchPattern } from "@/lib/utils/search";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
-  type CreatePostInput,
   type PostDetail,
   type PostFilters,
   type PostListItem,
@@ -129,13 +128,14 @@ export async function getPostById(
     .select("*, profiles(*)")
     .eq("id", id)
     .eq("status", CONTENT_STATUS.published)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .maybeSingle();
 
   if (module) {
     query = query.eq("module", module);
   }
 
-  const { data, error } = await query.maybeSingle();
+  const { data, error } = await query;
 
   if (error || !data) {
     return null;
@@ -147,51 +147,4 @@ export async function getPostById(
     row,
     countsMap.get(row.id) ?? { commentCount: 0, likeCount: 0 },
   );
-}
-
-export async function createPost(input: CreatePostInput): Promise<PostDetail> {
-  if (!isSupabaseConfigured()) {
-    throw new DbError("数据库未配置");
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("posts")
-    .insert({
-      module: input.module,
-      category_id: input.categoryId ?? "general",
-      user_id: input.userId,
-      title: input.title,
-      content: input.content,
-      status: CONTENT_STATUS.published,
-      school_id: DEFAULT_SCHOOL_ID,
-    })
-    .select("*, profiles(*)")
-    .single();
-
-  if (error || !data) {
-    throw new DbError(error?.message ?? "发帖失败", "VALIDATION");
-  }
-
-  return mapPostDetail(data as PostWithProfileRow, {
-    commentCount: 0,
-    likeCount: 0,
-  });
-}
-
-export async function softDeletePost(id: string, userId: string): Promise<void> {
-  if (!isSupabaseConfigured()) {
-    throw new DbError("数据库未配置");
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("posts")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", userId);
-
-  if (error) {
-    throw new DbError(error.message);
-  }
 }

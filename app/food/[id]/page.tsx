@@ -1,6 +1,14 @@
-import { MODULE_REGISTRY } from "@/constants/modules";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { FoodDetailView } from "@/components/food/FoodDetailView";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
+import { Button } from "@/components/ui/button";
+import { TARGET_TYPES } from "@/constants/reportReasons";
+import { ROUTES } from "@/constants/routes";
+import { getSessionUser } from "@/lib/auth/session";
 import { getFoodPlaceById } from "@/lib/db/food";
+import { countReactions, hasReaction } from "@/lib/db/reactions";
+import { can } from "@/lib/utils/permissions";
 
 type FoodDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -8,12 +16,48 @@ type FoodDetailPageProps = {
 
 export default async function FoodDetailPage({ params }: FoodDetailPageProps) {
   const { id } = await params;
-  await getFoodPlaceById(id);
+  const user = await getSessionUser();
+  const place = await getFoodPlaceById(id);
+
+  if (!place) {
+    notFound();
+  }
+
+  const [isFavorited, favoriteCount] = await Promise.all([
+    user
+      ? hasReaction({
+          userId: user.id,
+          targetType: TARGET_TYPES.food_place,
+          targetId: place.id,
+          type: "favorite",
+        })
+      : Promise.resolve(false),
+    countReactions({
+      targetType: TARGET_TYPES.food_place,
+      targetId: place.id,
+      type: "favorite",
+    }),
+  ]);
 
   return (
     <ModulePageShell
-      title="美食详情"
-      description={`${MODULE_REGISTRY.food.label} · 详情页`}
-    />
+      title={place.name}
+      description="吃喝玩乐 · 地点详情"
+      actions={
+        <Button variant="outline" asChild>
+          <Link href={ROUTES.food.list}>返回列表</Link>
+        </Button>
+      }
+    >
+      <FoodDetailView
+        place={place}
+        canRecommend={can(user, "content:create:food")}
+        canFavorite={can(user, "interaction:favorite")}
+        isLoggedIn={Boolean(user)}
+        isFavorited={isFavorited}
+        favoriteCount={favoriteCount}
+        currentUserId={user?.id ?? null}
+      />
+    </ModulePageShell>
   );
 }

@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createCommentAction, type CommentFormState } from "@/lib/forum/actions";
+import {
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+} from "@/components/common/UnsavedChangesGuard";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,13 +30,18 @@ export function CommentForm({
   const [state, formAction, pending] = useActionState(boundAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const wasPending = useRef(false);
+  const [content, setContent] = useState("");
+  const { markDirty, markClean, confirmLeave, dialogProps, isDirty } =
+    useUnsavedChangesGuard();
 
   useEffect(() => {
     if (wasPending.current && !pending && !state.error && !state.fieldErrors) {
       formRef.current?.reset();
+      setContent("");
+      markClean();
     }
     wasPending.current = pending;
-  }, [pending, state.error, state.fieldErrors]);
+  }, [pending, state.error, state.fieldErrors, markClean]);
 
   if (!isLoggedIn) {
     return (
@@ -54,34 +63,58 @@ export function CommentForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-3">
-      {revalidatePath ? (
-        <input type="hidden" name="revalidatePath" value={revalidatePath} />
-      ) : null}
-      <div className="space-y-2">
-        <Label htmlFor="content">发表评论</Label>
-        <textarea
-          id="content"
-          name="content"
-          rows={4}
-          placeholder="写下你的评论..."
-          required
-          className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        {state.fieldErrors?.content ? (
-          <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
+    <>
+      <form ref={formRef} action={formAction} className="space-y-3">
+        {revalidatePath ? (
+          <input type="hidden" name="revalidatePath" value={revalidatePath} />
         ) : null}
-      </div>
+        <div className="space-y-2">
+          <Label htmlFor="content">发表评论</Label>
+          <textarea
+            id="content"
+            name="content"
+            rows={4}
+            value={content}
+            onChange={(event) => {
+              setContent(event.target.value);
+              markDirty();
+            }}
+            placeholder="写下你的评论..."
+            required
+            className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {state.fieldErrors?.content ? (
+            <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
+          ) : null}
+        </div>
 
-      {state.error ? (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {state.error}
-        </p>
-      ) : null}
+        {state.error ? (
+          <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {state.error}
+          </p>
+        ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "发送中..." : "发送评论"}
-      </Button>
-    </form>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" size="sm" disabled={pending}>
+            {pending ? "发送中..." : "发送评论"}
+          </Button>
+          {isDirty ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                confirmLeave(() => {
+                  setContent("");
+                })
+              }
+            >
+              取消
+            </Button>
+          ) : null}
+        </div>
+      </form>
+      <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }

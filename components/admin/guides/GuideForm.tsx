@@ -8,6 +8,11 @@ import {
   updateGuideAction,
   type GuideFormState,
 } from "@/lib/guides/actions";
+import {
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+} from "@/components/common/UnsavedChangesGuard";
+import { RichTextEditor } from "@/components/admin/content/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +32,7 @@ type GuideFormProps = {
   };
   onCancel: () => void;
   onSuccess?: (guideId?: string) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 const initialState: GuideFormState = {};
@@ -46,14 +52,19 @@ export function GuideForm({
   initialValues,
   onCancel,
   onSuccess,
+  onDirtyChange,
 }: GuideFormProps) {
   const action = mode === "create" ? createGuideAction : updateGuideAction;
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [content, setContent] = useState(initialValues?.content ?? "");
   const [sourceLinks, setSourceLinks] = useState<GuideSourceLink[]>(
     initialValues?.sourceLinks?.length
       ? initialValues.sourceLinks
       : [emptySourceLink()],
   );
+  const { isDirty, markDirty, markClean, confirmLeave, dialogProps } =
+    useUnsavedChangesGuard();
+  const skipEditorDirtyRef = useRef(true);
 
   const sourceLinksJson = useMemo(
     () =>
@@ -64,6 +75,10 @@ export function GuideForm({
   );
 
   const handledSuccessRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     if (!state.success || !onSuccess) {
@@ -79,11 +94,17 @@ export function GuideForm({
     }
 
     handledSuccessRef.current = successKey;
+    markClean();
     onSuccess(state.guideId ?? initialValues?.guideId);
-  }, [state.success, state.guideId, initialValues?.guideId, onSuccess]);
+  }, [state.success, state.guideId, initialValues?.guideId, onSuccess, markClean]);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <>
+    <form
+      action={formAction}
+      className="space-y-5"
+      onChange={markDirty}
+    >
       {mode === "edit" && initialValues?.guideId ? (
         <input type="hidden" name="guideId" value={initialValues.guideId} />
       ) : null}
@@ -143,7 +164,7 @@ export function GuideForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="guide-reading-time">预计阅读时长（分钟）</Label>
+          <Label htmlFor="guide-reading-time">预计阅读时长（分钟，可选）</Label>
           <Input
             id="guide-reading-time"
             name="estimatedReadingTime"
@@ -176,20 +197,22 @@ export function GuideForm({
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="guide-content">正文（Markdown）</Label>
-        <textarea
-          id="guide-content"
-          name="content"
-          defaultValue={initialValues?.content ?? ""}
-          placeholder="# 标题&#10;&#10;在这里编写攻略正文..."
-          className={`${textareaClassName} min-h-[280px] font-mono`}
-          required
-        />
-        {state.fieldErrors?.content ? (
-          <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
-        ) : null}
-      </div>
+      <RichTextEditor
+        key={initialValues?.guideId ?? `create-${mode}`}
+        name="content"
+        value={content}
+        onChange={(value) => {
+          setContent(value);
+          if (skipEditorDirtyRef.current) {
+            skipEditorDirtyRef.current = false;
+            return;
+          }
+          markDirty();
+        }}
+        required
+        error={state.fieldErrors?.content}
+        hint="所见即所得：工具栏可调标题、字号、颜色、对齐，并插入图片与表格。"
+      />
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -198,7 +221,10 @@ export function GuideForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setSourceLinks((items) => [...items, emptySourceLink()])}
+            onClick={() => {
+              markDirty();
+              setSourceLinks((items) => [...items, emptySourceLink()]);
+            }}
           >
             添加链接
           </Button>
@@ -214,6 +240,7 @@ export function GuideForm({
                 value={item.label}
                 placeholder="链接名称"
                 onChange={(event) => {
+                  markDirty();
                   const next = [...sourceLinks];
                   next[index] = { ...next[index], label: event.target.value };
                   setSourceLinks(next);
@@ -223,6 +250,7 @@ export function GuideForm({
                 value={item.url}
                 placeholder="https://"
                 onChange={(event) => {
+                  markDirty();
                   const next = [...sourceLinks];
                   next[index] = { ...next[index], url: event.target.value };
                   setSourceLinks(next);
@@ -233,9 +261,12 @@ export function GuideForm({
                 variant="outline"
                 size="sm"
                 disabled={sourceLinks.length === 1}
-                onClick={() =>
-                  setSourceLinks((items) => items.filter((_, itemIndex) => itemIndex !== index))
-                }
+                onClick={() => {
+                  markDirty();
+                  setSourceLinks((items) =>
+                    items.filter((_, itemIndex) => itemIndex !== index),
+                  );
+                }}
               >
                 移除
               </Button>
@@ -256,10 +287,16 @@ export function GuideForm({
         <Button type="submit" disabled={pending}>
           {pending ? "保存中..." : mode === "create" ? "创建草稿" : "保存修改"}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => confirmLeave(onCancel)}
+        >
           返回列表
         </Button>
       </div>
     </form>
+    <UnsavedChangesDialog {...dialogProps} />
+    </>
   );
 }

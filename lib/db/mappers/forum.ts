@@ -1,4 +1,3 @@
-import { type ContentStatus } from "@/constants/contentStatus";
 import {
   mapProfileListItem,
   type ProfileRow,
@@ -68,7 +67,6 @@ export function mapForumPostListItem(row: ForumPostWithProfileRow): ForumPostLis
     id: post.id,
     title: post.title,
     excerpt: post.excerpt,
-    categoryId: post.categoryId,
     topics: post.topics,
     likeCount: post.likeCount,
     commentCount: post.commentCount,

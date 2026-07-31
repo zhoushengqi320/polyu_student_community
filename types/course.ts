@@ -5,7 +5,6 @@ import {
   type CourseDepartmentId,
   type CourseExamTypeId,
   type CourseReviewTag,
-  type CourseSemesterId,
   type CourseSortId,
 } from "@/constants/courseOptions";
 import { type ProfileListItem } from "@/types/user";
@@ -54,7 +53,8 @@ export type CourseReview = {
   id: string;
   courseId: string;
   userId: string;
-  semester: CourseSemesterId;
+  /** 可为 `2024/25|sem1` 或旧值如 `sem1` / `unknown` */
+  semester: string;
   teacherName: string | null;
   overallRating: number;
   difficultyRating: number;
@@ -112,9 +112,19 @@ export type CourseFilters = {
 export type CreateCourseReviewInput = {
   courseId: string;
   userId: string;
+  semester: string;
+  teacherName: string | null;
   overallRating: number;
   difficultyRating: number;
+  workloadRating: number;
+  gradingRating: number;
+  teachingRating: number;
+  examDifficulty: number | null;
+  examType: CourseExamTypeId | string | null;
+  assignmentType: CourseAssignmentTypeId | string | null;
+  attendanceRequired: CourseAttendanceId | string | null;
   reviewText: string;
+  tips: string | null;
   isAnonymous: boolean;
   tags: CourseReviewTag[] | string[];
 };

@@ -21,6 +21,8 @@ type CourseDetailViewProps = {
   canReview: boolean;
   isLoggedIn: boolean;
   isFavorited: boolean;
+  currentUserId?: string | null;
+  isAdminUser?: boolean;
 };
 
 export function CourseDetailView({
@@ -28,6 +30,8 @@ export function CourseDetailView({
   canReview,
   isLoggedIn,
   isFavorited,
+  currentUserId = null,
+  isAdminUser = false,
 }: CourseDetailViewProps) {
   return (
     <div className="space-y-6">
@@ -83,7 +87,14 @@ export function CourseDetailView({
           {
             id: "reviews",
             label: "Reviews",
-            content: <CourseReviews course={course} isLoggedIn={isLoggedIn} />,
+            content: (
+              <CourseReviews
+                course={course}
+                isLoggedIn={isLoggedIn}
+                currentUserId={currentUserId}
+                isAdminUser={isAdminUser}
+              />
+            ),
           },
           {
             id: "pdf",

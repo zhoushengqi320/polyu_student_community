@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { FORUM_DESCRIPTION } from "@/constants/forum";
-import {
-  isForumCategoryId,
-  isForumSortId,
-} from "@/constants/forumHelpers";
+import { FORUM_DESCRIPTION, isForumSortId } from "@/constants/forum";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
@@ -21,7 +17,6 @@ type ForumPageProps = {
   searchParams: Promise<{
     q?: string;
     topic?: string;
-    category?: string;
     sort?: string;
     page?: string;
   }>;
@@ -31,16 +26,12 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
   const params = await searchParams;
   const query = params.q?.trim() || undefined;
   const topic = params.topic?.trim() || undefined;
-  const category =
-    params.category && isForumCategoryId(params.category)
-      ? params.category
-      : undefined;
   const sort = params.sort && isForumSortId(params.sort) ? params.sort : "latest";
   const page = Number(params.page) || 1;
 
   const [user, result, hotPosts, popularTopics] = await Promise.all([
     getSessionUser(),
-    getForumPosts({ query, topic, category, sort, page }),
+    getForumPosts({ query, topic, sort, page }),
     getHotForumPosts(5),
     getForumTopics(12),
   ]);
@@ -72,7 +63,6 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
           popularTopics={popularTopics}
           activeQuery={query}
           activeTopic={topic}
-          activeCategory={category}
           activeSort={sort}
           canCreate={canCreate}
           isLoggedIn={Boolean(user)}

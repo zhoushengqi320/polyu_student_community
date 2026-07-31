@@ -1,8 +1,9 @@
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { POLYU_EMAIL_SUFFIX } from "@/constants/auth";
+import { ROUTES } from "@/constants/routes";
 
 type LoginPageProps = {
   searchParams: Promise<{ error?: string }>;
@@ -24,6 +25,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
         ) : null}
         <LoginForm />
+        <p className="text-center text-xs text-muted-foreground">
+          继续使用即表示你同意我们的
+          <Link
+            href={ROUTES.about.terms}
+            className="mx-1 underline underline-offset-2 hover:text-foreground"
+          >
+            网站使用条款
+          </Link>
+          与
+          <Link
+            href={ROUTES.about.privacy}
+            className="mx-1 underline underline-offset-2 hover:text-foreground"
+          >
+            私隐政策
+          </Link>
+          。
+        </p>
       </div>
     </ModulePageShell>
   );

@@ -26,14 +26,15 @@ export function TopicBadge({ topic, href, className }: TopicBadgeProps) {
   return <span className={classes}>#{topic}</span>;
 }
 
-export function topicFilterHref(topic: string, current: {
-  q?: string;
-  category?: string;
-  sort?: string;
-}) {
+export function topicFilterHref(
+  topic: string,
+  current: {
+    q?: string;
+    sort?: string;
+  },
+) {
   return buildForumUrl({
     q: current.q,
-    category: current.category,
     sort: current.sort as never,
     topic,
   });

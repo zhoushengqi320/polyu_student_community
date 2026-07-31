@@ -10,31 +10,28 @@ type ForumSortTabsProps = {
   activeSort: ForumSortId;
   q?: string;
   topic?: string;
-  category?: string;
 };
 
-export function ForumSortTabs({
-  activeSort,
-  q,
-  topic,
-  category,
-}: ForumSortTabsProps) {
+export function ForumSortTabs({ activeSort, q, topic }: ForumSortTabsProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {FORUM_SORT_OPTIONS.map((option) => (
-        <Link
-          key={option.id}
-          href={buildForumUrl({ q, topic, category, sort: option.id })}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-            activeSort === option.id
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-          )}
-        >
-          {option.label}
-        </Link>
-      ))}
+    <div>
+      <h3 className="mb-2 text-sm font-medium text-muted-foreground">排序方式</h3>
+      <div className="flex flex-wrap gap-2">
+        {FORUM_SORT_OPTIONS.map((option) => (
+          <Link
+            key={option.id}
+            href={buildForumUrl({ q, topic, sort: option.id })}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+              activeSort === option.id
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+            )}
+          >
+            {option.label}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

@@ -20,7 +20,6 @@ type ForumListProps = {
   popularTopics: string[];
   activeQuery?: string;
   activeTopic?: string;
-  activeCategory?: string;
   activeSort: ForumSortId;
   canCreate: boolean;
   isLoggedIn: boolean;
@@ -32,7 +31,6 @@ export function ForumList({
   popularTopics,
   activeQuery,
   activeTopic,
-  activeCategory,
   activeSort,
   canCreate,
   isLoggedIn,
@@ -43,16 +41,10 @@ export function ForumList({
         <ForumSearchBar />
       </Suspense>
 
-      <ForumActiveFilters
-        q={activeQuery}
-        topic={activeTopic}
-        category={activeCategory}
-        sort={activeSort}
-      />
+      <ForumActiveFilters q={activeQuery} topic={activeTopic} sort={activeSort} />
 
       <ForumTopicFilter
         activeTopic={activeTopic}
-        activeCategory={activeCategory}
         popularTopics={popularTopics}
         q={activeQuery}
         sort={activeSort}
@@ -62,7 +54,6 @@ export function ForumList({
         activeSort={activeSort}
         q={activeQuery}
         topic={activeTopic}
-        category={activeCategory}
       />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
@@ -72,7 +63,7 @@ export function ForumList({
               icon={MessageSquarePlus}
               title="没有找到帖子"
               description={
-                activeQuery || activeTopic || activeCategory
+                activeQuery || activeTopic
                   ? "试试调整搜索关键词或清除筛选条件。"
                   : "成为第一个发帖的人，分享你的经验吧。"
               }
@@ -105,7 +96,6 @@ export function ForumList({
                         href={buildForumUrl({
                           q: activeQuery,
                           topic: activeTopic,
-                          category: activeCategory,
                           sort: activeSort,
                           page: result.page - 1,
                         })}
@@ -123,7 +113,6 @@ export function ForumList({
                         href={buildForumUrl({
                           q: activeQuery,
                           topic: activeTopic,
-                          category: activeCategory,
                           sort: activeSort,
                           page: result.page + 1,
                         })}

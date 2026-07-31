@@ -8,9 +8,16 @@ import { type CourseDetail } from "@/types/course";
 type CourseReviewsProps = {
   course: CourseDetail;
   isLoggedIn: boolean;
+  currentUserId?: string | null;
+  isAdminUser?: boolean;
 };
 
-export function CourseReviews({ course, isLoggedIn }: CourseReviewsProps) {
+export function CourseReviews({
+  course,
+  isLoggedIn,
+  currentUserId = null,
+  isAdminUser = false,
+}: CourseReviewsProps) {
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -30,6 +37,10 @@ export function CourseReviews({ course, isLoggedIn }: CourseReviewsProps) {
               review={review}
               courseCode={course.code}
               isLoggedIn={isLoggedIn}
+              canManage={
+                Boolean(currentUserId && currentUserId === review.userId) ||
+                isAdminUser
+              }
             />
           ))}
         </div>

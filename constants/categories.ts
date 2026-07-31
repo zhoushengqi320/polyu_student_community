@@ -1,24 +1,3 @@
-export const FORUM_CATEGORIES = [
-  { id: "general", label: "综合讨论" },
-  { id: "study", label: "学习交流" },
-  { id: "campus", label: "校园生活" },
-  { id: "career", label: "升学就业" },
-  { id: "help", label: "求助问答" },
-] as const;
-
-export type ForumCategoryId = (typeof FORUM_CATEGORIES)[number]["id"];
-
-export const BUDDY_ACTIVITY_TYPES = [
-  { id: "study", label: "学习" },
-  { id: "sport", label: "运动" },
-  { id: "food", label: "约饭" },
-  { id: "travel", label: "出行" },
-  { id: "project", label: "项目合作" },
-  { id: "other", label: "其他" },
-] as const;
-
-export type BuddyActivityTypeId = (typeof BUDDY_ACTIVITY_TYPES)[number]["id"];
-
 export const FOOD_AREAS = [
   { id: "campus", label: "校内" },
   { id: "hung_hom", label: "红磡" },
@@ -29,24 +8,30 @@ export const FOOD_AREAS = [
 
 export type FoodAreaId = (typeof FOOD_AREAS)[number]["id"];
 
-export const RESOURCE_CATEGORIES = [
-  { id: "official", label: "官方系统" },
-  { id: "academic", label: "学术资源" },
-  { id: "tools", label: "实用工具" },
-  { id: "career", label: "升学就业" },
-  { id: "life", label: "生活服务" },
+export const STUDY_GUIDE_TOPICS = [
+  { id: "official_links", label: "常用官网" },
+  { id: "course_strategy", label: "选课策略" },
+  { id: "add_drop", label: "Add & Drop" },
+  { id: "gpa", label: "GPA 规则" },
+  { id: "exams", label: "考试安排" },
+  { id: "academic_integrity", label: "学术规范" },
 ] as const;
 
-export type ResourceCategoryId = (typeof RESOURCE_CATEGORIES)[number]["id"];
+export type StudyGuideTopicId = (typeof STUDY_GUIDE_TOPICS)[number]["id"];
 
-export const GUIDE_STAGES = [
-  { id: "pre_admission", label: "录取前" },
-  { id: "registration", label: "注册入学" },
-  { id: "first_year", label: "大一适应" },
-  { id: "daily_life", label: "日常生活" },
+export const LIFE_GUIDE_TOPICS = [
+  { id: "sim_card", label: "电话卡" },
+  { id: "banking", label: "银行开户" },
+  { id: "octopus", label: "八达通" },
+  { id: "shopping", label: "商超采购" },
+  { id: "delivery", label: "快递外卖" },
+  { id: "healthcare", label: "基础医疗" },
+  { id: "utilities", label: "水电煤气" },
+  { id: "transport", label: "交通出行" },
+  { id: "local_rules", label: "本地生活规则" },
 ] as const;
 
-export type GuideStageId = (typeof GUIDE_STAGES)[number]["id"];
+export type LifeGuideTopicId = (typeof LIFE_GUIDE_TOPICS)[number]["id"];
 
 export const SCHOOLS = [
   { id: "polyu", label: "香港理工大学", shortLabel: "理大" },

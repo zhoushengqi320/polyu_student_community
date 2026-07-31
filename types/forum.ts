@@ -1,4 +1,4 @@
-import { type ForumCategoryId, type ForumSortId } from "@/constants/forum";
+import { type ForumSortId } from "@/constants/forum";
 import { type ProfileListItem } from "@/types/user";
 
 export type ForumPost = {
@@ -7,6 +7,7 @@ export type ForumPost = {
   title: string;
   content: string;
   excerpt: string | null;
+  /** 历史字段；论坛已取消分类功能，新帖为 null */
   categoryId: string | null;
   topics: string[];
   likeCount: number;
@@ -24,7 +25,6 @@ export type ForumPostListItem = Pick<
   | "id"
   | "title"
   | "excerpt"
-  | "categoryId"
   | "topics"
   | "likeCount"
   | "commentCount"
@@ -43,7 +43,6 @@ export type ForumPostDetail = ForumPost & {
 export type GetForumPostsParams = {
   query?: string;
   topic?: string;
-  category?: string;
   sort?: ForumSortId;
   page?: number;
   pageSize?: number;
@@ -53,11 +52,10 @@ export type CreateForumPostInput = {
   userId: string;
   title: string;
   content: string;
-  categoryId: ForumCategoryId;
   topics: string[];
   isAnonymous: boolean;
 };
 
 export type UpdateForumPostInput = Partial<
-  Pick<CreateForumPostInput, "title" | "content" | "categoryId" | "topics" | "isAnonymous">
+  Pick<CreateForumPostInput, "title" | "content" | "topics" | "isAnonymous">
 >;

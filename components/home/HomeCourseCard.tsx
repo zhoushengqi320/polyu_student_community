@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
+import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import { type CourseWithStats } from "@/types/course";
 
 type HomeCourseCardProps = {
@@ -18,7 +19,7 @@ type HomeCourseCardProps = {
 
 export function HomeCourseCard({ course }: HomeCourseCardProps) {
   return (
-    <Card className="h-full transition-shadow hover:shadow-md">
+    <Card className={interactiveCardClassName("h-full")}>
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
@@ -29,7 +30,7 @@ export function HomeCourseCard({ course }: HomeCourseCardProps) {
         <CardTitle className="line-clamp-2 text-lg">
           <Link
             href={ROUTES.courses.detail(course.code)}
-            className="hover:text-primary"
+            className="transition-colors hover:text-primary"
           >
             {course.name}
           </Link>

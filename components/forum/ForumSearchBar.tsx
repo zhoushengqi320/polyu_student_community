@@ -20,7 +20,6 @@ export function ForumSearchBar() {
         buildForumUrl({
           q: value,
           topic: searchParams.get("topic") ?? undefined,
-          category: searchParams.get("category") ?? undefined,
           sort: (searchParams.get("sort") as ForumSortId | null) ?? undefined,
         }),
       );

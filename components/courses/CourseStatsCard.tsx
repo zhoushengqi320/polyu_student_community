@@ -17,6 +17,14 @@ type CourseStatsCardProps = {
   canReview: boolean;
 };
 
+function averageOf(
+  values: Array<number | null | undefined>,
+): number | null {
+  const nums = values.filter((value): value is number => typeof value === "number");
+  if (nums.length === 0) return null;
+  return Math.round((nums.reduce((sum, value) => sum + value, 0) / nums.length) * 10) / 10;
+}
+
 export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
   if (course.reviewCount === 0) {
     return (
@@ -44,6 +52,10 @@ export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
     );
   }
 
+  const averageWorkload = averageOf(course.reviews.map((item) => item.workloadRating));
+  const averageGrading = averageOf(course.reviews.map((item) => item.gradingRating));
+  const averageTeaching = averageOf(course.reviews.map((item) => item.teachingRating));
+
   return (
     <Card>
       <CardHeader>
@@ -52,20 +64,38 @@ export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">
         <div>
-          <p className="text-sm text-muted-foreground">Overall Rating</p>
+          <p className="text-sm text-muted-foreground">总体推荐</p>
           <RatingDisplay value={course.averageOverallRating} />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Difficulty</p>
+          <p className="text-sm text-muted-foreground">课程难度</p>
           <RatingDisplay value={course.averageDifficultyRating} />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Review Count</p>
+          <p className="text-sm text-muted-foreground">评价数</p>
           <p className="text-lg font-semibold">{course.reviewCount}</p>
         </div>
+        {averageWorkload != null ? (
+          <div>
+            <p className="text-sm text-muted-foreground">工作量</p>
+            <RatingDisplay value={averageWorkload} />
+          </div>
+        ) : null}
+        {averageGrading != null ? (
+          <div>
+            <p className="text-sm text-muted-foreground">给分友好度</p>
+            <RatingDisplay value={averageGrading} />
+          </div>
+        ) : null}
+        {averageTeaching != null ? (
+          <div>
+            <p className="text-sm text-muted-foreground">教学质量</p>
+            <RatingDisplay value={averageTeaching} />
+          </div>
+        ) : null}
         {course.commonTags.length > 0 ? (
           <div className="sm:col-span-3">
-            <p className="text-sm text-muted-foreground">Most Common Tags</p>
+            <p className="text-sm text-muted-foreground">常见标签</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {course.commonTags.map((item) => (
                 <span

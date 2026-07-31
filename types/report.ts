@@ -21,6 +21,10 @@ export type Report = {
 
 export type ReportWithReporter = Report & {
   reporter: ProfileListItem;
+  /** targetType=post 时对应 posts.module，用于正确跳转与删除 */
+  postModule?: string | null;
+  /** targetType=food_recommendation 时对应所属地点，用于跳转 */
+  foodPlaceId?: string | null;
 };
 
 export type AdminActionLog = {
