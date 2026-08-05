@@ -5,7 +5,6 @@ title: "Add&Drop"
 category: "Add&Drop"
 excerpt: "Add&Drop （正文待补充）"
 targetAudience: 在读同学
-estimatedReadingTime: 3
 isPinned: false
 topics:
 ---

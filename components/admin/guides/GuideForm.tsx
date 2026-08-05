@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useActionState } from "react";
 import { GUIDE_CATEGORIES } from "@/constants/guides";
 import {
@@ -16,6 +16,8 @@ import { RichTextEditor } from "@/components/admin/content/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCtrlSSave } from "@/hooks/useCtrlSSave";
+import { showSaveSuccessToast } from "@/lib/utils/saveSuccessToast";
 import { type GuideSourceLink } from "@/types/guide";
 
 type GuideFormProps = {
@@ -26,8 +28,6 @@ type GuideFormProps = {
     excerpt?: string | null;
     content?: string;
     category?: string | null;
-    targetAudience?: string | null;
-    estimatedReadingTime?: number | null;
     sourceLinks?: GuideSourceLink[];
   };
   onCancel: () => void;
@@ -65,6 +65,8 @@ export function GuideForm({
   const { isDirty, markDirty, markClean, confirmLeave, dialogProps } =
     useUnsavedChangesGuard();
   const skipEditorDirtyRef = useRef(true);
+  const formRef = useRef<HTMLFormElement>(null);
+  const saveViaShortcutRef = useRef(false);
 
   const sourceLinksJson = useMemo(
     () =>
@@ -75,6 +77,20 @@ export function GuideForm({
   );
 
   const handledSuccessRef = useRef<string | null>(null);
+
+  const handleCtrlSSave = useCallback(() => {
+    if (pending) return;
+    saveViaShortcutRef.current = true;
+    formRef.current?.requestSubmit();
+  }, [pending]);
+
+  useCtrlSSave({ disabled: pending, onSave: handleCtrlSSave });
+
+  useEffect(() => {
+    if (pending) {
+      handledSuccessRef.current = null;
+    }
+  }, [pending]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -95,12 +111,20 @@ export function GuideForm({
 
     handledSuccessRef.current = successKey;
     markClean();
+    showSaveSuccessToast();
+
+    if (saveViaShortcutRef.current && mode === "edit") {
+      saveViaShortcutRef.current = false;
+      return;
+    }
+    saveViaShortcutRef.current = false;
     onSuccess(state.guideId ?? initialValues?.guideId);
-  }, [state.success, state.guideId, initialValues?.guideId, onSuccess, markClean]);
+  }, [state.success, state.guideId, initialValues?.guideId, onSuccess, markClean, mode]);
 
   return (
     <>
     <form
+      ref={formRef}
       action={formAction}
       className="space-y-5"
       onChange={markDirty}
@@ -139,61 +163,26 @@ export function GuideForm({
         ) : null}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="guide-category">分类</Label>
-          <select
-            id="guide-category"
-            name="category"
-            defaultValue={initialValues?.category ?? ""}
-            required
-            className={selectClassName}
-          >
-            <option value="" disabled>
-              请选择分类
-            </option>
-            {GUIDE_CATEGORIES.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-          {state.fieldErrors?.category ? (
-            <p className="text-sm text-destructive">{state.fieldErrors.category}</p>
-          ) : null}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="guide-reading-time">预计阅读时长（分钟，可选）</Label>
-          <Input
-            id="guide-reading-time"
-            name="estimatedReadingTime"
-            type="number"
-            min={1}
-            max={120}
-            defaultValue={initialValues?.estimatedReadingTime ?? ""}
-            placeholder="例如：5"
-          />
-          {state.fieldErrors?.estimatedReadingTime ? (
-            <p className="text-sm text-destructive">
-              {state.fieldErrors.estimatedReadingTime}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
       <div className="space-y-2">
-        <Label htmlFor="guide-target-audience">目标读者</Label>
-        <Input
-          id="guide-target-audience"
-          name="targetAudience"
-          defaultValue={initialValues?.targetAudience ?? ""}
-          placeholder="例如：申请 PolyU 的准新生"
-        />
-        {state.fieldErrors?.targetAudience ? (
-          <p className="text-sm text-destructive">
-            {state.fieldErrors.targetAudience}
-          </p>
+        <Label htmlFor="guide-category">分类</Label>
+        <select
+          id="guide-category"
+          name="category"
+          defaultValue={initialValues?.category ?? ""}
+          required
+          className={selectClassName}
+        >
+          <option value="" disabled>
+            请选择分类
+          </option>
+          {GUIDE_CATEGORIES.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+        {state.fieldErrors?.category ? (
+          <p className="text-sm text-destructive">{state.fieldErrors.category}</p>
         ) : null}
       </div>
 
@@ -209,9 +198,10 @@ export function GuideForm({
           }
           markDirty();
         }}
+        onSaveShortcut={handleCtrlSSave}
         required
         error={state.fieldErrors?.content}
-        hint="所见即所得：工具栏可调标题、字号、颜色、对齐，并插入图片与表格。"
+        hint="所见即所得：工具栏可调标题、字号、颜色、对齐，并插入图片与表格。快捷键 ⌘/Ctrl+S 保存。"
       />
 
       <div className="space-y-3">
@@ -283,7 +273,7 @@ export function GuideForm({
         <p className="text-sm text-green-600">{state.success}</p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>
           {pending ? "保存中..." : mode === "create" ? "创建草稿" : "保存修改"}
         </Button>
@@ -294,6 +284,9 @@ export function GuideForm({
         >
           返回列表
         </Button>
+        <span className="text-xs text-muted-foreground">
+          快捷键 Ctrl/⌘+S 保存（不离开编辑页）
+        </span>
       </div>
     </form>
     <UnsavedChangesDialog {...dialogProps} />

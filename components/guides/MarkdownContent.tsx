@@ -67,7 +67,7 @@ export function MarkdownContent({
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="scroll-mt-24 border-b border-border/60 pb-2 text-xl font-semibold tracking-tight">
+            <h2 className="scroll-mt-24 text-xl font-semibold tracking-tight">
               {children}
             </h2>
           ),

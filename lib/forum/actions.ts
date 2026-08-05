@@ -20,6 +20,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export type ForumPostFormState = {
   error?: string;
+  success?: string;
   fieldErrors?: Partial<Record<"title" | "content" | "topics", string>>;
 };
 
@@ -145,9 +146,9 @@ export async function updateForumPostAction(
     await updateForumPost(postId, post.userId, parsed.data);
     revalidatePath(ROUTES.forum.list);
     revalidatePath(ROUTES.forum.detail(postId));
-    redirect(ROUTES.forum.detail(postId));
+    revalidatePath(ROUTES.forum.edit(postId));
+    return { success: "帖子已保存" };
   } catch (error) {
-    if (isRedirectError(error)) throw error;
     return {
       error: error instanceof DbError ? error.message : "更新帖子失败，请稍后重试",
     };

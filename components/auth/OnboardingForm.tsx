@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
 
 type OnboardingFormProps = {
   profile: Profile;
@@ -35,7 +36,7 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
       <CardHeader>
         <CardTitle>完善个人资料</CardTitle>
         <CardDescription>
-          欢迎加入理大社区！请填写以下信息，完成后即可发帖、评论与互动。
+          欢迎加入 PolyUHub！请填写以下信息，完成后即可发帖、评论与互动。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -117,6 +118,8 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
               {state.error}
             </p>
           ) : null}
+
+          <CommunityRulesNotice message="参与讨论前请了解社区规则，共同维护校园信息社区。" />
 
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "保存中..." : "完成并进入社区"}

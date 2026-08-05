@@ -13,6 +13,7 @@ type RichTextEditorProps = {
   hint?: string;
   required?: boolean;
   className?: string;
+  onSaveShortcut?: () => void;
 };
 
 /** 避免 TipTap 在 SSR/首屏水合阶段报错，仅在浏览器挂载后加载 */

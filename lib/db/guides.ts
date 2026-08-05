@@ -1,5 +1,6 @@
 import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
 import { CONTENT_STATUS, type ContentStatus } from "@/constants/contentStatus";
+import { compareByGuideListOrder } from "@/constants/contentGuideOrder";
 import { GUIDE_MODULE } from "@/constants/guides";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import {
@@ -58,8 +59,6 @@ function mapGuideMeta(row: GuideMetaRow | null | undefined): GuideMeta | null {
     guideId: row.post_id,
     stage: row.stage,
     category: row.category,
-    targetAudience: row.target_audience,
-    estimatedReadingTime: row.estimated_reading_time,
     lastVerifiedAt: row.last_verified_at,
     sourceLinks: readSourceLinks(row.source_links),
     isPinned: row.is_pinned,
@@ -150,7 +149,8 @@ export async function listGuides(
     .eq("status", CONTENT_STATUS.published)
     .is("deleted_at", null)
     .eq("school_id", DEFAULT_SCHOOL_ID)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .range(pagination.from, pagination.to);
 
   if (category) {
@@ -180,15 +180,19 @@ export async function listGuides(
     getFavoritePostIds(postIds, currentUserId),
   ]);
 
-  const guides = rows.map((row) => ({
-    ...mapPostListItem(row, {
-      commentCount: row.comment_count ?? 0,
-      likeCount: row.like_count ?? 0,
-    }),
-    meta: metaMap.get(row.id) ?? null,
-    excerpt: row.excerpt ?? getExcerpt(row.content),
-    isFavorited: favoritePostIds.has(row.id),
-  }));
+  const guides = rows
+    .map((row) => ({
+      ...mapPostListItem(row, {
+        commentCount: row.comment_count ?? 0,
+        likeCount: row.like_count ?? 0,
+      }),
+      meta: metaMap.get(row.id) ?? null,
+      excerpt: row.excerpt ?? getExcerpt(row.content),
+      isFavorited: favoritePostIds.has(row.id),
+    }))
+    .sort((left, right) =>
+      compareByGuideListOrder(GUIDE_MODULE, left.title, right.title),
+    );
 
   return toPaginatedResult(
     guides,
@@ -286,23 +290,27 @@ export async function getAllGuidesForAdmin(
   const rows = data as PostWithProfileRow[];
   const metaMap = await getGuideMetaByPostIds(rows.map((row) => row.id));
 
-  return rows.map((row) => {
-    const meta = metaMap.get(row.id) ?? null;
+  return rows
+    .map((row) => {
+      const meta = metaMap.get(row.id) ?? null;
 
-    return {
-      id: row.id,
-      title: row.title,
-      excerpt: row.excerpt,
-      content: row.content,
-      categoryId: meta?.category ?? row.category_id,
-      status: row.status as ContentStatus,
-      deletedAt: row.deleted_at,
-      author: mapProfileListItem(row.profiles as ProfileRow),
-      meta,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    };
-  });
+      return {
+        id: row.id,
+        title: row.title,
+        excerpt: row.excerpt,
+        content: row.content,
+        categoryId: meta?.category ?? row.category_id,
+        status: row.status as ContentStatus,
+        deletedAt: row.deleted_at,
+        author: mapProfileListItem(row.profiles as ProfileRow),
+        meta,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    })
+    .sort((left, right) =>
+      compareByGuideListOrder(GUIDE_MODULE, left.title, right.title),
+    );
 }
 
 export async function getGuideByIdForAdmin(
@@ -364,8 +372,6 @@ export async function createGuide(
     post_id: postId,
     stage: input.category,
     category: input.category,
-    target_audience: input.targetAudience?.trim() || null,
-    estimated_reading_time: input.estimatedReadingTime ?? null,
     source_links: toSourceLinksJson(input.sourceLinks),
     is_pinned: false,
   });
@@ -430,8 +436,6 @@ export async function updateGuide(
     .update({
       stage: input.category,
       category: input.category,
-      target_audience: input.targetAudience?.trim() || null,
-      estimated_reading_time: input.estimatedReadingTime ?? null,
       source_links: toSourceLinksJson(input.sourceLinks),
       last_verified_at: verifiedAt,
     })

@@ -1,4 +1,4 @@
-import { Bookmark, CalendarCheck, UserRound } from "lucide-react";
+import { Bookmark, CalendarCheck } from "lucide-react";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import { GuideCommentSection } from "@/components/guides/GuideCommentSection";
 import { GuideFavoriteButton } from "@/components/guides/GuideFavoriteButton";
@@ -68,12 +68,6 @@ export function GuideDetailView({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-            {guide.meta?.targetAudience ? (
-              <span className="inline-flex items-center gap-1">
-                <UserRound className="h-4 w-4" aria-hidden="true" />
-                {guide.meta.targetAudience}
-              </span>
-            ) : null}
             {guide.meta?.lastVerifiedAt ? (
               <span className="inline-flex items-center gap-1">
                 <CalendarCheck className="h-4 w-4" aria-hidden="true" />

@@ -4,8 +4,6 @@ module: guides
 title: 租房指南：热门区域与找房渠道
 category: housing
 excerpt: 租房指南：热门区域与找房渠道 热门区域 红磡核心区 热门：海滨南岸 通勤：步行5-12分钟直达校园，通勤效率高 租金：唐楼单间5300-5800HKD/月；电梯洋楼/小型屋苑单间6500HKD起；两居室整租11000-15000HKD/月 
-targetAudience: 计划在校外租房的新生
-estimatedReadingTime: 10
 isPinned: true
 topics:
 ---

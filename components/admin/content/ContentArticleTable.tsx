@@ -68,14 +68,15 @@ export function ContentArticleTable({
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[960px] text-left text-sm">
+          <table className="w-full min-w-[1100px] text-left text-xs">
             <thead className="border-b bg-muted/40">
-              <tr>
-                <th className="px-4 py-3 font-medium">标题</th>
-                <th className="px-4 py-3 font-medium">分类</th>
-                <th className="px-4 py-3 font-medium">状态</th>
-                <th className="px-4 py-3 font-medium">更新时间</th>
-                <th className="px-4 py-3 font-medium text-right">操作</th>
+              <tr className="whitespace-nowrap">
+                <th className="px-3 py-2.5 font-medium">标题</th>
+                <th className="px-3 py-2.5 font-medium">分类</th>
+                <th className="px-3 py-2.5 font-medium">状态</th>
+                <th className="px-3 py-2.5 font-medium">作者</th>
+                <th className="px-3 py-2.5 font-medium">更新时间</th>
+                <th className="px-3 py-2.5 font-medium text-right">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -83,27 +84,42 @@ export function ContentArticleTable({
                 const isDeleted = Boolean(article.deletedAt);
                 const canView =
                   !isDeleted && article.status === CONTENT_STATUS.published;
+                const authorName =
+                  article.author.displayName ?? article.author.username ?? "—";
 
                 return (
-                  <tr key={article.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-medium">{article.title}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                  <tr
+                    key={article.id}
+                    className="whitespace-nowrap border-b last:border-0"
+                  >
+                    <td className="max-w-[220px] truncate px-3 py-2 font-medium">
+                      {article.title}
+                    </td>
+                    <td className="max-w-[120px] truncate px-3 py-2 text-muted-foreground">
                       {article.categoryId ?? "—"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClassName(article) ?? "bg-secondary text-secondary-foreground"}`}
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${statusClassName(article) ?? "bg-secondary text-secondary-foreground"}`}
                       >
                         {statusLabel(article)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="max-w-[100px] truncate px-3 py-2 text-muted-foreground">
+                      {authorName}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
                       {formatDateTime(article.updatedAt)}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                    <td className="px-3 py-2">
+                      <div className="flex flex-nowrap items-center justify-end gap-1.5">
                         {canView ? (
-                          <Button variant="outline" size="sm" asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            asChild
+                          >
                             <Link href={detailHref(article.id)} target="_blank">
                               查看
                             </Link>
@@ -114,6 +130,7 @@ export function ContentArticleTable({
                             type="button"
                             variant="outline"
                             size="sm"
+                            className="h-7 px-2 text-xs"
                             onClick={() => onEdit(article.id)}
                           >
                             编辑
@@ -127,6 +144,7 @@ export function ContentArticleTable({
                             label="发布"
                             confirmTitle="发布文章？"
                             confirmDescription="发布后将出现在前台列表。"
+                            className="h-7 px-2 text-xs"
                           />
                         ) : null}
                         {!isDeleted &&
@@ -138,6 +156,7 @@ export function ContentArticleTable({
                             confirmTitle="隐藏文章？"
                             confirmDescription="隐藏后前台将不可见。"
                             variant="outline"
+                            className="h-7 px-2 text-xs"
                           />
                         ) : null}
                         {!isDeleted ? (
@@ -148,6 +167,7 @@ export function ContentArticleTable({
                             confirmTitle="删除文章？"
                             confirmDescription="将软删除此文章。"
                             variant="destructive"
+                            className="h-7 px-2 text-xs"
                           />
                         ) : null}
                       </div>

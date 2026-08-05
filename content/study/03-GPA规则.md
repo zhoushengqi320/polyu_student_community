@@ -5,7 +5,6 @@ title: GPA规则
 category: GPA规则
 excerpt: GPA规则 （正文待补充）
 targetAudience: 在读同学
-estimatedReadingTime: 3
 isPinned: false
 topics:
 ---

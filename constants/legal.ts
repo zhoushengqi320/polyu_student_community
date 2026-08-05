@@ -29,9 +29,13 @@ export const LEGAL_DOCUMENTS = {
   },
 } as const;
 
-export type LegalSlug = keyof typeof LEGAL_DOCUMENTS;
+export type LegalDocumentKey = keyof typeof LEGAL_DOCUMENTS;
+/** URL 路径用的 slug，如 community-rules */
+export type LegalSlug = (typeof LEGAL_DOCUMENTS)[LegalDocumentKey]["slug"];
 
-export const LEGAL_SLUGS = Object.keys(LEGAL_DOCUMENTS) as LegalSlug[];
+export const LEGAL_SLUGS = Object.values(LEGAL_DOCUMENTS).map(
+  (document) => document.slug,
+) as LegalSlug[];
 
 export const LEGAL_NAV_ITEMS = [
   LEGAL_DOCUMENTS.communityRules,
@@ -41,9 +45,15 @@ export const LEGAL_NAV_ITEMS = [
 ] as const;
 
 export function isLegalSlug(value: string): value is LegalSlug {
-  return value in LEGAL_DOCUMENTS;
+  return (LEGAL_SLUGS as readonly string[]).includes(value);
 }
 
 export function getLegalDocumentMeta(slug: LegalSlug) {
-  return LEGAL_DOCUMENTS[slug];
+  const document = Object.values(LEGAL_DOCUMENTS).find(
+    (item) => item.slug === slug,
+  );
+  if (!document) {
+    throw new Error(`Unknown legal slug: ${slug}`);
+  }
+  return document;
 }

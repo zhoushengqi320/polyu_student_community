@@ -15,6 +15,7 @@ import {
   adminActionInitialState,
   type AdminActionState,
 } from "@/lib/admin/state";
+import { cn } from "@/lib/utils/cn";
 
 type AdminConfirmButtonProps = {
   label: string;
@@ -27,6 +28,7 @@ type AdminConfirmButtonProps = {
   hiddenFields: Record<string, string>;
   variant?: "default" | "outline" | "destructive";
   disabled?: boolean;
+  className?: string;
 };
 
 function ActionMessage({ state }: { state: AdminActionState }) {
@@ -47,6 +49,7 @@ export function AdminConfirmButton({
   hiddenFields,
   variant = "destructive",
   disabled = false,
+  className,
 }: AdminConfirmButtonProps) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -57,7 +60,13 @@ export function AdminConfirmButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button type="button" size="sm" variant={variant} disabled={disabled}>
+        <Button
+          type="button"
+          size="sm"
+          variant={variant}
+          disabled={disabled}
+          className={cn(className)}
+        >
           {label}
         </Button>
       </DialogTrigger>

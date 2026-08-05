@@ -452,8 +452,6 @@ export type Database = {
           post_id: string;
           stage: string;
           category: string | null;
-          target_audience: string | null;
-          estimated_reading_time: number | null;
           last_verified_at: string | null;
           source_links: Json;
           is_pinned: boolean;
@@ -464,8 +462,6 @@ export type Database = {
           post_id: string;
           stage: string;
           category?: string | null;
-          target_audience?: string | null;
-          estimated_reading_time?: number | null;
           last_verified_at?: string | null;
           source_links?: Json;
           is_pinned?: boolean;
@@ -476,8 +472,6 @@ export type Database = {
           post_id?: string;
           stage?: string;
           category?: string | null;
-          target_audience?: string | null;
-          estimated_reading_time?: number | null;
           last_verified_at?: string | null;
           source_links?: Json;
           is_pinned?: boolean;

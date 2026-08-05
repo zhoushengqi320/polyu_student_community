@@ -28,6 +28,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="text-center text-xs text-muted-foreground">
           继续使用即表示你同意我们的
           <Link
+            href={ROUTES.about.communityRules}
+            className="mx-1 underline underline-offset-2 hover:text-foreground"
+          >
+            社区规则
+          </Link>
+          、
+          <Link
             href={ROUTES.about.terms}
             className="mx-1 underline underline-offset-2 hover:text-foreground"
           >

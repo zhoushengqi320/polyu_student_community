@@ -4,8 +4,6 @@ module: guides
 title: 租房指南：验房退租、防骗与合租
 category: housing
 excerpt: 租房指南：验房退租、防骗与合租 入住交接与验房流程 全屋状况取证 与业主/中介共同在场验房，对全屋墙面、地板、门窗、家具、家电逐一拍照、录像 重点标记已有的污渍、划痕、破损、霉斑，整理成书面《房屋交接清单》，双方签字后各留一份 设施功能核验
-targetAudience: 已签约或准备合租的同学
-estimatedReadingTime: 10
 isPinned: false
 topics:
 ---

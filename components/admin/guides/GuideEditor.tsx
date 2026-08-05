@@ -33,8 +33,6 @@ export function GuideEditor({
           excerpt: guide.excerpt,
           content: guide.content,
           category: guide.meta?.category ?? guide.categoryId,
-          targetAudience: guide.meta?.targetAudience ?? null,
-          estimatedReadingTime: guide.meta?.estimatedReadingTime ?? null,
           sourceLinks: guide.meta?.sourceLinks ?? [],
         }
       : undefined;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import {
   FORUM_MAX_TOPICS,
   FORUM_TOPIC_SUGGESTIONS,
@@ -27,6 +27,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
+import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
+import { useCtrlSSave } from "@/hooks/useCtrlSSave";
+import { showSaveSuccessToast } from "@/lib/utils/saveSuccessToast";
 
 const initialState: ForumPostFormState = {};
 
@@ -57,7 +60,35 @@ export function ForumPostForm({
   const [topics, setTopics] = useState<string[]>(initialValues?.topics ?? []);
   const [topicInput, setTopicInput] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(initialValues?.isAnonymous ?? false);
-  const { markDirty, confirmLeave, dialogProps } = useUnsavedChangesGuard();
+  const { markDirty, markClean, confirmLeave, dialogProps } = useUnsavedChangesGuard();
+  const formRef = useRef<HTMLFormElement>(null);
+  const canShowSaveToastRef = useRef(false);
+
+  const handleCtrlSSave = useCallback(() => {
+    if (pending) return;
+    formRef.current?.requestSubmit();
+  }, [pending]);
+
+  useCtrlSSave({
+    enabled: mode === "edit",
+    disabled: pending,
+    onSave: handleCtrlSSave,
+  });
+
+  useEffect(() => {
+    if (pending) {
+      canShowSaveToastRef.current = true;
+    }
+  }, [pending]);
+
+  useEffect(() => {
+    if (pending || !state.success || !canShowSaveToastRef.current) {
+      return;
+    }
+    canShowSaveToastRef.current = false;
+    markClean();
+    showSaveSuccessToast();
+  }, [pending, state.success, markClean]);
 
   function addTopic(raw: string) {
     const value = raw.trim();
@@ -94,7 +125,7 @@ export function ForumPostForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="space-y-4">
+          <form ref={formRef} action={formAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">标题</Label>
               <Input
@@ -220,7 +251,15 @@ export function ForumPostForm({
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
+            {state.success ? (
+              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                {state.success}
+              </p>
+            ) : null}
+
+            <CommunityRulesNotice />
+
+            <div className="flex flex-wrap items-center gap-2">
               <Button type="submit" disabled={pending}>
                 {pending
                   ? mode === "edit"
@@ -245,6 +284,11 @@ export function ForumPostForm({
               >
                 {mode === "edit" ? "取消" : "返回讨论区"}
               </Button>
+              {mode === "edit" ? (
+                <span className="text-xs text-muted-foreground">
+                  快捷键 Ctrl/⌘+S 保存（不离开编辑页）
+                </span>
+              ) : null}
             </div>
           </form>
         </CardContent>

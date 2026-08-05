@@ -13,8 +13,6 @@ export type GuideMeta = {
   guideId: string;
   stage: string;
   category: GuideCategoryId | string | null;
-  targetAudience: string | null;
-  estimatedReadingTime: number | null;
   lastVerifiedAt: string | null;
   sourceLinks: GuideSourceLink[];
   isPinned: boolean;
@@ -48,8 +46,6 @@ export type CreateGuideInput = {
   excerpt?: string | null;
   content: string;
   category: GuideCategoryId;
-  targetAudience?: string | null;
-  estimatedReadingTime?: number | null;
   sourceLinks: GuideSourceLink[];
 };
 

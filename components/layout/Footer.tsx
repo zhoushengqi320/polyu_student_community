@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HOME_DISCLAIMER } from "@/constants/home";
 import { LEGAL_NAV_ITEMS } from "@/constants/legal";
-import { SITE_NAME, SCHOOL_NAME } from "@/constants/site";
+import { SITE_NAME } from "@/constants/site";
 
 export function Footer() {
   return (
@@ -10,7 +10,7 @@ export function Footer() {
         <div>
           <p className="font-semibold">{SITE_NAME}</p>
           <p className="text-sm text-muted-foreground">
-            {SCHOOL_NAME}学生社区 · 课程 · 学习 · 生活
+            {SITE_NAME} · 课程 · 学习 · 生活
           </p>
           <p className="mt-2 overflow-x-auto text-xs text-muted-foreground whitespace-nowrap">
             {HOME_DISCLAIMER}

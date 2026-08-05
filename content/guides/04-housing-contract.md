@@ -4,8 +4,6 @@ module: guides
 title: 租房指南：看房、签约与费用
 category: housing
 excerpt: 租房指南：看房、签约与费用 看房要点 房屋硬件核验 基础户型与环境 确认朝向与采光：香港比较潮湿，南向、东向采光通风更佳，西向单位夏季闷热 检查墙面、天花板：查看是否有霉斑、渗水痕迹，厨卫角落重点排查漏水问题 确认楼层与噪音：香港基础噪音较
-targetAudience: 准备看房与签约的同学
-estimatedReadingTime: 12
 isPinned: false
 topics:
 ---

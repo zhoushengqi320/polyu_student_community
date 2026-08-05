@@ -34,6 +34,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
 
 type CourseReviewFormProps = {
   courseCode: string;
@@ -567,6 +568,8 @@ export function CourseReviewForm({
                 {state.error}
               </p>
             ) : null}
+
+            <CommunityRulesNotice message="发布课程评价前请遵守社区规则，分享真实体验，勿人身攻击或泄露隐私。" />
 
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={pending}>

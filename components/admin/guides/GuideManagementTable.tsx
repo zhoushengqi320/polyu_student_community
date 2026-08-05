@@ -78,16 +78,16 @@ export function GuideManagementTable({
       </div>
 
       <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full min-w-[1080px] text-left text-sm">
+        <table className="w-full min-w-[1180px] text-left text-xs">
           <thead className="border-b bg-muted/40">
-            <tr>
-              <th className="px-4 py-3 font-medium">标题</th>
-              <th className="px-4 py-3 font-medium">分类</th>
-              <th className="px-4 py-3 font-medium">状态</th>
-              <th className="px-4 py-3 font-medium">作者</th>
-              <th className="px-4 py-3 font-medium">创建时间</th>
-              <th className="px-4 py-3 font-medium">更新时间</th>
-              <th className="px-4 py-3 font-medium text-right">操作</th>
+            <tr className="whitespace-nowrap">
+              <th className="px-3 py-2.5 font-medium">标题</th>
+              <th className="px-3 py-2.5 font-medium">分类</th>
+              <th className="px-3 py-2.5 font-medium">状态</th>
+              <th className="px-3 py-2.5 font-medium">作者</th>
+              <th className="px-3 py-2.5 font-medium">创建时间</th>
+              <th className="px-3 py-2.5 font-medium">更新时间</th>
+              <th className="px-3 py-2.5 font-medium text-right">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -95,47 +95,63 @@ export function GuideManagementTable({
               const isDeleted = Boolean(guide.deletedAt);
               const canView =
                 !isDeleted && guide.status === CONTENT_STATUS.published;
+              const authorName =
+                guide.author.displayName ?? guide.author.username ?? "—";
 
               return (
-                <tr key={guide.id} className="border-b last:border-0">
-                  <td className="px-4 py-3">
+                <tr
+                  key={guide.id}
+                  className="whitespace-nowrap border-b last:border-0"
+                >
+                  <td className="max-w-[240px] px-3 py-2">
                     <button
                       type="button"
                       onClick={() => onEdit(guide.id)}
-                      className="line-clamp-2 text-left font-medium hover:text-primary"
+                      className="block w-full truncate text-left font-medium hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={isDeleted}
+                      title={guide.title}
                     >
                       {guide.title}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="max-w-[110px] truncate px-3 py-2 text-muted-foreground">
                     {getGuideCategoryLabel(guide.meta?.category ?? guide.categoryId)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <TagBadge
                       label={getGuideStatusLabel(guide)}
-                      className={getGuideStatusClassName(guide)}
+                      className={`text-[11px] ${getGuideStatusClassName(guide) ?? ""}`}
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    {guide.author.displayName ?? guide.author.username}
+                  <td className="max-w-[100px] truncate px-3 py-2 text-muted-foreground">
+                    {authorName}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-3 py-2 text-muted-foreground">
                     {formatDateTime(guide.createdAt)}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-3 py-2 text-muted-foreground">
                     {formatDateTime(guide.updatedAt)}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap justify-end gap-2">
+                  <td className="px-3 py-2">
+                    <div className="flex flex-nowrap items-center justify-end gap-1.5">
                       {canView ? (
-                        <Button asChild size="sm" variant="outline">
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs"
+                        >
                           <Link href={ROUTES.guides.detail(guide.id)} target="_blank">
                             查看
                           </Link>
                         </Button>
                       ) : (
-                        <Button size="sm" variant="outline" disabled>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled
+                          className="h-7 px-2 text-xs"
+                        >
                           查看
                         </Button>
                       )}
@@ -145,6 +161,7 @@ export function GuideManagementTable({
                           type="button"
                           size="sm"
                           variant="outline"
+                          className="h-7 px-2 text-xs"
                           onClick={() => onEdit(guide.id)}
                         >
                           编辑
@@ -169,6 +186,7 @@ export function GuideManagementTable({
                           action={publishGuideAction}
                           hiddenFields={{ guideId: guide.id }}
                           variant="default"
+                          className="h-7 px-2 text-xs"
                         />
                       ) : null}
 
@@ -180,6 +198,7 @@ export function GuideManagementTable({
                           action={hideGuideAction}
                           hiddenFields={{ guideId: guide.id }}
                           variant="outline"
+                          className="h-7 px-2 text-xs"
                         />
                       ) : null}
 
@@ -190,9 +209,10 @@ export function GuideManagementTable({
                           confirmDescription="此操作将软删除该攻略，前台将不再显示。"
                           action={deleteGuideAction}
                           hiddenFields={{ guideId: guide.id }}
+                          className="h-7 px-2 text-xs"
                         />
                       ) : (
-                        <span className="self-center text-xs text-muted-foreground">
+                        <span className="self-center text-[11px] text-muted-foreground">
                           已删除
                         </span>
                       )}

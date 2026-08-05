@@ -4,8 +4,6 @@ module: guides
 title: 学校注册：NetID、eStudent、选课与学生卡
 category: campus_systems
 excerpt: 从开通 NetID、完成课程注册，到领取实体学生卡与参加迎新。步骤框架供内地新生对照，具体日期以 Academic Registry 邮件为准。
-targetAudience: 办理注册的新生
-estimatedReadingTime: 9
 isPinned: true
 topics:
   - 注册

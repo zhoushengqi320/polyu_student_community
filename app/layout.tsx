@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SaveSuccessToastHost } from "@/components/common/SaveSuccessToastHost";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/constants/site";
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
+        <SaveSuccessToastHost />
       </body>
     </html>
   );

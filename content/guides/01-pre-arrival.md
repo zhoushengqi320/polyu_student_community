@@ -4,8 +4,6 @@ module: guides
 title: 入学前准备：证件与行前清单
 category: pre_arrival
 excerpt: 来港前证件、缴费与生活物资清单。含学费/杂费常见缴费路径，具体金额与截止日期以录取通知与 eStudent 为准。
-targetAudience: 准备来港的内地新生
-estimatedReadingTime: 8
 isPinned: true
 topics:
   - 行前

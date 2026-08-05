@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
+import { CommunityRulesView } from "@/components/legal/CommunityRulesView";
 import { LegalDocumentView } from "@/components/legal/LegalDocumentView";
 import { LEGAL_SLUGS, isLegalSlug } from "@/constants/legal";
 import { getLegalDocument } from "@/lib/legal/getLegalDocument";
@@ -45,7 +46,11 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
 
   return (
     <ModulePageShell title={document.title} description={document.description}>
-      <LegalDocumentView content={document.body} />
+      {document.slug === "community-rules" ? (
+        <CommunityRulesView content={document.body} />
+      ) : (
+        <LegalDocumentView content={document.body} />
+      )}
     </ModulePageShell>
   );
 }

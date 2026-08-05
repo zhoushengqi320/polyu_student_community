@@ -80,7 +80,15 @@ export function ReportDialog({
         <DialogHeader>
           <DialogTitle>举报{targetLabel}</DialogTitle>
           <DialogDescription>
-            请选择举报原因。管理员会尽快审核处理，恶意举报可能导致账号受限。
+            请选择举报原因。管理员会尽快审核处理，恶意举报可能导致账号受限。处理依据见
+            <Link
+              href={ROUTES.about.communityRules}
+              className="mx-1 underline underline-offset-2 hover:text-foreground"
+              onClick={() => setOpen(false)}
+            >
+              社区规则
+            </Link>
+            。
           </DialogDescription>
         </DialogHeader>
 

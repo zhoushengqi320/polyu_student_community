@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useActionState } from "react";
 import {
   LIFE_GUIDE_TOPICS,
@@ -23,6 +23,8 @@ import {
   type AdminContentArticle,
   type ContentCmsModule,
 } from "@/lib/db/contentCms";
+import { useCtrlSSave } from "@/hooks/useCtrlSSave";
+import { showSaveSuccessToast } from "@/lib/utils/saveSuccessToast";
 
 type ContentArticleFormProps = {
   module: ContentCmsModule;
@@ -55,6 +57,8 @@ export function ContentArticleForm({
   const [content, setContent] = useState(initialValues?.content ?? "");
   const handledSuccessRef = useRef<string | null>(null);
   const skipEditorDirtyRef = useRef(true);
+  const formRef = useRef<HTMLFormElement>(null);
+  const saveViaShortcutRef = useRef(false);
   const { isDirty, markDirty, markClean, confirmLeave, dialogProps } =
     useUnsavedChangesGuard();
 
@@ -62,6 +66,20 @@ export function ContentArticleForm({
     module === "study"
       ? STUDY_GUIDE_TOPICS.map((item) => item.label)
       : LIFE_GUIDE_TOPICS.map((item) => item.label);
+
+  const handleCtrlSSave = useCallback(() => {
+    if (pending) return;
+    saveViaShortcutRef.current = true;
+    formRef.current?.requestSubmit();
+  }, [pending]);
+
+  useCtrlSSave({ disabled: pending, onSave: handleCtrlSSave });
+
+  useEffect(() => {
+    if (pending) {
+      handledSuccessRef.current = null;
+    }
+  }, [pending]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -76,12 +94,24 @@ export function ContentArticleForm({
     if (handledSuccessRef.current === key) return;
     handledSuccessRef.current = key;
     markClean();
+    showSaveSuccessToast();
+
+    if (saveViaShortcutRef.current && mode === "edit") {
+      saveViaShortcutRef.current = false;
+      return;
+    }
+    saveViaShortcutRef.current = false;
     onSuccess();
-  }, [state.success, state.articleId, onSuccess, markClean]);
+  }, [state.success, state.articleId, onSuccess, markClean, mode]);
 
   return (
     <>
-      <form action={formAction} className="space-y-5" onChange={markDirty}>
+      <form
+        ref={formRef}
+        action={formAction}
+        className="space-y-5"
+        onChange={markDirty}
+      >
         <input type="hidden" name="module" value={module} />
         {mode === "edit" && initialValues ? (
           <input type="hidden" name="articleId" value={initialValues.id} />
@@ -147,9 +177,10 @@ export function ContentArticleForm({
             }
             markDirty();
           }}
+          onSaveShortcut={handleCtrlSSave}
           required
           error={state.fieldErrors?.content}
-          hint="所见即所得：工具栏可调标题、字号、颜色、对齐，并插入图片与表格。"
+          hint="所见即所得：工具栏可调标题、字号、颜色、对齐，并插入图片与表格。快捷键 ⌘/Ctrl+S 保存。"
         />
 
         {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
@@ -157,7 +188,7 @@ export function ContentArticleForm({
           <p className="text-sm text-green-600">{state.success}</p>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={pending}>
             {pending ? "保存中..." : mode === "create" ? "创建草稿" : "保存修改"}
           </Button>
@@ -168,6 +199,9 @@ export function ContentArticleForm({
           >
             返回列表
           </Button>
+          <span className="text-xs text-muted-foreground">
+            快捷键 Ctrl/⌘+S 保存（不离开编辑页）
+          </span>
         </div>
       </form>
       <UnsavedChangesDialog {...dialogProps} />

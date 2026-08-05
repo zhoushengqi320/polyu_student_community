@@ -4,8 +4,6 @@ module: guides
 title: 初次抵港：通关、到校与临时住宿
 category: first_week
 excerpt: 初次抵港：通关、到校与临时住宿 通关 1.提前在内地出入境大厅办理好学生D签，首次持D签注入境香港，必须走人工通道，由海关核验e-Visa、发放小白条并激活逗留资格。后续入境可以走自助通道。 2.保存好入香港关时领取的小白条，日后申领证件及
-targetAudience: 即将或刚到香港的新生
-estimatedReadingTime: 8
 isPinned: true
 topics:
 ---

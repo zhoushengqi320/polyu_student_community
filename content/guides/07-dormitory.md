@@ -4,8 +4,6 @@ module: guides
 title: 宿舍指南：红磡与何文田、申请与保宿
 category: housing
 excerpt: 理大学生宿舍申请框架：先开通 NetID，再经 POSS 申请；含红磡/何文田差异、入住与保宿注意点。具体名额与日期以 SAO 当年公告为准。
-targetAudience: 申请宿舍的新生
-estimatedReadingTime: 10
 isPinned: true
 topics:
   - 宿舍

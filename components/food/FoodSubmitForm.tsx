@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
 
 const initialState: FoodFormState = {};
 
@@ -110,6 +111,7 @@ export function FoodSubmitForm() {
           {state.error ? (
             <p className="text-sm text-destructive">{state.error}</p>
           ) : null}
+          <CommunityRulesNotice message="提交地点与推荐前请遵守社区规则，勿发布虚假或营销导流内容。" />
           <Button type="submit" disabled={pending}>
             {pending ? "提交中..." : "提交地点与推荐"}
           </Button>

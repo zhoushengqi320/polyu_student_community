@@ -56,8 +56,6 @@ function mapGuideMetaRow(row: GuideMetaRow): GuideMeta {
     guideId: row.post_id,
     stage: row.stage,
     category: row.category,
-    targetAudience: row.target_audience,
-    estimatedReadingTime: row.estimated_reading_time,
     lastVerifiedAt: row.last_verified_at,
     sourceLinks,
     isPinned: row.is_pinned,

@@ -1,4 +1,4 @@
--- 理大社区：初始种子数据
+-- PolyUHub：初始种子数据
 -- 常用网站导航分类 + 理工大学常用链接
 
 INSERT INTO public.resource_categories (id, label, sort_order) VALUES

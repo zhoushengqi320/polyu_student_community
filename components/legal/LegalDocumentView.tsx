@@ -2,6 +2,8 @@ import { type ReactNode } from "react";
 
 type LegalDocumentViewProps = {
   content: string;
+  /** 为一级章节标题添加稳定 id（如 section-1），供目录锚点使用 */
+  enableAnchors?: boolean;
 };
 
 function isSectionHeading(line: string) {
@@ -16,7 +18,15 @@ function isBullet(line: string) {
   return /^[-•]\s+\S/.test(line);
 }
 
-export function LegalDocumentView({ content }: LegalDocumentViewProps) {
+function getSectionAnchorId(line: string): string | undefined {
+  const match = line.match(/^(\d+)\.\s+/);
+  return match ? `section-${match[1]}` : undefined;
+}
+
+export function LegalDocumentView({
+  content,
+  enableAnchors = false,
+}: LegalDocumentViewProps) {
   const lines = content.split("\n");
   const elements: ReactNode[] = [];
   let listItems: string[] = [];
@@ -73,10 +83,12 @@ export function LegalDocumentView({ content }: LegalDocumentViewProps) {
     flushList();
 
     if (isSectionHeading(trimmed)) {
+      const anchorId = enableAnchors ? getSectionAnchorId(trimmed) : undefined;
       elements.push(
         <h2
           key={`h2-${elements.length}`}
-          className="mt-8 border-b border-border/70 pb-2 text-lg font-semibold tracking-tight first:mt-2 md:text-xl"
+          id={anchorId}
+          className="mt-8 scroll-mt-24 border-b border-border/70 pb-2 text-lg font-semibold tracking-tight first:mt-2 md:text-xl"
         >
           {trimmed}
         </h2>,

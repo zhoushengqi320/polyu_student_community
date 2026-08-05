@@ -1,5 +1,6 @@
 import { CONTENT_STATUS, type ContentStatus } from "@/constants/contentStatus";
 import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
+import { compareByGuideListOrder } from "@/constants/contentGuideOrder";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { createAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
@@ -85,7 +86,11 @@ export async function listContentArticlesForAdmin(
     return [];
   }
 
-  return (data as PostRow[]).map(mapArticle);
+  return (data as PostRow[])
+    .map(mapArticle)
+    .sort((left, right) =>
+      compareByGuideListOrder(module, left.title, right.title),
+    );
 }
 
 export async function createContentArticle(

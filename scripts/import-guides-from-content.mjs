@@ -139,11 +139,6 @@ async function loadArticles() {
         title: String(data.title),
         category: String(data.category),
         excerpt: data.excerpt ? String(data.excerpt) : null,
-        targetAudience: data.targetAudience ? String(data.targetAudience) : null,
-        estimatedReadingTime:
-          typeof data.estimatedReadingTime === "number"
-            ? data.estimatedReadingTime
-            : null,
         isPinned: Boolean(data.isPinned),
         topics: Array.isArray(data.topics) ? data.topics.map(String) : [],
         content: body.replace(/\*\*(.+?)\*\*/g, "$1"),
@@ -227,8 +222,6 @@ async function upsertArticle(supabase, article, authorId) {
       post_id: article.id,
       stage: article.category,
       category: article.category,
-      target_audience: article.targetAudience,
-      estimated_reading_time: article.estimatedReadingTime,
       last_verified_at: now,
       source_links: [],
       is_pinned: article.isPinned,

@@ -43,6 +43,8 @@ type RichTextEditorClientProps = {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
+  /** ⌘/Ctrl+S：在编辑器内拦截浏览器存网页并触发保存 */
+  onSaveShortcut?: () => void;
 };
 
 const FONT_SIZES = [
@@ -88,9 +90,12 @@ export function RichTextEditorClient({
   value,
   onChange,
   required,
+  onSaveShortcut,
 }: RichTextEditorClientProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef(false);
+  const onSaveShortcutRef = useRef(onSaveShortcut);
+  onSaveShortcutRef.current = onSaveShortcut;
   const [uploading, startUpload] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [, setTick] = useState(0);
@@ -128,12 +133,46 @@ export function RichTextEditorClient({
       TableCell,
       Placeholder.configure({
         placeholder: "在这里直接写正文…可选中文字设标题/字号，或插入图片、表格",
+        emptyEditorClass: "is-editor-empty",
+        emptyNodeClass: "is-empty",
+        showOnlyWhenEditable: true,
+        showOnlyCurrent: false,
       }),
     ],
     content: initialHtml || "<p></p>",
     editorProps: {
       attributes: {
         class: "prose-editor min-h-[320px] max-w-none px-4 py-3 outline-none",
+      },
+      handleDOMEvents: {
+        keydown: (_view, event) => {
+          const isSave =
+            (event.metaKey || event.ctrlKey) &&
+            !event.altKey &&
+            !event.shiftKey &&
+            (event.code === "KeyS" || event.key.toLowerCase() === "s");
+          if (!isSave) {
+            return false;
+          }
+          // TipTap 焦点内：必须在编辑器层 preventDefault，否则 Chrome 仍会「存储网页」
+          event.preventDefault();
+          event.stopPropagation();
+          onSaveShortcutRef.current?.();
+          return true;
+        },
+      },
+      handleKeyDown: (_view, event) => {
+        const isSave =
+          (event.metaKey || event.ctrlKey) &&
+          !event.altKey &&
+          !event.shiftKey &&
+          (event.code === "KeyS" || event.key.toLowerCase() === "s");
+        if (!isSave) {
+          return false;
+        }
+        event.preventDefault();
+        onSaveShortcutRef.current?.();
+        return true;
       },
     },
     onCreate: ({ editor: current }) => {
