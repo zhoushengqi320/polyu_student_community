@@ -5,11 +5,15 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "import:courses": "node scripts/import-courses-from-pdfs.mjs",
-    "import:guides": "node scripts/import-guides-from-content.mjs"
+    "import:guides": "node scripts/import-guides-from-content.mjs",
+    "verify:deploy": "node scripts/verify-deploy-env.mjs",
+    "setup:production": "node scripts/setup-production.mjs",
+    "deploy:production": "node scripts/deploy-production.mjs",
+    "configure:auth": "node scripts/configure-supabase-auth.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

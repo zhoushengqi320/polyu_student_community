@@ -6,6 +6,7 @@ import { polyuEmailSchema } from "@/lib/validations/authSchema";
 import { mapAuthErrorMessage } from "@/lib/auth/errors";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { getAuthCallbackUrl } from "@/lib/auth/getSiteUrl";
 import { ROUTES } from "@/constants/routes";
 import { type ActionResult } from "@/types/common";
 
@@ -19,10 +20,6 @@ function authUnavailableState(): AuthFormState {
   return {
     error: "认证服务未配置，请先设置环境变量。",
   };
-}
-
-function getAuthCallbackUrl(): string {
-  return `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`;
 }
 
 export async function sendMagicLinkAction(

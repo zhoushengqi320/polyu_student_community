@@ -10,89 +10,25 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 
 ### 已完成 / 基础可用
 
-- 首页六大模块入口
-- Supabase Magic Link 登录
-- PolyU 邮箱限制与 onboarding
-- 用户角色与权限模型
-- 个人主页
-- 常用网站导航
-  - 分类展示
-  - 搜索
-  - Supabase 数据源
-  - 未配置数据库时 fallback
-- 自由讨论区
-  - 帖子列表、详情、发布
-  - 分类筛选、topic 筛选、搜索、排序
-  - 热度、最新、最多评论、最多点赞、最多浏览
-  - 匿名发帖
-  - 评论与回复
-  - 回复统一展示在一级评论下一层，避免无限嵌套
-  - 点赞、收藏、举报
-- 举报系统
-  - 支持帖子、评论、课程评价等 target type
-  - 支持垃圾内容、诈骗、学术不端、骚扰、隐私泄露等原因
-- 管理员后台
-  - 查看统计
-  - 用户管理
-  - 封禁 / 解封用户
-  - 授予理大认证
-  - 举报处理
-  - 删除论坛帖子
-  - 删除论坛评论
-  - 删除课程评价
-  - 查看管理员操作日志
-- 课程评价增强版
-  - `/courses` 课程列表
-  - 课程搜索、部门筛选、排序、分页
-  - `/courses/[courseCode]` 课程详情
-  - Overview / Assessment / Reviews / PDF 真正交互式 Tabs
-  - 课程详情顶部统计卡片：Overall Rating、Difficulty、Review Count、Top Tags
-  - 课程统计聚合字段落表到 `courses`
-  - Assessment 按官方 PDF 中的原始分类展示，不强行归类为 assignment / quiz / final
-  - Objectives 导入时只保留目标正文，不重复显示 `Objectives` 标题
-  - PDF 区块支持通过本地 `学科/` 文件夹预览和下载原始 PDF
-  - `/courses/[courseCode]/review` 发布课程评价
-  - 轻量评价表单：综合评分、课程难度、标签、正文、匿名展示
-  - 课程评价“有用”投票
-  - 课程收藏 / 取消收藏
-  - 课程评价举报
-  - 管理员后台查看和删除课程评价
-- 课程 PDF 导入脚本
-  - 扫描 `学科/` 文件夹下的课程 PDF
-  - 自动提取课程代码、课程名、credits、level、objectives、description、assessment 等信息
-  - `assessment_json.items` 保留 PDF 原始考核分类和百分比
-  - `pdf_storage_path` 保存本地 PDF 路径，页面通过 `/course-pdfs/...` 读取
-  - 只插入数据库中不存在的新课程，避免重复导入
-  - `--update-existing` 会更新已有课程，并自动跳过同一批次内重复课程 code
-- 入学攻略基础版
-  - `/guides` 攻略列表页
-  - 分类筛选和关键词搜索
-  - `/guides/[id]` 攻略详情页
-  - 攻略正文复用 `posts`，`module = guides`
-  - `guides_meta` 存储分类、目标读者、阅读时间、核对时间和来源链接
-  - 基础 Markdown 展示
-  - `supabase/seed_guides.sql` 提供 8 篇短版测试攻略
-
-### 开发中 / 待完善
-
-- 课程评价后续增强
-  - 评价排序
-  - 后台课程评价筛选
-  - 个人主页展示“我的收藏课程”
-- 入学攻略后续增强
-  - JSONL 真实数据导入脚本
-  - 攻略收藏按钮与评论区 UI
-  - 管理员发布 / 编辑 / 删除攻略
-- 美食推荐 Food Recommendations
-- 找搭子 Buddy Matching
+- 首页流量入口：Hero、全站搜索、核心模块入口、热门课程、最新讨论、价值说明、页脚免责声明
+- Supabase Magic Link 登录、PolyU 邮箱限制、onboarding、角色权限、个人主页
+- 课程评价：列表 / 详情 / 评价 / 有用投票 / 收藏 / 举报；后台删除与课程管理
+- 吃喝玩乐：地点列表、筛选、推荐、收藏、举报、用户提交
+- 学习指南 / 生活指南：`/study`、`/life` + 后台内容 CMS；正文来自 `content/study`、`content/life`，用 `npm run import:guides` 导入
+- 入学攻略（季节模块）：`FEATURES.seasonalGuides` 控制导航；列表 / 详情 / 收藏 / 评论 / 举报 / 后台 CMS
+- 自由讨论区：分类、topic（含找搭子）、搜索排序、评论回复、赞藏举报
 - 全站搜索 `/search`
-- 社区行为守则页面 `/about/community-rules`
-- 首页升级为流量入口
-  - 全站搜索框
-  - 热门课程
-  - 最新讨论
-  - 最新找搭子
-  - 新生攻略入口
+- 社区规则 `/about/community-rules`（摘要 + 目录锚点）及登录 / 发帖 / 课评 / Food / 举报入口
+- 法律页：条款 / 私隐 / 版权
+- 举报系统与管理员后台（用户、内容、举报、操作日志）
+
+### 待完善（非上线阻断）
+
+- 生活指南部分栏目仍偏薄；美食冷启动数据不足
+- 课程评价排序、后台评价筛选；课程 PDF 生产环境对象存储方案
+- Study / Life 详情互动（评论 / 举报）与模块内搜索
+- 账号注销流程与法务文案校准；通知 / 申诉入口
+- `resources` 表为遗留数据，站点不暴露「常用网站」模块
 
 ## 技术栈
 
@@ -106,7 +42,7 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 - Supabase PostgreSQL
 - Supabase RLS
 - Server Actions
-- Vercel 部署
+- Railway / Node 生产部署
 - `pdf-parse` 用于本地课程 PDF 导入脚本
 
 ## 项目结构
@@ -185,7 +121,9 @@ npm run build            # 构建生产版本
 npm run start            # 启动生产服务
 npm run lint             # 运行 ESLint
 npm run typecheck        # TypeScript 类型检查
+npm run import:guides    # 从 content/guides|life|study 导入内容到 posts
 npm run import:courses   # 从 学科/ 文件夹导入课程 PDF
+npm run verify:deploy    # 检查部署环境变量（加 --production 校验生产配置）
 ```
 
 当前 `npm run typecheck` 已通过。
@@ -194,45 +132,71 @@ npm run import:courses   # 从 学科/ 文件夹导入课程 PDF
 
 ### 1. 执行数据库迁移
 
-按顺序执行：
+按顺序在 Supabase `SQL Editor` 执行 `supabase/migrations/` 下全部文件：
 
 ```text
-supabase/migrations/001_initial_schema.sql
-supabase/migrations/002_rls_policies.sql
-supabase/migrations/003_magic_link_onboarding.sql
-supabase/migrations/004_forum_enhancements.sql
-supabase/migrations/005_forum_reports.sql
-supabase/migrations/006_forum_comment_replies.sql
-supabase/migrations/007_course_reviews_enhancement.sql
-supabase/migrations/008_simplify_course_reviews.sql
-supabase/migrations/009_course_review_stats.sql
-supabase/migrations/010_freshman_guides.sql
+001_initial_schema.sql
+002_rls_policies.sql
+003_magic_link_onboarding.sql
+004_forum_enhancements.sql
+005_forum_reports.sql
+006_forum_comment_replies.sql
+007_course_reviews_enhancement.sql
+008_simplify_course_reviews.sql
+009_course_review_stats.sql
+010_freshman_guides.sql
+011_module_key_study_life.sql
+012_relax_course_review_text_length.sql
+013_content_images_storage.sql
+014_food_places_user_insert.sql
+015_food_place_target_type.sql
+016_drop_estimated_reading_time.sql
+017_drop_target_audience.sql
 ```
 
-这些 SQL 可以在 Supabase 控制台的 `SQL Editor -> New query` 中按顺序复制执行。`009_course_review_stats.sql` 会在 `courses` 表新增课程评价统计字段，并创建触发器自动同步统计。`010_freshman_guides.sql` 会扩展 `guides_meta`，用于 Freshman Guides 的分类和扩展信息。
+说明：
 
-然后执行：
+- `009`：课程评价统计字段与触发器
+- `011`：为 `posts.module` 增加 `study` / `life`
+- `013`：内容图 Storage bucket（`content-images`）
+- `014` / `015`：美食地点用户提交与举报 target
+- `016` / `017`：移除已废弃的攻略元数据列
+
+可选执行：
 
 ```text
 supabase/seed.sql
 ```
 
-如果要插入入学攻略测试数据，再执行：
+`supabase/seed_guides.sql` 已废弃；真实指南内容请用：
 
-```text
-supabase/seed_guides.sql
+```bash
+npm run import:guides
+# 或只导入某一模块
+npm run import:guides -- --module=study
 ```
-
-`seed_guides.sql` 只用于开发测试，会插入 8 篇短版攻略。执行前数据库里需要至少有一个 `profiles` 用户记录。
 
 ### 2. 配置 Magic Link
 
-在 Supabase 控制台设置：
+在 Supabase 控制台：
 
-- Authentication -> Providers -> Email，启用 Email 登录
-- Authentication -> URL Configuration
-  - Site URL: `http://localhost:3000`
-  - Redirect URL: `http://localhost:3000/auth/callback`
+- Authentication → Providers → Email：启用 Email 登录
+- Authentication → URL Configuration：
+
+本地开发：
+
+- Site URL: `http://localhost:3000`
+- Redirect URLs: `http://localhost:3000/auth/callback`
+
+生产（Railway 或其它平台部署后，把域名换成实际值）：
+
+- Site URL: `https://你的生产域名`
+- Redirect URLs 同时保留：
+  - `http://localhost:3000/auth/callback`
+  - `https://你的生产域名/auth/callback`
+  - `https://*.up.railway.app/auth/callback`（Railway 默认域名）
+
+并把环境变量 `NEXT_PUBLIC_SITE_URL` 设为生产 Site URL（不含末尾斜杠）。登录邮件里的回调地址由该变量生成。
 
 项目默认只允许 `@connect.polyu.hk` 邮箱登录。
 
@@ -249,6 +213,83 @@ WHERE id = '你的用户 UUID';
 ```
 
 用户 UUID 可在 Supabase `Authentication -> Users` 查看。
+
+## 生产部署（Railway，推荐）
+
+前提：GitHub 仓库已推送最新 `main`；Supabase 已执行迁移 `001`–`017`；Email 登录已启用。
+
+Railway 比 Vercel 注册更简单，适合本项目一键上线。
+
+### 1. 创建项目并连接 GitHub
+
+1. 打开 [railway.app](https://railway.app) → **Login with GitHub**
+2. **New Project** → **Deploy from GitHub repo**
+3. 选择 `zhoushengqi320/polyu_student_community`（或你的 fork）
+4. Railway 会读取根目录 `railway.toml`，自动执行 `npm run build` 与 `npm start`
+
+### 2. 生成公网域名
+
+1. 进入该 Service → **Settings** → **Networking** → **Generate Domain**
+2. 记下域名，例如 `https://polyuhub-production.up.railway.app`
+
+### 3. 配置环境变量
+
+在 Service → **Variables** 添加：
+
+| 变量 | 值 | 说明 |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL | 与本地 `.env.local` 相同 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon public key | 前端可用 |
+| `NEXT_PUBLIC_SITE_URL` | `https://你的-railway-域名.up.railway.app` | **不要**用 localhost |
+
+说明：
+
+- `SUPABASE_SERVICE_ROLE_KEY` **不要**配到 Railway；仅本地导入脚本使用
+- 也可用 Railway 变量引用：`NEXT_PUBLIC_SITE_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}`（需先生成域名）
+
+添加变量后 Railway 会自动 **Redeploy**（Next.js 需在构建时注入 `NEXT_PUBLIC_*`）。
+
+### 4. 配置 Supabase Auth 回调
+
+部署成功后，在 **Supabase → Authentication → URL Configuration**：
+
+- **Site URL**：与 `NEXT_PUBLIC_SITE_URL` 相同
+- **Redirect URLs** 至少包含：
+  - `https://你的-railway-域名.up.railway.app/auth/callback`
+  - `http://localhost:3000/auth/callback`
+  - `https://*.up.railway.app/auth/callback`
+
+若 `.env.local` 有 `SUPABASE_ACCESS_TOKEN`，也可本地执行：
+
+```bash
+npm run configure:auth -- --site-url=https://你的-railway-域名.up.railway.app
+```
+
+### 5. 验收
+
+- `https://你的域名/api/health` → `supabaseConfigured: true`
+- 打开 `/auth/login`，用 `@connect.polyu.hk` 收 Magic Link 并登录
+- 浏览 `/courses`、`/forum`、`/study`
+
+部署前本地检查：
+
+```bash
+npm run verify:deploy -- --production
+```
+
+### 6. 本阶段暂不强制
+
+- 内容批量导入（`import:guides` / `import:courses`）可在上线后补
+- 课程 PDF 生产对象存储方案可后续再做
+
+---
+
+<details>
+<summary>备选：Vercel 部署（可选）</summary>
+
+若已有 Vercel 账号，也可 Import GitHub 仓库，配置相同的三个 `NEXT_PUBLIC_*` 环境变量后 Deploy。详见 git 历史中 Vercel 说明，或执行 `npm run setup:production`（需 `npx vercel login`）。
+
+</details>
 
 ## 课程 PDF 导入
 
@@ -423,9 +464,10 @@ supabase gen types typescript --project-id <project-id> --schema public > types/
 
 ## 已知问题
 
-- 课程 PDF 自动解析已支持本地 PDF 预览、目标正文清洗和 Assessment 原始分类展示，但不同学院 PDF 格式仍可能需要后续微调。
-- 课程评价后台筛选、评价排序和个人主页“我的收藏课程”入口仍待增强。
-- 入学攻略目前只有基础列表、详情和 seed 数据，收藏按钮、评论区、管理员 CRUD 和 JSONL 导入脚本仍待增强。
+- 课程 PDF 目前依赖本地 `学科/` 路径，生产环境需后续改为对象存储后才可稳定预览。
+- 课程评价后台筛选、评价排序仍可继续增强。
+- 生活指南部分栏目内容偏薄；美食模块缺冷启动地点数据。
+- 找搭子为论坛 topic，不是独立导航模块；`/buddy` 会重定向到论坛。
 
 ## Git 注意事项
 

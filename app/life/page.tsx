@@ -15,8 +15,8 @@ export default async function LifePage() {
       <ContentGuideList
         items={result.data}
         detailHref={ROUTES.life.detail}
-        emptyTitle="生活指南建设中"
-        emptyDescription="后续将接入电话卡、银行开户、八达通、医疗、交通与日常缴费等内容。"
+        emptyTitle="暂无生活指南"
+        emptyDescription="电话卡、银行开户、八达通、医疗、交通与日常缴费等内容将陆续上线。"
       />
     </ModulePageShell>
   );
