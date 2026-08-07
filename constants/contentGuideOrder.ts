@@ -6,7 +6,6 @@ export const GUIDE_LIST_ORDER: Record<string, readonly string[]> = {
   study: [
     "常用官网",
     "选课策略",
-    "Add&Drop",
     "GPA规则",
     "考试安排",
     "学术规范",
@@ -27,6 +26,7 @@ export const GUIDE_LIST_ORDER: Record<string, readonly string[]> = {
     "本地生活规则",
     "生活服务",
     "交通出行",
+    "口岸介绍",
   ],
   guides: [
     "入学前准备：证件与行前清单",

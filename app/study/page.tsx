@@ -16,7 +16,7 @@ export default async function StudyPage() {
         items={result.data}
         detailHref={ROUTES.study.detail}
         emptyTitle="暂无学习指南"
-        emptyDescription="选课策略、常用官网、Add & Drop、GPA 规则、考试安排与学术规范等内容将陆续上线。"
+        emptyDescription="选课策略、常用官网、GPA 规则、考试安排与学术规范等内容将陆续上线。"
       />
     </ModulePageShell>
   );

@@ -43,7 +43,7 @@ export const MODULE_REGISTRY = {
     key: "study" as const,
     route: "/study",
     label: "学习指南",
-    description: "选课策略、常用官网、Add & Drop、GPA、考试与学术规范",
+    description: "选课策略、常用官网、GPA、考试与学术规范",
     requiresVerification: true,
     icon: "NotebookPen",
   },

@@ -11,7 +11,6 @@ export type FoodAreaId = (typeof FOOD_AREAS)[number]["id"];
 export const STUDY_GUIDE_TOPICS = [
   { id: "official_links", label: "常用官网" },
   { id: "course_strategy", label: "选课策略" },
-  { id: "add_drop", label: "Add & Drop" },
   { id: "gpa", label: "GPA 规则" },
   { id: "exams", label: "考试安排" },
   { id: "academic_integrity", label: "学术规范" },
@@ -28,6 +27,7 @@ export const LIFE_GUIDE_TOPICS = [
   { id: "healthcare", label: "基础医疗" },
   { id: "utilities", label: "水电煤气" },
   { id: "transport", label: "交通出行" },
+  { id: "border_crossing", label: "口岸介绍" },
   { id: "local_rules", label: "本地生活规则" },
 ] as const;
 

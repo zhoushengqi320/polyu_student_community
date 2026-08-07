@@ -39,7 +39,7 @@ export function NavbarContent({ user }: NavbarContentProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex">
+          <div className="hidden lg:flex">
             {user ? <UserMenu user={user} /> : <AuthButtons />}
           </div>
 
