@@ -69,12 +69,27 @@ const MODULE_CREATE_PERMISSION: Partial<Record<ModuleKey, Permission>> = {
   forum: "content:create:forum",
 };
 
+function isTemporarilyBanned(user: SessionUser): boolean {
+  const until = user.profile?.bannedUntil;
+  if (!until) {
+    return false;
+  }
+  return new Date(until) > new Date();
+}
+
 export function getEffectiveRole(user: SessionUser | null) {
   if (!user?.profile) {
     return USER_ROLES.guest;
   }
 
-  if (user.profile.status === USER_STATUS.banned) {
+  if (
+    user.profile.status === USER_STATUS.banned &&
+    !user.profile.bannedUntil
+  ) {
+    return "banned" as const;
+  }
+
+  if (isTemporarilyBanned(user)) {
     return "banned" as const;
   }
 

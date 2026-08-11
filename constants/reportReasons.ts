@@ -6,6 +6,7 @@ export const REPORT_REASONS = [
   { id: "hate_speech", label: "仇恨或歧视" },
   { id: "sexual_content", label: "色情内容" },
   { id: "false_information", label: "虚假信息" },
+  { id: "political_sensitive", label: "政治敏感" },
   { id: "privacy", label: "隐私泄露" },
   { id: "other", label: "其他" },
 ] as const;

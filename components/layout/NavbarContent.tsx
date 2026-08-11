@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { AuthButtons, UserMenu } from "@/components/auth/UserMenu";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { isFeatureEnabled } from "@/constants/features";
 import { AUTH_NAV_ITEMS, NAV_ITEMS, ROUTES } from "@/constants/routes";
 import { SITE_LOGO, SITE_NAME } from "@/constants/site";
 import { Button } from "@/components/ui/button";
@@ -11,9 +13,13 @@ import { type SessionUser } from "@/types/user";
 
 type NavbarContentProps = {
   user: SessionUser | null;
+  unreadNotificationCount?: number;
 };
 
-export function NavbarContent({ user }: NavbarContentProps) {
+export function NavbarContent({
+  user,
+  unreadNotificationCount = 0,
+}: NavbarContentProps) {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between gap-4">
@@ -39,6 +45,9 @@ export function NavbarContent({ user }: NavbarContentProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {user && isFeatureEnabled("notifications") ? (
+            <NotificationBell unreadCount={unreadNotificationCount} />
+          ) : null}
           <div className="hidden lg:flex">
             {user ? <UserMenu user={user} /> : <AuthButtons />}
           </div>

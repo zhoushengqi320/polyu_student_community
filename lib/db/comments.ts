@@ -1,4 +1,5 @@
 import { CONTENT_STATUS } from "@/constants/contentStatus";
+import { CONTENT_RISK_LEVELS } from "@/constants/moderation";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import {
   mapCommentWithAuthor,
@@ -106,6 +107,13 @@ export async function createComment(
   }
 
   const supabase = await createClient();
+
+  const riskLevel = input.riskLevel ?? CONTENT_RISK_LEVELS.low;
+  const status =
+    riskLevel === CONTENT_RISK_LEVELS.high
+      ? CONTENT_STATUS.hidden
+      : CONTENT_STATUS.published;
+
   const { data, error } = await supabase
     .from("comments")
     .insert({
@@ -114,7 +122,8 @@ export async function createComment(
       parent_id: input.parentId ?? null,
       user_id: input.userId,
       content: input.content,
-      status: CONTENT_STATUS.published,
+      status,
+      risk_level: riskLevel,
     })
     .select("*, profiles(*)")
     .single();
@@ -152,4 +161,13 @@ export function countCommentsInThread(thread: CommentThreadItem[]): number {
     (total, item) => total + 1 + countCommentsInThread(item.replies),
     0,
   );
+}
+
+export function collectCommentIdsFromThread(
+  thread: CommentThreadItem[],
+): string[] {
+  return thread.flatMap((item) => [
+    item.id,
+    ...collectCommentIdsFromThread(item.replies),
+  ]);
 }

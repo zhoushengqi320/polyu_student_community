@@ -4,6 +4,9 @@ export const SITE_LOGO = "PolyUHub";
 export const SCHOOL_NAME = "香港理工大学";
 export const SCHOOL_SHORT = "理大";
 
+/** 全站 UI 与日期/数字格式化 locale（简体中文） */
+export const APP_LOCALE = "zh-CN";
+
 export const SITE_SLOGAN = "选课前，先查 PolyUHub";
 
 export const SITE_DESCRIPTION =

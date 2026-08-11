@@ -76,6 +76,12 @@ export function ForumPostForm({
   });
 
   useEffect(() => {
+    if (state.pendingReview) {
+      router.push(ROUTES.forum.list);
+    }
+  }, [state.pendingReview, router]);
+
+  useEffect(() => {
     if (pending) {
       canShowSaveToastRef.current = true;
     }

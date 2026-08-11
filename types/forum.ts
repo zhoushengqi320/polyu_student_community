@@ -13,7 +13,6 @@ export type ForumPost = {
   likeCount: number;
   commentCount: number;
   viewCount: number;
-  hotScore: number;
   isAnonymous: boolean;
   status: string;
   createdAt: string;
@@ -29,7 +28,6 @@ export type ForumPostListItem = Pick<
   | "likeCount"
   | "commentCount"
   | "viewCount"
-  | "hotScore"
   | "isAnonymous"
   | "createdAt"
 > & {
@@ -48,12 +46,15 @@ export type GetForumPostsParams = {
   pageSize?: number;
 };
 
+import { type ContentRiskLevel } from "@/constants/moderation";
+
 export type CreateForumPostInput = {
   userId: string;
   title: string;
   content: string;
   topics: string[];
   isAnonymous: boolean;
+  riskLevel?: ContentRiskLevel;
 };
 
 export type UpdateForumPostInput = Partial<

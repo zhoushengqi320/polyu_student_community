@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
+  backToRegisterEmailAction,
   completeRegisterAction,
   setRegisterPasswordAction,
   startRegisterAction,
@@ -69,6 +70,8 @@ export function SignupWizard({
 }) {
   const [step, setStep] = useState<Step>(initialStep);
   const [email, setEmail] = useState(draftEmail);
+  /** 用户主动返回改邮箱时，避免旧的 emailState.success 再次把步骤推到验证码 */
+  const holdOnEmailStepRef = useRef(false);
 
   const [emailState, emailAction, emailPending] = useActionState(
     startRegisterAction,
@@ -76,6 +79,10 @@ export function SignupWizard({
   );
   const [otpState, otpAction, otpPending] = useActionState(
     verifyRegisterOtpAction,
+    initialState,
+  );
+  const [backState, backAction, backPending] = useActionState(
+    backToRegisterEmailAction,
     initialState,
   );
   const [passwordState, passwordAction, passwordPending] = useActionState(
@@ -93,6 +100,9 @@ export function SignupWizard({
     if (emailState.step === "already_registered") {
       return;
     }
+    if (holdOnEmailStepRef.current) {
+      return;
+    }
     if (emailState.success || emailState.devInfo) {
       setStep("otp");
     }
@@ -102,7 +112,18 @@ export function SignupWizard({
     if (otpState.step === "password") {
       setStep("password");
     }
+    if (otpState.step === "email") {
+      holdOnEmailStepRef.current = true;
+      setStep("email");
+    }
   }, [otpState.step]);
+
+  useEffect(() => {
+    if (backState.step === "email") {
+      holdOnEmailStepRef.current = true;
+      setStep("email");
+    }
+  }, [backState.step]);
 
   useEffect(() => {
     if (passwordState.step === "profile") {
@@ -137,7 +158,13 @@ export function SignupWizard({
         </p>
 
         {step === "email" ? (
-          <form action={emailAction} className="space-y-4">
+          <form
+            action={(formData) => {
+              holdOnEmailStepRef.current = false;
+              emailAction(formData);
+            }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="signup-email">理大学生邮箱</Label>
               <Input
@@ -169,12 +196,19 @@ export function SignupWizard({
                 ) : null}
               </p>
             ) : null}
-            {emailState.success ? (
+            {backState.success && holdOnEmailStepRef.current ? (
+              <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                {backState.success}
+              </p>
+            ) : null}
+            {emailState.success && !holdOnEmailStepRef.current ? (
               <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
                 {emailState.success}
               </p>
             ) : null}
-            {emailState.devInfo ? <DevOtpBox {...emailState.devInfo} /> : null}
+            {emailState.devInfo && !holdOnEmailStepRef.current ? (
+              <DevOtpBox {...emailState.devInfo} />
+            ) : null}
             <Button type="submit" className="w-full" disabled={emailPending || cooldown > 0}>
               {emailPending
                 ? "发送中..."
@@ -187,6 +221,10 @@ export function SignupWizard({
 
         {step === "otp" ? (
           <form action={otpAction} className="space-y-4">
+            <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+              <p className="text-muted-foreground">验证码已发送至</p>
+              <p className="break-all font-medium">{email || "当前邮箱"}</p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="signup-otp">邮箱验证码</Label>
               <Input
@@ -221,6 +259,15 @@ export function SignupWizard({
               }}
             >
               {cooldown > 0 ? `${cooldown}s 后可重发` : "重新发送验证码"}
+            </Button>
+            <Button
+              type="submit"
+              formAction={backAction}
+              variant="outline"
+              className="w-full"
+              disabled={backPending || otpPending}
+            >
+              {backPending ? "返回中..." : "更改邮箱"}
             </Button>
           </form>
         ) : null}

@@ -30,12 +30,15 @@ export type PostDetail = Post & {
   likeCount: number;
 };
 
+import { type ContentRiskLevel } from "@/constants/moderation";
+
 export type CreateCommentInput = {
   targetType: "post";
   targetId: string;
   userId: string;
   content: string;
   parentId?: string | null;
+  riskLevel?: ContentRiskLevel;
 };
 
 export type PostFilters = {
@@ -65,4 +68,9 @@ export type CommentWithAuthor = Comment & {
 
 export type CommentThreadItem = CommentWithAuthor & {
   replies: CommentThreadItem[];
+};
+
+export type CommentReactionSummary = {
+  count: number;
+  isLiked: boolean;
 };

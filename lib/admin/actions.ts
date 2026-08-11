@@ -19,6 +19,10 @@ import {
   adminSoftDeleteFoodRecommendation,
 } from "@/lib/db/food";
 import { updateReportStatus } from "@/lib/db/reports";
+import {
+  confirmReportViolation,
+  dismissReportWithReview,
+} from "@/lib/moderation/reportWorkflow";
 import { REPORT_STATUS } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { type TargetType } from "@/constants/reportReasons";
@@ -276,6 +280,23 @@ export async function resolveReportAction(
   );
 }
 
+export async function confirmReportViolationAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const reportId = String(formData.get("reportId") ?? "");
+
+  if (!reportId) {
+    return { error: "无效的举报 ID" };
+  }
+
+  return runAdminAction(
+    () => confirmReportViolation(reportId, admin.id),
+    "已确认违规并下架内容",
+  );
+}
+
 export async function dismissReportAction(
   _prevState: AdminActionState,
   formData: FormData,
@@ -288,8 +309,8 @@ export async function dismissReportAction(
   }
 
   return runAdminAction(
-    () => updateReportStatus(reportId, admin.id, REPORT_STATUS.dismissed),
-    "举报已驳回",
+    () => dismissReportWithReview(reportId, admin.id),
+    "举报已驳回，内容已恢复（如适用）",
   );
 }
 

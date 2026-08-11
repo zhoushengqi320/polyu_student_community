@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DeleteContentButton } from "@/components/common/DeleteContentButton";
 import { RatingDisplay } from "@/components/common/RatingDisplay";
+import { UserIdentity } from "@/components/common/UserIdentity";
 import { FoodFavoriteButton } from "@/components/food/FoodFavoriteButton";
 import { FoodRecommendationForm } from "@/components/food/FoodRecommendationForm";
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -122,10 +123,13 @@ export function FoodDetailView({
             <Card key={item.id}>
               <CardHeader className="space-y-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">
-                      {item.author.displayName ?? item.author.username}
-                    </CardTitle>
+                  <div className="space-y-1">
+                    <UserIdentity
+                      userId={item.author.id}
+                      name={item.author.displayName ?? item.author.username}
+                      avatarUrl={item.author.avatarUrl}
+                      size="sm"
+                    />
                     <CardDescription>
                       {formatRelativeTime(item.createdAt)}
                     </CardDescription>

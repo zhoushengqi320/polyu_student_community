@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { APP_LOCALE } from "@/constants/site";
 import { type AdminStats } from "@/types/admin";
 
 type AdminStatsCardsProps = {
@@ -46,7 +47,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
             <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats[key].toLocaleString("zh-HK")}</p>
+            <p className="text-3xl font-bold">{stats[key].toLocaleString(APP_LOCALE)}</p>
           </CardContent>
         </Card>
       ))}

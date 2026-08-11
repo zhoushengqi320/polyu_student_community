@@ -66,6 +66,7 @@ function FavoriteForumPostRow({ item }: { item: FavoriteForumPostItem }) {
   return (
     <Link
       href={ROUTES.forum.detail(item.post.id)}
+      prefetch={false}
       className="block rounded-lg border px-4 py-3 transition-colors hover:bg-muted/40"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">

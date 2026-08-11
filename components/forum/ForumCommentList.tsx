@@ -1,39 +1,36 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { ReportDialog } from "@/components/common/ReportDialog";
+import { UserIdentity } from "@/components/common/UserIdentity";
+import {
+  CommentLikeButton,
+  CommentReplyTrigger,
+} from "@/components/forum/CommentLikeButton";
 import { CommentReplyForm } from "@/components/forum/CommentReplyForm";
 import { DeleteCommentButton } from "@/components/posts/DeleteCommentButton";
 import { FORUM_REPORT_TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
 import { cn } from "@/lib/utils/cn";
-import { type CommentThreadItem } from "@/types/post";
+import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
 
 type ForumCommentListProps = {
   comments: CommentThreadItem[];
   postId: string;
   isLoggedIn: boolean;
   canComment: boolean;
+  canLike: boolean;
   totalCount: number;
   revalidatePath?: string;
-  currentUserId?: string;
+  currentUserId?: string | null;
   isAdmin?: boolean;
+  reactionMap: Record<string, CommentReactionSummary>;
 };
 
 function getAuthorName(comment: CommentThreadItem): string {
   return comment.author.displayName ?? comment.author.username;
 }
-
-type CommentThreadNodeProps = {
-  comment: CommentThreadItem;
-  postId: string;
-  isLoggedIn: boolean;
-  canComment: boolean;
-  revalidatePath: string;
-  currentUserId?: string;
-  isAdmin?: boolean;
-};
 
 function flattenReplies(comment: CommentThreadItem): CommentThreadItem[] {
   return comment.replies.flatMap((reply) => [
@@ -42,45 +39,108 @@ function flattenReplies(comment: CommentThreadItem): CommentThreadItem[] {
   ]);
 }
 
-function CommentActions({
+type CommentItemProps = {
+  comment: CommentThreadItem;
+  postId: string;
+  isLoggedIn: boolean;
+  canComment: boolean;
+  canLike: boolean;
+  revalidatePath: string;
+  currentUserId?: string | null;
+  isAdmin?: boolean;
+  reactionMap: Record<string, CommentReactionSummary>;
+  replyTargetName?: string;
+  nested?: boolean;
+};
+
+function CommentItem({
   comment,
   postId,
   isLoggedIn,
   canComment,
+  canLike,
   revalidatePath,
   currentUserId,
   isAdmin = false,
-}: CommentThreadNodeProps) {
+  reactionMap,
+  replyTargetName,
+  nested = false,
+}: CommentItemProps) {
+  const [replyOpen, setReplyOpen] = useState(false);
+  const reaction = reactionMap[comment.id] ?? { count: 0, isLiked: false };
   const canDelete =
     isLoggedIn && (isAdmin || (currentUserId != null && comment.userId === currentUserId));
 
   return (
-    <div className="flex items-center gap-1">
-      {isLoggedIn ? (
+    <li
+      className={cn(
+        "rounded-lg border px-4 py-3",
+        nested ? "ml-4 border-l-2 border-l-primary/20 bg-background sm:ml-6" : "bg-muted/20",
+      )}
+    >
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-2 text-sm">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          <UserIdentity
+            userId={comment.author.id}
+            name={getAuthorName(comment)}
+            avatarUrl={comment.author.avatarUrl}
+            size="xs"
+          />
+          {replyTargetName ? (
+            <span className="text-xs text-muted-foreground">
+              · 回复 @{replyTargetName}
+            </span>
+          ) : null}
+          <span className="text-muted-foreground">
+            {formatRelativeTime(comment.createdAt)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          {canDelete ? (
+            <DeleteCommentButton
+              commentId={comment.id}
+              revalidatePath={revalidatePath}
+            />
+          ) : null}
+          <ReportDialog
+            targetType={FORUM_REPORT_TARGET_TYPES.comment}
+            targetId={comment.id}
+            isLoggedIn={isLoggedIn}
+            revalidatePath={revalidatePath}
+            triggerLabel="举报"
+            triggerVariant="ghost"
+            triggerSize="sm"
+          />
+        </div>
+      </div>
+
+      <p className="whitespace-pre-wrap text-sm leading-6">{comment.content}</p>
+
+      <div className="mt-2 flex flex-wrap items-center gap-1">
+        <CommentLikeButton
+          commentId={comment.id}
+          likeCount={reaction.count}
+          isLiked={reaction.isLiked}
+          canInteract={canLike}
+          revalidatePath={revalidatePath}
+        />
+        <CommentReplyTrigger
+          canComment={canComment}
+          isLoggedIn={isLoggedIn}
+          onClick={() => setReplyOpen((open) => !open)}
+        />
+      </div>
+
+      {replyOpen && canComment ? (
         <CommentReplyForm
           postId={postId}
           parentCommentId={comment.id}
           replyToName={getAuthorName(comment)}
-          canComment={canComment}
           revalidatePath={revalidatePath}
+          onCancel={() => setReplyOpen(false)}
         />
       ) : null}
-      {canDelete ? (
-        <DeleteCommentButton
-          commentId={comment.id}
-          revalidatePath={revalidatePath}
-        />
-      ) : null}
-      <ReportDialog
-        targetType={FORUM_REPORT_TARGET_TYPES.comment}
-        targetId={comment.id}
-        isLoggedIn={isLoggedIn}
-        revalidatePath={revalidatePath}
-        triggerLabel="举报"
-        triggerVariant="ghost"
-        triggerSize="sm"
-      />
-    </div>
+    </li>
   );
 }
 
@@ -89,86 +149,56 @@ function CommentThreadNode({
   postId,
   isLoggedIn,
   canComment,
+  canLike,
   revalidatePath,
   currentUserId,
   isAdmin,
-}: CommentThreadNodeProps) {
+  reactionMap,
+}: Omit<CommentItemProps, "replyTargetName" | "nested">) {
   const replies = flattenReplies(comment);
   const commentsById = new Map(
     [comment, ...replies].map((item) => [item.id, item]),
   );
 
   return (
-    <li className="rounded-lg border bg-muted/20 px-4 py-3">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={ROUTES.profile(comment.author.id)}
-            className="font-medium hover:text-primary"
-          >
-            {getAuthorName(comment)}
-          </Link>
-          <span className="text-muted-foreground">
-            {formatRelativeTime(comment.createdAt)}
-          </span>
-        </div>
-        <CommentActions
+    <div className="space-y-3">
+      <ul className="space-y-0">
+        <CommentItem
           comment={comment}
           postId={postId}
           isLoggedIn={isLoggedIn}
           canComment={canComment}
+          canLike={canLike}
           revalidatePath={revalidatePath}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
+          reactionMap={reactionMap}
         />
-      </div>
-
-      <p className="whitespace-pre-wrap text-sm leading-6">{comment.content}</p>
+      </ul>
 
       {replies.length > 0 ? (
-        <ul className="mt-3 space-y-3">
+        <ul className="space-y-3">
           {replies.map((reply) => (
-            <li
+            <CommentItem
               key={reply.id}
-              className={cn(
-                "rounded-lg border bg-background px-4 py-3",
-                "ml-4 border-l-2 border-l-primary/20 sm:ml-6",
+              comment={reply}
+              postId={postId}
+              isLoggedIn={isLoggedIn}
+              canComment={canComment}
+              canLike={canLike}
+              revalidatePath={revalidatePath}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+              reactionMap={reactionMap}
+              replyTargetName={getAuthorName(
+                commentsById.get(reply.parentId ?? "") ?? comment,
               )}
-            >
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={ROUTES.profile(reply.author.id)}
-                    className="font-medium hover:text-primary"
-                  >
-                    {getAuthorName(reply)}
-                  </Link>
-                  <span className="text-xs text-muted-foreground">
-                    · 回复 @{getAuthorName(
-                      commentsById.get(reply.parentId ?? "") ?? comment,
-                    )}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {formatRelativeTime(reply.createdAt)}
-                  </span>
-                </div>
-                <CommentActions
-                  comment={reply}
-                  postId={postId}
-                  isLoggedIn={isLoggedIn}
-                  canComment={canComment}
-                  revalidatePath={revalidatePath}
-                  currentUserId={currentUserId}
-                  isAdmin={isAdmin}
-                />
-              </div>
-
-              <p className="whitespace-pre-wrap text-sm leading-6">{reply.content}</p>
-            </li>
+              nested
+            />
           ))}
         </ul>
       ) : null}
-    </li>
+    </div>
   );
 }
 
@@ -177,10 +207,12 @@ export function ForumCommentList({
   postId,
   isLoggedIn,
   canComment,
+  canLike,
   totalCount,
   revalidatePath = ROUTES.forum.detail(postId),
   currentUserId,
   isAdmin = false,
+  reactionMap,
 }: ForumCommentListProps) {
   if (comments.length === 0) {
     return (
@@ -199,16 +231,19 @@ export function ForumCommentList({
       ) : null}
       <ul className="space-y-4">
         {comments.map((comment) => (
-          <CommentThreadNode
-            key={comment.id}
-            comment={comment}
-            postId={postId}
-            isLoggedIn={isLoggedIn}
-            canComment={canComment}
-            revalidatePath={revalidatePath}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-          />
+          <li key={comment.id}>
+            <CommentThreadNode
+              comment={comment}
+              postId={postId}
+              isLoggedIn={isLoggedIn}
+              canComment={canComment}
+              canLike={canLike}
+              revalidatePath={revalidatePath}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+              reactionMap={reactionMap}
+            />
+          </li>
         ))}
       </ul>
     </div>

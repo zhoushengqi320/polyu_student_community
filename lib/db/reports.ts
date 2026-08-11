@@ -17,7 +17,7 @@ import { type AdminReportFilters } from "@/types/admin";
 import { type Report, type ReportWithReporter } from "@/types/report";
 
 type CreateAdminActionInput = {
-  adminId: string;
+  adminId: string | null;
   action: string;
   targetType: TargetType | "user";
   targetId: string;
@@ -279,22 +279,7 @@ export async function createReport(input: {
   targetId: string;
   reason: ReportReasonId;
   description?: string | null;
-}): Promise<void> {
-  if (!isSupabaseConfigured()) {
-    throw new DbError("数据库未配置");
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("reports").insert({
-    reporter_id: input.reporterId,
-    target_type: input.targetType,
-    target_id: input.targetId,
-    reason: input.reason,
-    description: input.description ?? null,
-    status: REPORT_STATUS.pending,
-  });
-
-  if (error) {
-    throw new DbError(error.message);
-  }
+}): Promise<import("@/lib/moderation/reportWorkflow").CreateReportResult> {
+  const { processNewReport } = await import("@/lib/moderation/reportWorkflow");
+  return processNewReport(input);
 }

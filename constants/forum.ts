@@ -17,7 +17,6 @@ export const FORUM_TOPIC_SUGGESTIONS = [
 
 export const FORUM_SORT_OPTIONS = [
   { id: "latest", label: "最新" },
-  { id: "hot", label: "最热" },
   { id: "most_commented", label: "评论最多" },
   { id: "most_liked", label: "点赞最多" },
   { id: "most_viewed", label: "浏览最多" },
@@ -34,6 +33,17 @@ export const FORUM_DESCRIPTION =
 
 export function isForumSortId(value: string): value is ForumSortId {
   return FORUM_SORT_OPTIONS.some((item) => item.id === value);
+}
+
+/** 兼容旧链接 ?sort=hot */
+export function normalizeForumSort(value: string | undefined): ForumSortId {
+  if (value === "hot") {
+    return "most_viewed";
+  }
+  if (value && isForumSortId(value)) {
+    return value;
+  }
+  return "latest";
 }
 
 export function buildForumUrl(params: {

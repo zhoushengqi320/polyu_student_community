@@ -12,6 +12,7 @@ export const ROUTES = {
   forgotPassword: "/auth/forgot-password",
   onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
+  notifications: "/notifications",
   admin: "/admin",
   adminCourses: (params?: { editCourseId?: string }) => {
     const search = new URLSearchParams({ tab: "courses" });

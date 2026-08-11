@@ -18,9 +18,14 @@ import {
   type CreateCourseReviewInput,
 } from "@/types/course";
 import { DbError, toPaginatedResult, getPagination } from "@/lib/db/shared";
-import { buildSearchPattern } from "@/lib/utils/search";
+import {
+  buildCourseSearchOrFilter,
+  sortCoursesBySearchRelevance,
+} from "@/lib/utils/courseSearch";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+const COURSE_SEARCH_FETCH_CAP = 5000;
 
 export async function listCourses(
   filters: CourseFilters = {},
@@ -34,6 +39,7 @@ export async function listCourses(
     sort = "code",
   } = filters;
   const pagination = getPagination(page, pageSize);
+  const searchTerm = search?.trim();
 
   if (!isSupabaseConfigured()) {
     return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
@@ -53,10 +59,32 @@ export async function listCourses(
     query = query.eq("faculty", faculty);
   }
 
-  if (search?.trim()) {
-    const pattern = buildSearchPattern(search);
-    query = query.or(
-      `code.ilike.${pattern},name.ilike.${pattern},description.ilike.${pattern}`,
+  if (searchTerm) {
+    const orFilter = buildCourseSearchOrFilter(searchTerm);
+    if (orFilter) {
+      query = query.or(orFilter);
+    }
+
+    query = query.limit(COURSE_SEARCH_FETCH_CAP);
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Failed to list courses:", error);
+      return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+    }
+
+    const ranked = sortCoursesBySearchRelevance(
+      ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats),
+      searchTerm,
+    );
+    const total = Math.min(count ?? ranked.length, COURSE_SEARCH_FETCH_CAP);
+    const paginated = ranked.slice(pagination.from, pagination.to + 1);
+
+    return toPaginatedResult(
+      paginated,
+      total,
+      pagination.page,
+      pagination.pageSize,
     );
   }
 
@@ -322,17 +350,39 @@ export async function listCoursesForAdminPage(options: {
   let query = supabase
     .from("courses")
     .select("*", { count: "exact" })
-    .eq("school_id", DEFAULT_SCHOOL_ID)
-    .order("code", { ascending: true })
-    .range(from, to);
+    .eq("school_id", DEFAULT_SCHOOL_ID);
 
   if (options.search?.trim()) {
-    const pattern = buildSearchPattern(options.search);
-    query = query.or(
-      `code.ilike.${pattern},name.ilike.${pattern},department.ilike.${pattern}`,
+    const searchTerm = options.search.trim();
+    const orFilter = buildCourseSearchOrFilter(searchTerm);
+    if (orFilter) {
+      query = query.or(orFilter);
+    }
+
+    query = query.limit(COURSE_SEARCH_FETCH_CAP);
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+
+    const ranked = sortCoursesBySearchRelevance(
+      ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats),
+      searchTerm,
     );
+    const total = Math.min(count ?? ranked.length, COURSE_SEARCH_FETCH_CAP);
+    const paginated = ranked.slice(from, to + 1);
+
+    return {
+      items: paginated,
+      total,
+      page,
+      pageSize,
+      totalPages: total === 0 ? 0 : Math.ceil(total / pageSize),
+    };
   }
 
+  query = query.order("code", { ascending: true }).range(from, to);
   const { data, error, count } = await query;
 
   if (error) {

@@ -1,6 +1,6 @@
 import { CommentForm } from "@/components/posts/CommentForm";
 import { ForumCommentList } from "@/components/forum/ForumCommentList";
-import { type CommentThreadItem } from "@/types/post";
+import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
 
 type GuideCommentSectionProps = {
   guideId: string;
@@ -8,9 +8,11 @@ type GuideCommentSectionProps = {
   totalCommentCount: number;
   isLoggedIn: boolean;
   canComment: boolean;
+  canLike: boolean;
   currentUserId?: string;
   isAdmin: boolean;
   revalidatePath: string;
+  reactionMap: Record<string, CommentReactionSummary>;
 };
 
 export function GuideCommentSection({
@@ -19,9 +21,11 @@ export function GuideCommentSection({
   totalCommentCount,
   isLoggedIn,
   canComment,
+  canLike,
   currentUserId,
   isAdmin,
   revalidatePath,
+  reactionMap,
 }: GuideCommentSectionProps) {
   return (
     <section className="space-y-4">
@@ -37,10 +41,12 @@ export function GuideCommentSection({
         postId={guideId}
         isLoggedIn={isLoggedIn}
         canComment={canComment}
+        canLike={canLike}
         totalCount={totalCommentCount}
         revalidatePath={revalidatePath}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
+        reactionMap={reactionMap}
       />
     </section>
   );

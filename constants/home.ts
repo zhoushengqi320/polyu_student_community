@@ -43,4 +43,4 @@ export const HOME_VALUE_POINTS = [
 ] as const;
 
 export const HOME_DISCLAIMER =
-  "PolyUHub 为学生自发建设的非官方社区平台，与香港理工大学官方无隶属关系。用户生成内容仅代表用户个人观点。";
+  "本站为学生自发建设的非官方社区平台，与香港理工大学官方无隶属关系。用户生成内容仅代表用户个人观点。";

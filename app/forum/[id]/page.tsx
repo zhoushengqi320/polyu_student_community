@@ -2,22 +2,25 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ForumPostCard } from "@/components/forum/ForumPostCard";
 import { ForumPostDetailView } from "@/components/forum/ForumPostDetailView";
+import { ForumPostViewTracker } from "@/components/forum/ForumPostViewTracker";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { ForumCommentList } from "@/components/forum/ForumCommentList";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   countCommentsInThread,
+  collectCommentIdsFromThread,
   listPostCommentThread,
 } from "@/lib/db/comments";
 import {
   getForumPostById,
   getPostsByTopic,
-  incrementForumPostViewCount,
 } from "@/lib/db/forum";
-import { hasReaction } from "@/lib/db/reactions";
+import { getReactionSummariesForTargets, hasReaction } from "@/lib/db/reactions";
 import { ROUTES } from "@/constants/routes";
-import { can, canManageOwnContent } from "@/lib/utils/permissions";
+import { TARGET_TYPES } from "@/constants/reportReasons";
+import { can, canManageOwnContent, isAdmin, isBanned } from "@/lib/utils/permissions";
+import { getVisitorId } from "@/lib/guest/visitorId";
 import { Button } from "@/components/ui/button";
 
 type ForumDetailPageProps = {
@@ -26,8 +29,6 @@ type ForumDetailPageProps = {
 
 export default async function ForumDetailPage({ params }: ForumDetailPageProps) {
   const { id } = await params;
-
-  await incrementForumPostViewCount(id);
 
   const [post, commentThread, user] = await Promise.all([
     getForumPostById(id),
@@ -41,8 +42,10 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
 
   const canComment = can(user, "interaction:comment");
   const canInteract = can(user, "interaction:like");
+  // 访客也可点赞评论；封禁用户不可点赞
+  const canLikeComments = !isBanned(user);
 
-  const [isLiked, isFavorited, relatedPosts] = await Promise.all([
+  const [isLiked, isFavorited, relatedPosts, visitorId] = await Promise.all([
     user
       ? hasReaction({
           userId: user.id,
@@ -62,9 +65,19 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
     post.topics[0]
       ? getPostsByTopic(post.topics[0], 4)
       : Promise.resolve([]),
+    user ? Promise.resolve(null) : getVisitorId(),
   ]);
 
   const totalCommentCount = countCommentsInThread(commentThread);
+  const commentIds = collectCommentIdsFromThread(commentThread);
+  const commentReactionMap = await getReactionSummariesForTargets({
+    targetType: TARGET_TYPES.comment,
+    targetIds: commentIds,
+    userId: user?.id,
+    visitorId: visitorId ?? undefined,
+    type: "like",
+  });
+  const reactionMap = Object.fromEntries(commentReactionMap.entries());
 
   const filteredRelated = relatedPosts.filter((item) => item.id !== post.id).slice(0, 3);
 
@@ -79,6 +92,7 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
       }
     >
       <div className="mx-auto max-w-3xl space-y-8">
+        <ForumPostViewTracker postId={post.id} />
         <ForumPostDetailView
           post={post}
           commentCount={totalCommentCount}
@@ -112,7 +126,11 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
             postId={post.id}
             isLoggedIn={Boolean(user)}
             canComment={canComment}
+            canLike={canLikeComments}
             totalCount={totalCommentCount}
+            currentUserId={user?.id ?? null}
+            isAdmin={isAdmin(user)}
+            reactionMap={reactionMap}
           />
         </section>
       </div>

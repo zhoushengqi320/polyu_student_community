@@ -4,10 +4,15 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { adminDeleteForumComment } from "@/lib/db/admin";
 import { softDeleteComment } from "@/lib/db/comments";
-import { toggleReaction, type ReactionType } from "@/lib/db/reactions";
+import {
+  toggleGuestReaction,
+  toggleReaction,
+  type ReactionType,
+} from "@/lib/db/reactions";
 import { createReport } from "@/lib/db/reports";
+import { getVisitorId } from "@/lib/guest/visitorId";
 import { reportSchema } from "@/lib/validations/reportSchema";
-import { assertCan, isAdmin } from "@/lib/utils/permissions";
+import { assertCan, isAdmin, isBanned } from "@/lib/utils/permissions";
 import { type TargetType, type ReportReasonId } from "@/constants/reportReasons";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -24,17 +29,6 @@ export async function toggleReactionAction(
     return { error: "数据库未配置" };
   }
 
-  const user = await getSessionUser();
-  if (!user) {
-    return { error: "请先登录" };
-  }
-
-  try {
-    assertCan(user, "interaction:like");
-  } catch {
-    return { error: "当前账号无法执行此操作" };
-  }
-
   const targetType = String(formData.get("targetType") ?? "") as TargetType;
   const targetId = String(formData.get("targetId") ?? "");
   const type = String(formData.get("type") ?? "") as ReactionType;
@@ -44,12 +38,53 @@ export async function toggleReactionAction(
     return { error: "无效的操作参数" };
   }
 
+  const user = await getSessionUser();
+
+  if (user) {
+    if (isBanned(user)) {
+      return { error: "当前账号无法执行此操作" };
+    }
+
+    try {
+      assertCan(user, "interaction:like");
+    } catch {
+      return { error: "当前账号无法执行此操作" };
+    }
+
+    try {
+      const result = await toggleReaction({
+        userId: user.id,
+        targetType,
+        targetId,
+        type,
+      });
+
+      revalidatePath(revalidatePathValue);
+      return {
+        success: result === "added" ? "已添加" : "已取消",
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "操作失败，请稍后重试",
+      };
+    }
+  }
+
+  // 访客：仅允许对评论点赞；用 cookie visitor_id 去重
+  if (type !== "like" || targetType !== "comment") {
+    return { error: "请先登录" };
+  }
+
+  const visitorId = await getVisitorId();
+  if (!visitorId) {
+    return { error: "无法识别访客身份，请刷新页面后重试" };
+  }
+
   try {
-    const result = await toggleReaction({
-      userId: user.id,
+    const result = await toggleGuestReaction({
+      visitorId,
       targetType,
       targetId,
-      type,
     });
 
     revalidatePath(revalidatePathValue);
@@ -94,7 +129,7 @@ export async function createReportAction(
   }
 
   try {
-    await createReport({
+    const result = await createReport({
       reporterId: user.id,
       targetType: parsed.data.targetType as TargetType,
       targetId: parsed.data.targetId,
@@ -104,7 +139,18 @@ export async function createReportAction(
 
     const revalidatePathValue = String(formData.get("revalidatePath") ?? "/");
     revalidatePath(revalidatePathValue);
-    return { success: "举报已提交，管理员会尽快处理" };
+
+    if (result.autoHidden) {
+      return {
+        success:
+          "举报已提交。该内容因收到多次举报已暂时隐藏，等待管理员审核。",
+      };
+    }
+
+    return {
+      success:
+        "举报已提交，内容仍公开可见。管理员审核后会通知处理结果。",
+    };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "举报失败，请稍后重试",

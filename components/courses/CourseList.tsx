@@ -40,7 +40,7 @@ export function CourseList({
           <Input
             name="q"
             defaultValue={query}
-            placeholder="搜索课程代码、名称或简介，例如 COMP1002"
+            placeholder="搜索课程代码或名称，例如 AP、AP10000"
             className="pl-9"
           />
         </div>

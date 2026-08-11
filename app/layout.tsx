@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SaveSuccessToastHost } from "@/components/common/SaveSuccessToastHost";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/constants/site";
+import { APP_LOCALE, SITE_DESCRIPTION, SITE_NAME } from "@/constants/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-HK">
+    <html lang={APP_LOCALE}>
       <body className="min-h-screen antialiased">
         <div className="flex min-h-screen flex-col">
           <Navbar />

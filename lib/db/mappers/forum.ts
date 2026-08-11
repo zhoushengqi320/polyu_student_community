@@ -15,7 +15,6 @@ export type ForumPostRow = Database["public"]["Tables"]["posts"]["Row"] & {
   like_count?: number | null;
   comment_count?: number | null;
   view_count?: number | null;
-  hot_score?: number | null;
   is_anonymous?: boolean | null;
 };
 
@@ -39,7 +38,6 @@ export function mapForumPost(row: ForumPostRow): ForumPost {
     likeCount: readCount(row.like_count),
     commentCount: readCount(row.comment_count),
     viewCount: readCount(row.view_count),
-    hotScore: readCount(row.hot_score),
     isAnonymous: row.is_anonymous ?? false,
     status: row.status,
     createdAt: row.created_at,
@@ -71,7 +69,6 @@ export function mapForumPostListItem(row: ForumPostWithProfileRow): ForumPostLis
     likeCount: post.likeCount,
     commentCount: post.commentCount,
     viewCount: post.viewCount,
-    hotScore: post.hotScore,
     isAnonymous: post.isAnonymous,
     createdAt: post.createdAt,
     author: mapAuthor(row),

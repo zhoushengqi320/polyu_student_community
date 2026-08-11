@@ -4,9 +4,35 @@ import { type Database } from "@/types/database";
 import { shouldBypassOnboardingRedirect } from "@/lib/auth/onboarding";
 import { ROUTES } from "@/constants/routes";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import {
+  VISITOR_COOKIE_NAME,
+  createVisitorId,
+  getVisitorCookieOptions,
+  isValidVisitorId,
+} from "@/lib/guest/visitorId";
+
+function ensureVisitorCookie(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  let visitorId = request.cookies.get(VISITOR_COOKIE_NAME)?.value;
+  if (!isValidVisitorId(visitorId)) {
+    visitorId = createVisitorId();
+    request.cookies.set(VISITOR_COOKIE_NAME, visitorId);
+  }
+
+  // 始终写回响应，避免 supabase setAll 重建 Response 时丢失新 cookie
+  response.cookies.set(
+    VISITOR_COOKIE_NAME,
+    visitorId,
+    getVisitorCookieOptions(),
+  );
+  return response;
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  supabaseResponse = ensureVisitorCookie(request, supabaseResponse);
 
   const config = getSupabasePublicConfig();
   if (!config) {
@@ -67,9 +93,9 @@ export async function updateSession(request: NextRequest) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = ROUTES.onboarding;
       redirectUrl.search = "";
-      return NextResponse.redirect(redirectUrl);
+      return ensureVisitorCookie(request, NextResponse.redirect(redirectUrl));
     }
   }
 
-  return supabaseResponse;
+  return ensureVisitorCookie(request, supabaseResponse);
 }

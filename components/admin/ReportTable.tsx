@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { Flag } from "lucide-react";
 import {
+  confirmReportViolationAction,
   dismissReportAction,
   adminDeleteFoodRecommendationAction,
   adminDeleteForumCommentAction,
   adminDeleteReportedPostAction,
   adminHideFoodPlaceAction,
   markReportReviewedAction,
-  resolveReportAction,
 } from "@/lib/admin/actions";
 import {
   adminActionInitialState,
@@ -57,7 +57,7 @@ function ReportActionForm({
   variant = "outline",
 }: {
   reportId: string;
-  action: typeof resolveReportAction | typeof dismissReportAction | typeof markReportReviewedAction;
+  action: typeof confirmReportViolationAction | typeof dismissReportAction | typeof markReportReviewedAction;
   label: string;
   variant?: "default" | "outline" | "destructive";
 }) {
@@ -273,13 +273,14 @@ export function ReportTable({ reports }: ReportTableProps) {
                       />
                       <ReportActionForm
                         reportId={report.id}
-                        action={resolveReportAction}
-                        label="标记已处理"
+                        action={confirmReportViolationAction}
+                        label="确认违规"
+                        variant="destructive"
                       />
                       <ReportActionForm
                         reportId={report.id}
                         action={dismissReportAction}
-                        label="驳回"
+                        label="驳回（无违规）"
                         variant="outline"
                       />
                     </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Shield, User, Bookmark } from "lucide-react";
+import { LogOut, Shield, Bookmark } from "lucide-react";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { logoutFormAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
@@ -20,6 +21,7 @@ function getDisplayName(user: SessionUser): string {
 
 export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   const displayName = getDisplayName(user);
+  const avatarUrl = user.profile?.avatarUrl;
   const profileHref = ROUTES.profile(user.id);
   const roleLabel = user.profile
     ? USER_ROLE_LABELS[user.profile.role]
@@ -29,16 +31,16 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   if (variant === "mobile") {
     return (
       <div className="space-y-2">
-        <div className="rounded-md bg-muted px-3 py-2">
-          <p className="text-sm font-medium">{displayName}</p>
-          <p className="text-xs text-muted-foreground">{roleLabel}</p>
-        </div>
-        <Button variant="ghost" className="w-full justify-start" asChild>
-          <Link href={profileHref}>
-            <User className="mr-2 h-4 w-4" />
-            个人主页
-          </Link>
-        </Button>
+        <Link
+          href={profileHref}
+          className="flex items-center gap-3 rounded-md bg-muted px-3 py-2 transition-colors hover:bg-muted/80"
+        >
+          <UserAvatar src={avatarUrl} name={displayName} size="lg" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{displayName}</p>
+            <p className="text-xs text-muted-foreground">{roleLabel}</p>
+          </div>
+        </Link>
         <Button variant="ghost" className="w-full justify-start" asChild>
           <Link href={`${profileHref}#favorites`}>
             <Bookmark className="mr-2 h-4 w-4" />
@@ -68,20 +70,29 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       {showAdminLink ? (
         <Button variant="ghost" size="sm" asChild>
           <Link href={ROUTES.admin}>管理后台</Link>
         </Button>
       ) : null}
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={profileHref} className="max-w-[140px] truncate">
-          {displayName}
+      <Button variant="ghost" size="icon" className="rounded-full" asChild>
+        <Link
+          href={`${profileHref}#favorites`}
+          title="我的收藏"
+          aria-label="我的收藏"
+        >
+          <Bookmark className="h-4 w-4" />
         </Link>
       </Button>
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={`${profileHref}#favorites`}>收藏</Link>
-      </Button>
+      <Link
+        href={profileHref}
+        title={displayName}
+        aria-label={`${displayName} 的个人主页`}
+        className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <UserAvatar src={avatarUrl} name={displayName} size="md" />
+      </Link>
       <form action={logoutFormAction}>
         <Button type="submit" variant="outline" size="sm">
           退出

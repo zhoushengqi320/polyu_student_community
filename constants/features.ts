@@ -4,7 +4,7 @@ export const FEATURES = {
   internships: false,
   gpaCalculator: false,
   coursePlanner: false,
-  notifications: false,
+  notifications: true,
   messaging: false,
   multiSchool: false,
   /** 开学季临时展示「入学攻略」；关闭后导航与首页不再常驻该入口 */

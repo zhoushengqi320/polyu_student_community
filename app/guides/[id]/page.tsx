@@ -7,11 +7,13 @@ import { TARGET_TYPES } from "@/constants/reportReasons";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   countCommentsInThread,
+  collectCommentIdsFromThread,
   listPostCommentThread,
 } from "@/lib/db/comments";
 import { getGuideById } from "@/lib/db/guides";
-import { countReactions } from "@/lib/db/reactions";
-import { can, isAdmin } from "@/lib/utils/permissions";
+import { countReactions, getReactionSummariesForTargets } from "@/lib/db/reactions";
+import { getVisitorId } from "@/lib/guest/visitorId";
+import { can, isAdmin, isBanned } from "@/lib/utils/permissions";
 
 type GuideDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -40,6 +42,20 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
   const totalCommentCount = countCommentsInThread(commentThread);
   const canComment = can(user, "interaction:comment");
   const canFavorite = can(user, "interaction:like");
+  const canLikeComments = !isBanned(user);
+  const commentIds = collectCommentIdsFromThread(commentThread);
+  const visitorId = user ? null : await getVisitorId();
+  const commentReactionMap = Object.fromEntries(
+    (
+      await getReactionSummariesForTargets({
+        targetType: TARGET_TYPES.comment,
+        targetIds: commentIds,
+        userId: user?.id,
+        visitorId: visitorId ?? undefined,
+        type: "like",
+      })
+    ).entries(),
+  );
 
   return (
     <ModulePageShell
@@ -54,9 +70,11 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
         isLoggedIn={Boolean(user)}
         canComment={canComment}
         canFavorite={canFavorite}
+        canLike={canLikeComments}
         isAdmin={isAdmin(user)}
         currentUserId={user?.id}
         revalidatePath={revalidatePath}
+        commentReactionMap={commentReactionMap}
       />
     </ModulePageShell>
   );

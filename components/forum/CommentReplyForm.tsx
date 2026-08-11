@@ -13,9 +13,8 @@ type CommentReplyFormProps = {
   postId: string;
   parentCommentId: string;
   replyToName: string;
-  canComment: boolean;
   revalidatePath?: string;
-  onCancel?: () => void;
+  onCancel: () => void;
 };
 
 const initialState: CommentFormState = {};
@@ -24,7 +23,6 @@ export function CommentReplyForm({
   postId,
   parentCommentId,
   replyToName,
-  canComment,
   revalidatePath,
   onCancel,
 }: CommentReplyFormProps) {
@@ -32,7 +30,6 @@ export function CommentReplyForm({
   const [state, formAction, pending] = useActionState(boundAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const wasPending = useRef(false);
-  const [visible, setVisible] = useState(false);
   const [content, setContent] = useState("");
   const { markDirty, markClean, confirmLeave, dialogProps } =
     useUnsavedChangesGuard();
@@ -42,35 +39,15 @@ export function CommentReplyForm({
       formRef.current?.reset();
       setContent("");
       markClean();
-      setVisible(false);
-      onCancel?.();
+      onCancel();
     }
     wasPending.current = pending;
   }, [pending, state.error, state.fieldErrors, onCancel, markClean]);
 
-  if (!canComment) {
-    return null;
-  }
-
-  if (!visible) {
-    return (
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 px-2 text-xs"
-        onClick={() => setVisible(true)}
-      >
-        回复
-      </Button>
-    );
-  }
-
   function hideReply() {
     setContent("");
     markClean();
-    setVisible(false);
-    onCancel?.();
+    onCancel();
   }
 
   return (

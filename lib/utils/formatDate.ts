@@ -1,10 +1,12 @@
-const DATE_FORMATTER = new Intl.DateTimeFormat("zh-HK", {
+import { APP_LOCALE } from "@/constants/site";
+
+const DATE_FORMATTER = new Intl.DateTimeFormat(APP_LOCALE, {
   year: "numeric",
   month: "short",
   day: "numeric",
 });
 
-const DATETIME_FORMATTER = new Intl.DateTimeFormat("zh-HK", {
+const DATETIME_FORMATTER = new Intl.DateTimeFormat(APP_LOCALE, {
   year: "numeric",
   month: "short",
   day: "numeric",
@@ -28,16 +30,16 @@ export function formatRelativeTime(value: string | Date): string {
   const diffMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
 
   if (diffMinutes < 1) {
-    return "剛剛";
+    return "刚刚";
   }
 
   if (diffMinutes < 60) {
-    return `${diffMinutes}分鐘前`;
+    return `${diffMinutes}分钟前`;
   }
 
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) {
-    return `${diffHours}小時前`;
+    return `${diffHours}小时前`;
   }
 
   const diffDays = Math.floor(diffHours / 24);

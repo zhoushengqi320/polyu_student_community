@@ -273,6 +273,15 @@ export async function startRegisterAction(
   }
 }
 
+/** 验证码步骤返回修改邮箱：清除注册草稿 cookie */
+export async function backToRegisterEmailAction(
+  _prevState: AuthFormState,
+  _formData?: FormData,
+): Promise<AuthFormState> {
+  await clearRegistrationDraftCookie();
+  return { step: "email", success: "请重新输入邮箱" };
+}
+
 export async function verifyRegisterOtpAction(
   _prevState: AuthFormState,
   formData: FormData,

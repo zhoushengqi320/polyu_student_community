@@ -9,9 +9,19 @@ import {
   createForumPost,
   deleteForumPost,
   getForumPostById,
+  incrementForumPostViewCount,
   updateForumPost,
 } from "@/lib/db/forum";
+import { createNotification } from "@/lib/db/notifications";
 import { DbError } from "@/lib/db/shared";
+import {
+  assessContentRisk,
+  assessForumPostRisk,
+} from "@/lib/moderation/contentRisk";
+import {
+  CONTENT_RISK_LEVELS,
+  NOTIFICATION_TYPES,
+} from "@/constants/moderation";
 import { commentSchema } from "@/lib/validations/commentSchema";
 import { forumPostSchema } from "@/lib/validations/forumPostSchema";
 import { assertCan, canManageOwnContent } from "@/lib/utils/permissions";
@@ -21,6 +31,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 export type ForumPostFormState = {
   error?: string;
   success?: string;
+  pendingReview?: boolean;
   fieldErrors?: Partial<Record<"title" | "content" | "topics", string>>;
 };
 
@@ -76,13 +87,36 @@ export async function createForumPostAction(
   }
 
   try {
+    const risk = assessForumPostRisk({
+      title: parsed.data.title,
+      content: parsed.data.content,
+    });
+
     const post = await createForumPost({
       userId: user.id,
       title: parsed.data.title,
       content: parsed.data.content,
       topics: parsed.data.topics,
       isAnonymous: parsed.data.isAnonymous,
+      riskLevel: risk.level,
     });
+
+    if (risk.level === CONTENT_RISK_LEVELS.high) {
+      await createNotification({
+        userId: user.id,
+        type: NOTIFICATION_TYPES.contentPendingReview,
+        title: "帖子待审核",
+        body: "您的帖子因触发内容安全检测，已提交审核，审核通过后将公开展示。",
+        link: ROUTES.forum.list,
+        metadata: { postId: post.id, flags: risk.flags },
+      });
+
+      revalidatePath(ROUTES.forum.list);
+      return {
+        success: "帖子已提交，正在审核中，通过后将公开展示。",
+        pendingReview: true,
+      };
+    }
 
     revalidatePath(ROUTES.forum.list);
     redirect(ROUTES.forum.detail(post.id));
@@ -227,13 +261,27 @@ export async function createCommentAction(
   }
 
   try {
+    const risk = assessContentRisk(parsed.data.content);
+
     await createComment({
       targetType: "post",
       targetId: postId,
       userId: user.id,
       content: parsed.data.content,
       parentId: parsed.data.parentId ?? null,
+      riskLevel: risk.level,
     });
+
+    if (risk.level === CONTENT_RISK_LEVELS.high) {
+      await createNotification({
+        userId: user.id,
+        type: NOTIFICATION_TYPES.contentPendingReview,
+        title: "评论待审核",
+        body: "您的评论因触发内容安全检测，已提交审核，审核通过后将公开展示。",
+        link: ROUTES.forum.detail(postId),
+        metadata: { postId, flags: risk.flags },
+      });
+    }
 
     const revalidatePathValue =
       String(formData.get("revalidatePath") ?? "") || ROUTES.forum.detail(postId);
@@ -244,4 +292,15 @@ export async function createCommentAction(
       error: "评论失败，请稍后重试",
     };
   }
+}
+
+/** 用户进入帖子详情页时记录浏览（由客户端挂载触发，列表预取不计入） */
+export async function recordForumPostViewAction(postId: string): Promise<void> {
+  if (!isSupabaseConfigured() || !postId.trim()) {
+    return;
+  }
+
+  await incrementForumPostViewCount(postId);
+  revalidatePath(ROUTES.forum.detail(postId));
+  revalidatePath(ROUTES.forum.list);
 }

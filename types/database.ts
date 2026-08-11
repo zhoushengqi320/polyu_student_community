@@ -480,7 +480,6 @@ export type Database = {
           like_count: number;
           comment_count: number;
           view_count: number;
-          hot_score: number;
           is_anonymous: boolean;
           status: "draft" | "published" | "hidden" | "removed";
           deleted_at: string | null;
@@ -508,7 +507,6 @@ export type Database = {
           like_count?: number;
           comment_count?: number;
           view_count?: number;
-          hot_score?: number;
           is_anonymous?: boolean;
           status?: "draft" | "published" | "hidden" | "removed";
           deleted_at?: string | null;
@@ -536,7 +534,6 @@ export type Database = {
           like_count?: number;
           comment_count?: number;
           view_count?: number;
-          hot_score?: number;
           is_anonymous?: boolean;
           status?: "draft" | "published" | "hidden" | "removed";
           deleted_at?: string | null;

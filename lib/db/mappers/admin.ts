@@ -13,6 +13,8 @@ export function mapAdminUserListItem(
     ...mapProfileListItem(row),
     email,
     status: profile.status,
+    bannedUntil: profile.bannedUntil,
+    reporterWarningCount: profile.reporterWarningCount,
     createdAt: profile.createdAt,
     polyuVerifiedAt: profile.polyuVerifiedAt,
   };

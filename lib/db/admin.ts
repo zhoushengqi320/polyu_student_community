@@ -185,7 +185,10 @@ export async function unbanUser(userId: string, adminId: string): Promise<void> 
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ status: USER_STATUS.active })
+    .update({
+      status: USER_STATUS.active,
+      banned_until: null,
+    })
     .eq("id", userId);
 
   if (error) {

@@ -17,6 +17,10 @@ export type Profile = {
   reviewReason: string | null;
   role: UserRole;
   status: UserStatus;
+  /** 临时封禁截止时间（恶意举报等） */
+  bannedUntil: string | null;
+  /** 恶意举报警告次数（管理员可见） */
+  reporterWarningCount: number;
   schoolId: string;
   polyuVerifiedAt: string | null;
   bio: string | null;

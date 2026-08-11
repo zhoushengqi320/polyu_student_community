@@ -14,7 +14,7 @@ import { TARGET_TYPES } from "@/constants/reportReasons";
 import { getGuideCategoryLabel } from "@/constants/guides";
 import { formatDate } from "@/lib/utils/formatDate";
 import { type GuideDetail } from "@/types/guide";
-import { type CommentThreadItem } from "@/types/post";
+import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
 
 type GuideDetailViewProps = {
   guide: GuideDetail;
@@ -24,9 +24,11 @@ type GuideDetailViewProps = {
   isLoggedIn: boolean;
   canComment: boolean;
   canFavorite: boolean;
+  canLike: boolean;
   isAdmin: boolean;
   currentUserId?: string;
   revalidatePath: string;
+  commentReactionMap: Record<string, CommentReactionSummary>;
 };
 
 export function GuideDetailView({
@@ -37,9 +39,11 @@ export function GuideDetailView({
   isLoggedIn,
   canComment,
   canFavorite,
+  canLike,
   isAdmin,
   currentUserId,
   revalidatePath,
+  commentReactionMap,
 }: GuideDetailViewProps) {
   const categoryLabel = getGuideCategoryLabel(
     guide.meta?.category ?? guide.categoryId,
@@ -132,9 +136,11 @@ export function GuideDetailView({
         totalCommentCount={totalCommentCount}
         isLoggedIn={isLoggedIn}
         canComment={canComment}
+        canLike={canLike}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
         revalidatePath={revalidatePath}
+        reactionMap={commentReactionMap}
       />
     </div>
   );

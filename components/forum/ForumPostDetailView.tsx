@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Eye, Flame, MessageSquare } from "lucide-react";
+import { Eye, MessageSquare } from "lucide-react";
+import { UserIdentity } from "@/components/common/UserIdentity";
 import { ForumReactionButtons } from "@/components/forum/ForumReactionButtons";
 import { DeleteContentButton } from "@/components/common/DeleteContentButton";
 import { ReportDialog } from "@/components/common/ReportDialog";
@@ -60,21 +61,13 @@ export function ForumPostDetailView({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          {post.isAnonymous ? (
-            <span className="font-medium text-foreground">{getAuthorName(post)}</span>
-          ) : (
-            <Link
-              href={ROUTES.profile(post.author.id)}
-              className="font-medium text-foreground hover:text-primary"
-            >
-              {getAuthorName(post)}
-            </Link>
-          )}
-          <span className="inline-flex items-center gap-1">
-            <Flame className="h-4 w-4" aria-hidden="true" />
-            热度 {post.hotScore}
-          </span>
-          <span className="inline-flex items-center gap-1">
+          <UserIdentity
+            userId={post.isAnonymous ? undefined : post.author.id}
+            name={getAuthorName(post)}
+            avatarUrl={post.isAnonymous ? null : post.author.avatarUrl}
+            size="sm"
+          />
+          <span className="inline-flex items-center gap-1" title="进入详情页后累计">
             <Eye className="h-4 w-4" aria-hidden="true" />
             {post.viewCount} 浏览
           </span>

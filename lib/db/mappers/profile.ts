@@ -40,6 +40,12 @@ export function mapProfile(row: ProfileRow): Profile {
     reviewReason: row.review_reason ?? null,
     role: row.role as UserRole,
     status: row.status,
+    bannedUntil:
+      (row as ProfileRow & { banned_until?: string | null }).banned_until ??
+      null,
+    reporterWarningCount:
+      (row as ProfileRow & { reporter_warning_count?: number })
+        .reporter_warning_count ?? 0,
     schoolId: row.school_id,
     polyuVerifiedAt: row.polyu_verified_at,
     bio: row.bio,

@@ -1,5 +1,6 @@
 import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
 import { CONTENT_STATUS } from "@/constants/contentStatus";
+import { CONTENT_RISK_LEVELS } from "@/constants/moderation";
 import { FORUM_PAGE_SIZE, type ForumSortId } from "@/constants/forum";
 import {
   buildPostExcerpt,
@@ -24,10 +25,6 @@ const FORUM_MODULE = "forum" as const;
 
 function applyForumSort(query: ReturnType<typeof buildForumBaseQuery>, sort: ForumSortId) {
   switch (sort) {
-    case "hot":
-      return query
-        .order("hot_score", { ascending: false })
-        .order("created_at", { ascending: false });
     case "most_commented":
       return query
         .order("comment_count", { ascending: false })
@@ -126,6 +123,12 @@ export async function createForumPost(
   const supabase = await createClient();
   const excerpt = buildPostExcerpt(input.content);
 
+  const riskLevel = input.riskLevel ?? CONTENT_RISK_LEVELS.low;
+  const status =
+    riskLevel === CONTENT_RISK_LEVELS.high
+      ? CONTENT_STATUS.hidden
+      : CONTENT_STATUS.published;
+
   const { data, error } = await supabase
     .from("posts")
     .insert({
@@ -137,7 +140,8 @@ export async function createForumPost(
       category_id: null,
       topics: input.topics,
       is_anonymous: input.isAnonymous,
-      status: CONTENT_STATUS.published,
+      status,
+      risk_level: riskLevel,
       school_id: DEFAULT_SCHOOL_ID,
     })
     .select("*, profiles(*)")
@@ -231,9 +235,16 @@ export async function incrementForumPostViewCount(id: string): Promise<void> {
   }
 }
 
-export async function getHotForumPosts(limit = 5): Promise<ForumPostListItem[]> {
-  const result = await getForumPosts({ sort: "hot", pageSize: limit });
+export async function getMostViewedForumPosts(
+  limit = 5,
+): Promise<ForumPostListItem[]> {
+  const result = await getForumPosts({ sort: "most_viewed", pageSize: limit });
   return result.data;
+}
+
+/** @deprecated 使用 getMostViewedForumPosts */
+export async function getHotForumPosts(limit = 5): Promise<ForumPostListItem[]> {
+  return getMostViewedForumPosts(limit);
 }
 
 export async function getPostsByTopic(

@@ -18,6 +18,8 @@ export type AdminStats = {
 export type AdminUserListItem = ProfileListItem & {
   email: string | null;
   status: UserStatus;
+  bannedUntil: string | null;
+  reporterWarningCount: number;
   createdAt: string;
   polyuVerifiedAt: string | null;
 };

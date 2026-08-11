@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { FORUM_DESCRIPTION, isForumSortId } from "@/constants/forum";
+import { FORUM_DESCRIPTION, normalizeForumSort } from "@/constants/forum";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getForumPosts,
   getForumTopics,
-  getHotForumPosts,
+  getMostViewedForumPosts,
 } from "@/lib/db/forum";
 import { ROUTES } from "@/constants/routes";
 import { canCreateInModule } from "@/lib/utils/permissions";
@@ -26,13 +26,13 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
   const params = await searchParams;
   const query = params.q?.trim() || undefined;
   const topic = params.topic?.trim() || undefined;
-  const sort = params.sort && isForumSortId(params.sort) ? params.sort : "latest";
+  const sort = normalizeForumSort(params.sort);
   const page = Number(params.page) || 1;
 
   const [user, result, hotPosts, popularTopics] = await Promise.all([
     getSessionUser(),
     getForumPosts({ query, topic, sort, page }),
-    getHotForumPosts(5),
+    getMostViewedForumPosts(5),
     getForumTopics(12),
   ]);
 

@@ -14,6 +14,7 @@ import { USER_ROLE_LABELS, USER_STATUS_LABELS } from "@/constants/userRoles";
 import { USER_ROLES } from "@/constants/userRoles";
 import { formatDateTime } from "@/lib/utils/formatDate";
 import { type AdminUserListItem } from "@/types/admin";
+import { UserAvatar } from "@/components/common/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -82,6 +83,7 @@ export function UserManagementTable({ users }: UserManagementTableProps) {
             <th className="px-4 py-3 font-medium">绑定邮箱</th>
             <th className="px-4 py-3 font-medium">角色</th>
             <th className="px-4 py-3 font-medium">状态</th>
+            <th className="px-4 py-3 font-medium">举报警告</th>
             <th className="px-4 py-3 font-medium">注册时间</th>
             <th className="px-4 py-3 font-medium text-right">操作</th>
           </tr>
@@ -89,16 +91,32 @@ export function UserManagementTable({ users }: UserManagementTableProps) {
         <tbody>
           {users.map((user) => {
             const isAdmin = user.role === USER_ROLES.admin;
-            const isBanned = user.status === "banned";
+            const isBanned =
+              user.status === "banned" ||
+              Boolean(
+                user.bannedUntil && new Date(user.bannedUntil) > new Date(),
+              );
+            const hasReportWarning = user.reporterWarningCount > 0;
             const canVerify = user.role === USER_ROLES.user;
 
             return (
               <tr key={user.id} className="border-b last:border-0">
                 <td className="px-4 py-3">
-                  <div className="font-medium">
-                    {user.displayName ?? user.username}
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      src={user.avatarUrl}
+                      name={user.displayName ?? user.username}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {user.displayName ?? user.username}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        @{user.username}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">@{user.username}</div>
                 </td>
                 <td className="px-4 py-3">
                   {user.email ? (
@@ -119,6 +137,21 @@ export function UserManagementTable({ users }: UserManagementTableProps) {
                         : undefined
                     }
                   />
+                  {user.bannedUntil && new Date(user.bannedUntil) > new Date() ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      限制至 {formatDateTime(user.bannedUntil)}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">
+                  {hasReportWarning ? (
+                    <TagBadge
+                      label={`${user.reporterWarningCount} 次`}
+                      className="bg-amber-100 text-amber-800"
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {formatDateTime(user.createdAt)}
