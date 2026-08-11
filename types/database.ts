@@ -382,7 +382,7 @@ export type Database = {
         Row: {
           id: string;
           email: string;
-          purpose: "register" | "login" | "reset_password";
+          purpose: "register" | "login" | "reset_password" | "change_password";
           code_hash: string;
           expires_at: string;
           resend_available_at: string;
@@ -394,7 +394,7 @@ export type Database = {
         Insert: {
           id?: string;
           email: string;
-          purpose: "register" | "login" | "reset_password";
+          purpose: "register" | "login" | "reset_password" | "change_password";
           code_hash: string;
           expires_at: string;
           resend_available_at: string;

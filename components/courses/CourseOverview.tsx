@@ -5,6 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  normalizeDisplayCode,
+  normalizeDisplayLevel,
+  normalizeDisplayName,
+} from "@/lib/courses/normalizeDisplay";
 import { type CourseDetail } from "@/types/course";
 
 type CourseOverviewProps = {
@@ -31,6 +36,10 @@ function InfoBlock({
 }
 
 export function CourseOverview({ course }: CourseOverviewProps) {
+  const displayCode = normalizeDisplayCode(course.code);
+  const displayName = normalizeDisplayName(course.name, course.code);
+  const displayLevel = normalizeDisplayLevel(course.level);
+
   return (
     <Card>
       <CardHeader>
@@ -39,8 +48,8 @@ export function CourseOverview({ course }: CourseOverviewProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <InfoBlock label="Course Code" value={course.code} />
-          <InfoBlock label="Course Name" value={course.name} />
+          <InfoBlock label="Course Code" value={displayCode} />
+          <InfoBlock label="Course Name" value={displayName} />
           <InfoBlock label="Department" value={course.department} />
           <InfoBlock label="School ID" value={course.schoolId} />
           <InfoBlock label="Faculty" value={course.faculty} />
@@ -48,7 +57,7 @@ export function CourseOverview({ course }: CourseOverviewProps) {
             label="Credits"
             value={course.credits === null ? null : `${course.credits} credits`}
           />
-          <InfoBlock label="Level" value={course.level} />
+          <InfoBlock label="Level" value={displayLevel} />
           <InfoBlock label="Semester Offered" value={course.semesterOffered} />
         </div>
 

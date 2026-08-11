@@ -17,6 +17,7 @@ import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
 import { getReports } from "@/lib/db/reports";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type AdminDashboardData } from "@/types/admin";
+import { ADMIN_TAB_IDS, type AdminTabId } from "@/constants/admin";
 
 const EMPTY_DASHBOARD: AdminDashboardData = {
   stats: {
@@ -39,8 +40,18 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   isDatabaseConfigured: false,
 };
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; editCourseId?: string }>;
+}) {
   const { user, reason, isAdmin } = await getAdminAccessState();
+  const params = await searchParams;
+  const initialTab =
+    params.tab && ADMIN_TAB_IDS.has(params.tab)
+      ? (params.tab as AdminTabId)
+      : undefined;
+  const initialEditCourseId = params.editCourseId ?? null;
 
   if (!isAdmin) {
     return <AdminAccessDenied reason={reason} user={user} />;
@@ -77,7 +88,7 @@ export default async function AdminPage() {
           getAllForumPosts({ pageSize: 100 }),
           getAllForumComments({ pageSize: 100 }),
           getAllCourseReviews({ pageSize: 100 }),
-          listCoursesForAdmin(200),
+          listCoursesForAdmin(),
           getAllGuidesForAdmin({ pageSize: 100 }),
           listContentArticlesForAdmin("study", { pageSize: 100 }),
           listContentArticlesForAdmin("life", { pageSize: 100 }),
@@ -114,7 +125,11 @@ export default async function AdminPage() {
           数据库尚未配置，部分数据无法加载。
         </div>
       ) : null}
-      <AdminDashboard data={dashboardData} />
+      <AdminDashboard
+        data={dashboardData}
+        initialTab={initialTab}
+        initialEditCourseId={initialEditCourseId}
+      />
     </ModulePageShell>
   );
 }

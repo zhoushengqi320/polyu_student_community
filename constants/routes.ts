@@ -13,6 +13,13 @@ export const ROUTES = {
   onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
   admin: "/admin",
+  adminCourses: (params?: { editCourseId?: string }) => {
+    const search = new URLSearchParams({ tab: "courses" });
+    if (params?.editCourseId) {
+      search.set("editCourseId", params.editCourseId);
+    }
+    return `/admin?${search.toString()}`;
+  },
   search: (q?: string, type?: string) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);

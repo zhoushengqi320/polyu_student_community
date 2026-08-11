@@ -5,6 +5,7 @@ import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { TagBadge } from "@/components/common/TagBadge";
 import { ProfileFavoritesSection } from "@/components/profile/ProfileFavoritesSection";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { ProfileChangePasswordForm } from "@/components/profile/ProfileChangePasswordForm";
 import { getSessionUser } from "@/lib/auth/session";
 import { getUserFavorites } from "@/lib/db/favorites";
 import { getProfileById } from "@/lib/db/profiles";
@@ -123,6 +124,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </Card>
 
         {isOwnProfile ? <ProfileEditForm profile={profile} /> : null}
+
+        {isOwnProfile && sessionUser?.email ? (
+          <ProfileChangePasswordForm email={sessionUser.email} />
+        ) : null}
 
         {favorites ? <ProfileFavoritesSection favorites={favorites} /> : null}
       </div>

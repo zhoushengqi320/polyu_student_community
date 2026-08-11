@@ -142,7 +142,7 @@ export async function submitProfileForReview(
   userId: string,
   input: {
     nickname?: string;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
     grade?: string;
     major?: string;
   },
@@ -151,8 +151,10 @@ export async function submitProfileForReview(
     throw new DbError("数据库未配置");
   }
 
-  const nickname = input.nickname?.trim() || "";
-  const avatarUrl = input.avatarUrl?.trim() || "";
+  const nicknameProvided = input.nickname !== undefined;
+  const avatarProvided = input.avatarUrl !== undefined;
+  const nickname = nicknameProvided ? input.nickname?.trim() || "" : undefined;
+  const avatarUrl = avatarProvided ? input.avatarUrl?.trim() || "" : undefined;
 
   if (nickname) {
     const available = await isNicknameAvailable(nickname, userId);
@@ -170,15 +172,26 @@ export async function submitProfileForReview(
     payload.major = input.major.trim();
   }
 
-  if (nickname || avatarUrl || input.nickname !== undefined) {
-    const hasSubmission = Boolean(nickname || avatarUrl);
+  if (nicknameProvided) {
     payload.nickname = nickname || null;
-    payload.avatar_url = avatarUrl || null;
     payload.display_name = nickname || null;
-    if (hasSubmission) {
-      payload.profile_review_status = PROFILE_REVIEW_STATUS.pending;
-      payload.review_reason = null;
-    }
+  }
+
+  if (avatarProvided) {
+    payload.avatar_url = avatarUrl || null;
+  }
+
+  const hasReviewSubmission =
+    (nicknameProvided && Boolean(nickname)) ||
+    (avatarProvided && Boolean(avatarUrl));
+
+  if (hasReviewSubmission) {
+    payload.profile_review_status = PROFILE_REVIEW_STATUS.pending;
+    payload.review_reason = null;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    throw new DbError("没有可保存的修改");
   }
 
   const supabase = await createClient();

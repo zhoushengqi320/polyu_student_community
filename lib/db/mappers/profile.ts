@@ -35,6 +35,7 @@ export function mapProfile(row: ProfileRow): Profile {
     nickname: row.nickname ?? null,
     approvedNickname,
     approvedAvatarUrl,
+    pendingAvatarUrl: row.avatar_url ?? null,
     profileReviewStatus: reviewStatus,
     reviewReason: row.review_reason ?? null,
     role: row.role as UserRole,

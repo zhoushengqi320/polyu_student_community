@@ -17,10 +17,16 @@ import { cn } from "@/lib/utils/cn";
 
 type AdminDashboardProps = {
   data: AdminDashboardData;
+  initialTab?: AdminTabId;
+  initialEditCourseId?: string | null;
 };
 
-export function AdminDashboard({ data }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<AdminTabId>("reports");
+export function AdminDashboard({
+  data,
+  initialTab = "reports",
+  initialEditCourseId = null,
+}: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState<AdminTabId>(initialTab);
 
   return (
     <div className="space-y-6">
@@ -93,7 +99,10 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
       ) : null}
 
       {activeTab === "courses" ? (
-        <CoursesAdminPanel courses={data.courses} />
+        <CoursesAdminPanel
+          courses={data.courses}
+          initialEditCourseId={initialEditCourseId}
+        />
       ) : null}
 
       {activeTab === "course-reviews" ? (

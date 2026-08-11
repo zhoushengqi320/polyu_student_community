@@ -75,10 +75,11 @@ export function UserManagementTable({ users }: UserManagementTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[720px] text-left text-sm">
+      <table className="w-full min-w-[860px] text-left text-sm">
         <thead className="border-b bg-muted/40">
           <tr>
             <th className="px-4 py-3 font-medium">用户</th>
+            <th className="px-4 py-3 font-medium">绑定邮箱</th>
             <th className="px-4 py-3 font-medium">角色</th>
             <th className="px-4 py-3 font-medium">状态</th>
             <th className="px-4 py-3 font-medium">注册时间</th>
@@ -98,6 +99,13 @@ export function UserManagementTable({ users }: UserManagementTableProps) {
                     {user.displayName ?? user.username}
                   </div>
                   <div className="text-xs text-muted-foreground">@{user.username}</div>
+                </td>
+                <td className="px-4 py-3">
+                  {user.email ? (
+                    <span className="font-mono text-xs">{user.email}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <TagBadge label={USER_ROLE_LABELS[user.role]} />

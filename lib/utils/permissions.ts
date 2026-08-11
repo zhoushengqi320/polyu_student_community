@@ -128,8 +128,20 @@ export function canCreateInModule(
   return can(user, permission);
 }
 
+export function canAccessAdmin(user: SessionUser | null): boolean {
+  if (!user?.profile) {
+    return false;
+  }
+
+  return (
+    user.profile.role === USER_ROLES.admin &&
+    user.profile.status === USER_STATUS.active &&
+    can(user, "admin:access")
+  );
+}
+
 export function isAdmin(user: SessionUser | null): boolean {
-  return getEffectiveRole(user) === USER_ROLES.admin;
+  return canAccessAdmin(user);
 }
 
 export function canManageOwnContent(

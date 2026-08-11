@@ -15,7 +15,7 @@ export function HomePageSkeleton() {
       </section>
 
       <div className="container space-y-12 py-12 md:py-16">
-        {Array.from({ length: 5 }).map((_, index) => (
+        {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="space-y-4">
             <div className="h-8 w-48 rounded bg-muted" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

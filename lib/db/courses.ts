@@ -298,24 +298,62 @@ export async function softDeleteCourseReview(
   }
 }
 
-export async function listCoursesForAdmin(limit = 200): Promise<CourseWithStats[]> {
+export async function listCoursesForAdmin(limit = 5000): Promise<CourseWithStats[]> {
   if (!isSupabaseConfigured()) {
     return [];
+  }
+
+  const supabase = await createClient();
+  const courses: CourseWithStats[] = [];
+  const pageSize = 1000;
+  let from = 0;
+
+  while (courses.length < limit) {
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*")
+      .eq("school_id", DEFAULT_SCHOOL_ID)
+      .order("code", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    courses.push(...(data as CourseWithStatsRow[]).map(mapCourseWithStats));
+    from += pageSize;
+
+    if (data.length < pageSize) {
+      break;
+    }
+  }
+
+  return courses.slice(0, limit);
+}
+
+export async function getCourseByIdForAdmin(
+  courseId: string,
+): Promise<CourseWithStats | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
     .select("*")
-    .eq("school_id", DEFAULT_SCHOOL_ID)
-    .order("code", { ascending: true })
-    .limit(limit);
+    .eq("id", courseId)
+    .maybeSingle();
 
-  if (error) {
-    throw new DbError(error.message);
+  if (error || !data) {
+    return null;
   }
 
-  return ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats);
+  return mapCourseWithStats(data as CourseWithStatsRow);
 }
 
 export async function createCourse(input: {
@@ -326,6 +364,7 @@ export async function createCourse(input: {
   level?: string | null;
   credits?: number | null;
   description?: string | null;
+  objectives?: string | null;
   prerequisites?: string | null;
   teachingPattern?: string | null;
   semesterOffered?: string | null;
@@ -345,6 +384,7 @@ export async function createCourse(input: {
       level: input.level ?? null,
       credits: input.credits ?? null,
       description: input.description ?? null,
+      objectives: input.objectives ?? null,
       prerequisites: input.prerequisites ?? null,
       teaching_pattern: input.teachingPattern ?? null,
       semester_offered: input.semesterOffered ?? null,
@@ -370,6 +410,7 @@ export async function updateCourse(
     level?: string | null;
     credits?: number | null;
     description?: string | null;
+    objectives?: string | null;
     prerequisites?: string | null;
     teachingPattern?: string | null;
     semesterOffered?: string | null;
@@ -390,6 +431,7 @@ export async function updateCourse(
       level: input.level ?? null,
       credits: input.credits ?? null,
       description: input.description ?? null,
+      objectives: input.objectives ?? null,
       prerequisites: input.prerequisites ?? null,
       teaching_pattern: input.teachingPattern ?? null,
       semester_offered: input.semesterOffered ?? null,
@@ -403,4 +445,27 @@ export async function updateCourse(
   }
 
   return mapCourseWithStats(data as CourseWithStatsRow);
+}
+
+export async function deleteCourse(courseId: string): Promise<{ code: string }> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .delete()
+    .eq("id", courseId)
+    .select("code")
+    .maybeSingle();
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+  if (!data) {
+    throw new DbError("课程不存在或无法删除");
+  }
+
+  return { code: String(data.code) };
 }

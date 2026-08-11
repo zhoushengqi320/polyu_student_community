@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getCoursePdfPublicHref } from "@/lib/courses/pdfPath";
 import { formatDate } from "@/lib/utils/formatDate";
 import { type CourseDetail } from "@/types/course";
 
@@ -15,24 +16,12 @@ type CoursePdfPanelProps = {
   course: CourseDetail;
 };
 
-function getCoursePdfHref(course: CourseDetail): string | null {
-  if (course.pdfUrl) {
-    return course.pdfUrl;
-  }
-
-  if (!course.pdfStoragePath) {
-    return null;
-  }
-
-  const normalizedPath = course.pdfStoragePath.replace(/^学科\//, "");
-  return `/course-pdfs/${normalizedPath
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/")}`;
-}
-
 export function CoursePdfPanel({ course }: CoursePdfPanelProps) {
-  const pdfHref = getCoursePdfHref(course);
+  const pdfHref = getCoursePdfPublicHref(
+    course.pdfStoragePath,
+    course.pdfUrl,
+  );
+  const downloadHref = pdfHref ? `${pdfHref}?download=1` : null;
 
   return (
     <Card>
@@ -50,7 +39,7 @@ export function CoursePdfPanel({ course }: CoursePdfPanelProps) {
               </a>
             </Button>
             <Button asChild variant="outline">
-              <a href={pdfHref} download>
+              <a href={downloadHref ?? pdfHref} download={course.sourceFileName ?? undefined}>
                 <Download className="h-4 w-4" aria-hidden="true" />
                 下载 PDF
               </a>

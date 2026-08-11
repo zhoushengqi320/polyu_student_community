@@ -11,6 +11,8 @@ export type Profile = {
   nickname: string | null;
   approvedNickname: string | null;
   approvedAvatarUrl: string | null;
+  /** 用户提交的待审头像（仅本人资料页展示） */
+  pendingAvatarUrl: string | null;
   profileReviewStatus: ProfileReviewStatus;
   reviewReason: string | null;
   role: UserRole;

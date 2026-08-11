@@ -16,6 +16,7 @@ export type AdminStats = {
 };
 
 export type AdminUserListItem = ProfileListItem & {
+  email: string | null;
   status: UserStatus;
   createdAt: string;
   polyuVerifiedAt: string | null;

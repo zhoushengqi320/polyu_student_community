@@ -65,6 +65,36 @@ export const setPasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const changePasswordWithOtpSchema = z
+  .object({
+    otp: z
+      .string()
+      .trim()
+      .regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `请输入 ${OTP_LENGTH} 位数字验证码`),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的新密码不一致",
+    path: ["confirmPassword"],
+  });
+
+/** @deprecated 改用 changePasswordWithOtpSchema */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "请输入当前密码"),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的新密码不一致",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.password !== data.currentPassword, {
+    message: "新密码不能与当前密码相同",
+    path: ["password"],
+  });
+
 export const loginPasswordSchema = z.object({
   email: polyuEmailSchema.shape.email,
   password: z.string().min(1, "请输入密码"),

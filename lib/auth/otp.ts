@@ -7,7 +7,7 @@ import {
 } from "@/constants/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type OtpPurpose = "register" | "login" | "reset_password";
+export type OtpPurpose = "register" | "login" | "reset_password" | "change_password";
 
 function getOtpPepper(): string {
   return (

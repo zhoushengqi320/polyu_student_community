@@ -14,6 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
+import {
+  normalizeDisplayCode,
+  normalizeDisplayName,
+} from "@/lib/courses/normalizeDisplay";
 import { type CourseDetail } from "@/types/course";
 
 type CourseDetailViewProps = {
@@ -33,13 +37,16 @@ export function CourseDetailView({
   currentUserId = null,
   isAdminUser = false,
 }: CourseDetailViewProps) {
+  const displayCode = normalizeDisplayCode(course.code);
+  const displayName = normalizeDisplayName(course.name, course.code);
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
-              {course.code}
+              {displayCode}
             </span>
             <span>{course.department}</span>
             {course.faculty ? <span>{course.faculty}</span> : null}
@@ -47,12 +54,19 @@ export function CourseDetailView({
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <CardTitle className="text-2xl">{course.name}</CardTitle>
+              <CardTitle className="text-2xl">{displayName}</CardTitle>
               <CardDescription className="mt-2">
                 官方课程信息 + 学生真实评价
               </CardDescription>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
+              {isAdminUser ? (
+                <Button type="button" variant="outline" asChild>
+                  <Link href={ROUTES.adminCourses({ editCourseId: course.id })}>
+                    编辑课程
+                  </Link>
+                </Button>
+              ) : null}
               <CourseFavoriteButton
                 courseId={course.id}
                 isFavorited={isFavorited}

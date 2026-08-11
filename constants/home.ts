@@ -1,10 +1,7 @@
 import { ROUTES } from "@/constants/routes";
 
 export const HOME_LIMITS = {
-  featuredCourses: 6,
-  latestReviews: 5,
   latestPosts: 5,
-  featuredGuides: 4,
 } as const;
 
 export const HOME_HERO = {

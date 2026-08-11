@@ -15,6 +15,8 @@ export const ADMIN_TABS = [
 
 export type AdminTabId = (typeof ADMIN_TABS)[number]["id"];
 
+export const ADMIN_TAB_IDS = new Set<string>(ADMIN_TABS.map((tab) => tab.id));
+
 export const REPORT_STATUS_LABELS: Record<
   (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS],
   string
@@ -54,6 +56,7 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   delete_food_recommendation: "删除吃喝玩乐推荐",
   create_course: "创建课程",
   update_course: "更新课程",
+  delete_course: "删除课程",
   create_guide: "创建攻略",
   update_guide: "编辑攻略",
   publish_guide: "发布攻略",

@@ -7,6 +7,7 @@ import { formatRelativeTime } from "@/lib/utils/formatDate";
 import {
   type FavoriteCourseItem,
   type FavoriteFoodPlaceItem,
+  type FavoriteForumPostItem,
   type UserFavorites,
 } from "@/lib/db/favorites";
 
@@ -61,18 +62,52 @@ function FavoriteFoodRow({ item }: { item: FavoriteFoodPlaceItem }) {
   );
 }
 
+function FavoriteForumPostRow({ item }: { item: FavoriteForumPostItem }) {
+  return (
+    <Link
+      href={ROUTES.forum.detail(item.post.id)}
+      className="block rounded-lg border px-4 py-3 transition-colors hover:bg-muted/40"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{item.post.title}</p>
+          {item.post.excerpt ? (
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+              {item.post.excerpt}
+            </p>
+          ) : null}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {item.post.authorDisplayName}
+            {item.post.commentCount > 0
+              ? ` · ${item.post.commentCount} 条评论`
+              : ""}
+            {item.post.topics.length > 0
+              ? ` · ${item.post.topics.slice(0, 2).join("、")}`
+              : ""}
+          </p>
+        </div>
+        <p className="shrink-0 text-xs text-muted-foreground">
+          {formatRelativeTime(item.favoritedAt)}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 export function ProfileFavoritesSection({
   favorites,
 }: ProfileFavoritesSectionProps) {
   const isEmpty =
-    favorites.courses.length === 0 && favorites.foodPlaces.length === 0;
+    favorites.courses.length === 0 &&
+    favorites.foodPlaces.length === 0 &&
+    favorites.forumPosts.length === 0;
 
   return (
     <section id="favorites" className="max-w-2xl space-y-4 scroll-mt-24">
       <div>
         <h2 className="text-lg font-semibold">我的收藏</h2>
         <p className="text-sm text-muted-foreground">
-          仅自己可见。可从课程详情、吃喝玩乐地点页添加收藏。
+          仅自己可见。可从自由讨论区、课程评价、吃喝玩乐页面添加收藏。
         </p>
       </div>
 
@@ -80,9 +115,16 @@ export function ProfileFavoritesSection({
         <EmptyState
           icon={Bookmark}
           title="还没有收藏"
-          description="去课程评价或吃喝玩乐逛逛，点收藏后会显示在这里。"
+          description="去自由讨论区、课程评价或吃喝玩乐逛逛，点收藏后会显示在这里。"
           action={
             <div className="flex flex-wrap justify-center gap-2">
+              <Link
+                href={ROUTES.forum.list}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                自由讨论区
+              </Link>
+              <span className="text-sm text-muted-foreground">·</span>
               <Link
                 href={ROUTES.courses.list}
                 className="text-sm font-medium text-primary hover:underline"
@@ -101,6 +143,21 @@ export function ProfileFavoritesSection({
         />
       ) : (
         <div className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              自由讨论区（{favorites.forumPosts.length}）
+            </h3>
+            {favorites.forumPosts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">暂无收藏帖子</p>
+            ) : (
+              <div className="space-y-2">
+                {favorites.forumPosts.map((item) => (
+                  <FavoriteForumPostRow key={item.post.id} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
               课程（{favorites.courses.length}）

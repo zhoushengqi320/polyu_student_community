@@ -6,6 +6,7 @@ import { mapProfileListItem, type ProfileRow } from "@/lib/db/mappers/profile";
 import { createAdminAction, logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { DbError, getPagination } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   type AdminCourseReviewListItem,
@@ -64,6 +65,44 @@ export async function getAdminStats(): Promise<AdminStats> {
   };
 }
 
+async function getAuthEmailMap(): Promise<Map<string, string | null>> {
+  const map = new Map<string, string | null>();
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
+    return map;
+  }
+
+  try {
+    const admin = createAdminClient();
+    let page = 1;
+
+    while (page <= 20) {
+      const { data, error } = await admin.auth.admin.listUsers({
+        page,
+        perPage: 200,
+      });
+
+      if (error) {
+        console.error("Failed to list auth users:", error);
+        break;
+      }
+
+      for (const user of data.users) {
+        map.set(user.id, user.email ?? null);
+      }
+
+      if (data.users.length < 200) {
+        break;
+      }
+      page += 1;
+    }
+  } catch (error) {
+    console.error("Failed to load auth emails:", error);
+  }
+
+  return map;
+}
+
 export async function listUsers(
   filters: AdminUserFilters = {},
 ): Promise<AdminUserListItem[]> {
@@ -102,7 +141,11 @@ export async function listUsers(
     return [];
   }
 
-  return (data ?? []).map(mapAdminUserListItem);
+  const emailMap = await getAuthEmailMap();
+
+  return (data ?? []).map((row: ProfileRow) =>
+    mapAdminUserListItem(row, emailMap.get(row.id) ?? null),
+  );
 }
 
 export async function banUser(

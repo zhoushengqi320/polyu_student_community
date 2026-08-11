@@ -27,6 +27,8 @@ function purposeLabel(purpose: string): string {
       return "邮箱验证码登录";
     case "reset_password":
       return "密码重置";
+    case "change_password":
+      return "修改密码";
     default:
       return "身份验证";
   }
@@ -88,7 +90,7 @@ async function sendViaSmtp(
 export async function sendOtpEmail(options: {
   email: string;
   code: string;
-  purpose: "register" | "login" | "reset_password";
+  purpose: "register" | "login" | "reset_password" | "change_password";
 }): Promise<SendOtpEmailResult> {
   if (isDevShowLoginOtp()) {
     return { ok: true, skipped: true };

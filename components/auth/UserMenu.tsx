@@ -5,7 +5,7 @@ import { LogOut, Shield, User, Bookmark } from "lucide-react";
 import { logoutFormAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
-import { isAdmin } from "@/lib/utils/permissions";
+import { can } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
 import { type SessionUser } from "@/types/user";
 
@@ -24,7 +24,7 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   const roleLabel = user.profile
     ? USER_ROLE_LABELS[user.profile.role]
     : "用户";
-  const showAdminLink = isAdmin(user);
+  const showAdminLink = can(user, "admin:access");
 
   if (variant === "mobile") {
     return (

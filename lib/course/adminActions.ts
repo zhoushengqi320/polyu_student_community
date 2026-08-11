@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin/session";
 import { type AdminActionState } from "@/lib/admin/state";
-import { createCourse, updateCourse } from "@/lib/db/courses";
+import { createCourse, deleteCourse, updateCourse } from "@/lib/db/courses";
 import { logAdminAction } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
 import { courseAdminSchema } from "@/lib/validations/courseAdminSchema";
@@ -23,6 +23,7 @@ function readCourseForm(formData: FormData) {
     level: formData.get("level"),
     credits: formData.get("credits"),
     description: formData.get("description"),
+    objectives: formData.get("objectives"),
     prerequisites: formData.get("prerequisites"),
     teachingPattern: formData.get("teachingPattern"),
     semesterOffered: formData.get("semesterOffered"),
@@ -95,6 +96,30 @@ export async function updateCourseAdminAction(
   } catch (error) {
     return {
       error: error instanceof DbError ? error.message : "更新课程失败",
+    };
+  }
+}
+
+export async function deleteCourseAdminAction(
+  courseId: string,
+): Promise<CourseAdminFormState> {
+  const admin = await requireAdmin();
+
+  try {
+    const deleted = await deleteCourse(courseId);
+    await logAdminAction({
+      adminId: admin.id,
+      action: "delete_course",
+      targetType: TARGET_TYPES.course,
+      targetId: courseId,
+      metadata: { code: deleted.code },
+    });
+    revalidatePath(ROUTES.admin);
+    revalidatePath(ROUTES.courses.list);
+    return { success: `课程 ${deleted.code} 已删除` };
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "删除课程失败",
     };
   }
 }
