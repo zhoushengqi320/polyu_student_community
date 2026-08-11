@@ -298,41 +298,61 @@ export async function softDeleteCourseReview(
   }
 }
 
-export async function listCoursesForAdmin(limit = 5000): Promise<CourseWithStats[]> {
+export async function listCoursesForAdminPage(options: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+} = {}): Promise<{
+  items: CourseWithStats[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, options.pageSize ?? 20));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   if (!isSupabaseConfigured()) {
-    return [];
+    return { items: [], total: 0, page, pageSize, totalPages: 0 };
   }
 
   const supabase = await createClient();
-  const courses: CourseWithStats[] = [];
-  const pageSize = 1000;
-  let from = 0;
+  let query = supabase
+    .from("courses")
+    .select("*", { count: "exact" })
+    .eq("school_id", DEFAULT_SCHOOL_ID)
+    .order("code", { ascending: true })
+    .range(from, to);
 
-  while (courses.length < limit) {
-    const { data, error } = await supabase
-      .from("courses")
-      .select("*")
-      .eq("school_id", DEFAULT_SCHOOL_ID)
-      .order("code", { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      throw new DbError(error.message);
-    }
-
-    if (!data || data.length === 0) {
-      break;
-    }
-
-    courses.push(...(data as CourseWithStatsRow[]).map(mapCourseWithStats));
-    from += pageSize;
-
-    if (data.length < pageSize) {
-      break;
-    }
+  if (options.search?.trim()) {
+    const pattern = buildSearchPattern(options.search);
+    query = query.or(
+      `code.ilike.${pattern},name.ilike.${pattern},department.ilike.${pattern}`,
+    );
   }
 
-  return courses.slice(0, limit);
+  const { data, error, count } = await query;
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  const total = count ?? 0;
+  return {
+    items: ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats),
+    total,
+    page,
+    pageSize,
+    totalPages: total === 0 ? 0 : Math.ceil(total / pageSize),
+  };
+}
+
+/** @deprecated Prefer listCoursesForAdminPage for paginated admin UI */
+export async function listCoursesForAdmin(limit = 5000): Promise<CourseWithStats[]> {
+  const result = await listCoursesForAdminPage({ page: 1, pageSize: limit });
+  return result.items;
 }
 
 export async function getCourseByIdForAdmin(

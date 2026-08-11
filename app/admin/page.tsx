@@ -11,7 +11,6 @@ import {
   listPendingProfileReviews,
   listUsers,
 } from "@/lib/db/admin";
-import { listCoursesForAdmin } from "@/lib/db/courses";
 import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
 import { getReports } from "@/lib/db/reports";
@@ -74,7 +73,6 @@ export default async function AdminPage({
         forumPosts,
         forumComments,
         courseReviews,
-        courses,
         guides,
         studyArticles,
         lifeArticles,
@@ -88,7 +86,6 @@ export default async function AdminPage({
           getAllForumPosts({ pageSize: 100 }),
           getAllForumComments({ pageSize: 100 }),
           getAllCourseReviews({ pageSize: 100 }),
-          listCoursesForAdmin(),
           getAllGuidesForAdmin({ pageSize: 100 }),
           listContentArticlesForAdmin("study", { pageSize: 100 }),
           listContentArticlesForAdmin("life", { pageSize: 100 }),
@@ -103,7 +100,7 @@ export default async function AdminPage({
         forumPosts,
         forumComments,
         courseReviews,
-        courses,
+        courses: [],
         guides,
         studyArticles,
         lifeArticles,

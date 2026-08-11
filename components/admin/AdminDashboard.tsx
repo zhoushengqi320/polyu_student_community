@@ -99,10 +99,7 @@ export function AdminDashboard({
       ) : null}
 
       {activeTab === "courses" ? (
-        <CoursesAdminPanel
-          courses={data.courses}
-          initialEditCourseId={initialEditCourseId}
-        />
+        <CoursesAdminPanel initialEditCourseId={initialEditCourseId} />
       ) : null}
 
       {activeTab === "course-reviews" ? (

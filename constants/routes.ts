@@ -20,6 +20,7 @@ export const ROUTES = {
     }
     return `/admin?${search.toString()}`;
   },
+  adminUploadPdf: "/admin/upload-pdf",
   search: (q?: string, type?: string) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);

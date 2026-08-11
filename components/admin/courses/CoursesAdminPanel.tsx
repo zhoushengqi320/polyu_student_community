@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { COURSE_DEPARTMENTS } from "@/constants/courseOptions";
 import { ROUTES } from "@/constants/routes";
 import {
   createCourseAdminAction,
   deleteCourseAdminAction,
+  getCourseAdminAction,
+  listCoursesAdminAction,
   updateCourseAdminAction,
   type CourseAdminFormState,
 } from "@/lib/course/adminActions";
@@ -23,23 +31,17 @@ import {
 import { type CourseWithStats } from "@/types/course";
 
 type CoursesAdminPanelProps = {
-  courses: CourseWithStats[];
   initialEditCourseId?: string | null;
 };
 
+const PAGE_SIZE = 20;
 const initialState: CourseAdminFormState = {};
 
 const TEXTAREA_CLASS =
   "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
-function FieldError({
-  message,
-}: {
-  message?: string;
-}) {
-  if (!message) {
-    return null;
-  }
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
   return <p className="text-sm text-destructive">{message}</p>;
 }
 
@@ -69,22 +71,16 @@ function CourseForm({
   }, [state.success, mode, onCancel]);
 
   function handleDelete() {
-    if (!course) {
-      return;
-    }
+    if (!course) return;
     const confirmed = window.confirm(
       `确定删除课程 ${course.code}？若已有评价，删除可能失败。`,
     );
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     startDeleteTransition(async () => {
       const result = await deleteCourseAdminAction(course.id);
       setDeleteState(result);
-      if (result.success) {
-        onDeleted?.();
-      }
+      if (result.success) onDeleted?.();
     });
   }
 
@@ -146,12 +142,10 @@ function CourseForm({
             <div className="space-y-2">
               <Label htmlFor="faculty">Faculty（可选）</Label>
               <Input id="faculty" name="faculty" defaultValue={course?.faculty ?? ""} />
-              <FieldError message={state.fieldErrors?.faculty} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="level">Level（可选）</Label>
               <Input id="level" name="level" defaultValue={course?.level ?? ""} />
-              <FieldError message={state.fieldErrors?.level} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="credits">Credits（可选）</Label>
@@ -162,7 +156,6 @@ function CourseForm({
                 step="0.5"
                 defaultValue={course?.credits ?? ""}
               />
-              <FieldError message={state.fieldErrors?.credits} />
             </div>
           </div>
 
@@ -184,7 +177,6 @@ function CourseForm({
               defaultValue={course?.objectives ?? ""}
               className={TEXTAREA_CLASS}
             />
-            <FieldError message={state.fieldErrors?.objectives} />
           </div>
 
           <div className="space-y-2">
@@ -196,7 +188,6 @@ function CourseForm({
               defaultValue={course?.prerequisites ?? ""}
               className={TEXTAREA_CLASS}
             />
-            <FieldError message={state.fieldErrors?.prerequisites} />
           </div>
 
           <div className="space-y-2">
@@ -218,7 +209,6 @@ function CourseForm({
               placeholder="合并 PDF 拆分时，可在此注明：本课程与 XXX 共用同一份官方大纲。"
               className={TEXTAREA_CLASS}
             />
-            <FieldError message={state.fieldErrors?.description} />
           </div>
 
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
@@ -259,36 +249,82 @@ function CourseForm({
 }
 
 export function CoursesAdminPanel({
-  courses,
   initialEditCourseId = null,
 }: CoursesAdminPanelProps) {
   const [view, setView] = useState<"list" | "create" | "edit">("list");
-  const [editingId, setEditingId] = useState<string | null>(initialEditCourseId);
+  const [editing, setEditing] = useState<CourseWithStats | null>(null);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const editing = courses.find((item) => item.id === editingId) ?? null;
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<CourseWithStats[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, startLoadTransition] = useTransition();
+  const [listVersion, setListVersion] = useState(0);
+
+  const reloadList = useCallback(() => {
+    startLoadTransition(async () => {
+      const result = await listCoursesAdminAction({
+        page,
+        pageSize: PAGE_SIZE,
+        search,
+      });
+      if (!result.success) {
+        setLoadError(result.error);
+        setItems([]);
+        setTotal(0);
+        setTotalPages(0);
+        return;
+      }
+      setLoadError(null);
+      setItems(result.data.items);
+      setTotal(result.data.total);
+      setTotalPages(result.data.totalPages);
+      if (result.data.totalPages > 0 && page > result.data.totalPages) {
+        setPage(result.data.totalPages);
+      }
+    });
+  }, [page, search]);
 
   useEffect(() => {
-    if (initialEditCourseId) {
-      setEditingId(initialEditCourseId);
-      setView("edit");
+    if (view === "list") {
+      reloadList();
     }
+  }, [view, reloadList, listVersion]);
+
+  useEffect(() => {
+    if (!initialEditCourseId) return;
+    startLoadTransition(async () => {
+      const result = await getCourseAdminAction(initialEditCourseId);
+      if (result.success && result.course) {
+        setEditing(result.course);
+        setView("edit");
+      }
+    });
   }, [initialEditCourseId]);
 
-  const filteredCourses = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) {
-      return courses;
+  function handleSearchSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setPage(1);
+    setSearch(searchInput.trim());
+  }
+
+  function backToList(refresh = true) {
+    setView("list");
+    setEditing(null);
+    if (refresh) {
+      setListVersion((value) => value + 1);
     }
-    return courses.filter(
-      (course) =>
-        course.code.toLowerCase().includes(keyword) ||
-        course.name.toLowerCase().includes(keyword) ||
-        course.department.toLowerCase().includes(keyword),
-    );
-  }, [courses, search]);
+  }
 
   if (view === "create") {
-    return <CourseForm mode="create" onCancel={() => setView("list")} />;
+    return (
+      <CourseForm
+        mode="create"
+        onCancel={() => backToList(true)}
+      />
+    );
   }
 
   if (view === "edit" && editing) {
@@ -296,14 +332,8 @@ export function CoursesAdminPanel({
       <CourseForm
         mode="edit"
         course={editing}
-        onCancel={() => {
-          setView("list");
-          setEditingId(null);
-        }}
-        onDeleted={() => {
-          setView("list");
-          setEditingId(null);
-        }}
+        onCancel={() => backToList(true)}
+        onDeleted={() => backToList(true)}
       />
     );
   }
@@ -314,20 +344,49 @@ export function CoursesAdminPanel({
         <div>
           <CardTitle>课程目录</CardTitle>
           <CardDescription>
-            共 {courses.length} 门课程
-            {search.trim() ? ` · 筛选后 ${filteredCourses.length} 门` : ""}
+            共 {total} 门课程 · 每页 {PAGE_SIZE} 门
+            {search ? ` · 搜索「${search}」` : ""}
           </CardDescription>
         </div>
-        <Button type="button" onClick={() => setView("create")}>
-          新增课程
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" asChild>
+            <Link href={ROUTES.adminUploadPdf}>上传 PDF</Link>
+          </Button>
+          <Button type="button" onClick={() => setView("create")}>
+            新增课程
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="搜索课号、名称或院系…"
-        />
+        <form onSubmit={handleSearchSubmit} className="flex flex-wrap gap-2">
+          <Input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="搜索课号、名称或院系…"
+            className="max-w-md"
+          />
+          <Button type="submit" variant="secondary" disabled={isLoading}>
+            搜索
+          </Button>
+          {search ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setSearchInput("");
+                setSearch("");
+                setPage(1);
+              }}
+            >
+              清除
+            </Button>
+          ) : null}
+        </form>
+
+        {loadError ? (
+          <p className="text-sm text-destructive">{loadError}</p>
+        ) : null}
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
@@ -340,7 +399,7 @@ export function CoursesAdminPanel({
               </tr>
             </thead>
             <tbody>
-              {filteredCourses.map((course) => (
+              {items.map((course) => (
                 <tr key={course.id} className="border-b">
                   <td className="px-2 py-2 font-medium">{course.code}</td>
                   <td className="px-2 py-2">{course.name}</td>
@@ -353,7 +412,7 @@ export function CoursesAdminPanel({
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          setEditingId(course.id);
+                          setEditing(course);
                           setView("edit");
                         }}
                       >
@@ -368,12 +427,47 @@ export function CoursesAdminPanel({
               ))}
             </tbody>
           </table>
-          {filteredCourses.length === 0 ? (
+          {isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              {courses.length === 0 ? "暂无课程，请先新增。" : "没有匹配的课程。"}
+              加载中…
+            </p>
+          ) : null}
+          {!isLoading && items.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {total === 0 && !search ? "暂无课程，请先新增。" : "没有匹配的课程。"}
             </p>
           ) : null}
         </div>
+
+        {totalPages > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              第 {page} / {totalPages} 页
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page <= 1 || isLoading}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                上一页
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages || isLoading}
+                onClick={() =>
+                  setPage((value) => Math.min(totalPages, value + 1))
+                }
+              >
+                下一页
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

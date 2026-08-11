@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin/session";
 import { type AdminActionState } from "@/lib/admin/state";
-import { createCourse, deleteCourse, updateCourse } from "@/lib/db/courses";
+import { createCourse, deleteCourse, getCourseByIdForAdmin, listCoursesForAdminPage, updateCourse } from "@/lib/db/courses";
 import { logAdminAction } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
 import { courseAdminSchema } from "@/lib/validations/courseAdminSchema";
@@ -120,6 +120,49 @@ export async function deleteCourseAdminAction(
   } catch (error) {
     return {
       error: error instanceof DbError ? error.message : "删除课程失败",
+    };
+  }
+}
+
+export async function listCoursesAdminAction(input: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}) {
+  await requireAdmin();
+  try {
+    return {
+      success: true as const,
+      data: await listCoursesForAdminPage(input),
+    };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: error instanceof DbError ? error.message : "加载课程列表失败",
+      data: {
+        items: [],
+        total: 0,
+        page: input.page ?? 1,
+        pageSize: input.pageSize ?? 20,
+        totalPages: 0,
+      },
+    };
+  }
+}
+
+export async function getCourseAdminAction(courseId: string) {
+  await requireAdmin();
+  try {
+    const course = await getCourseByIdForAdmin(courseId);
+    if (!course) {
+      return { success: false as const, error: "课程不存在", course: null };
+    }
+    return { success: true as const, course };
+  } catch (error) {
+    return {
+      success: false as const,
+      error: error instanceof DbError ? error.message : "加载课程失败",
+      course: null,
     };
   }
 }
