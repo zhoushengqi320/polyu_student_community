@@ -8,7 +8,8 @@ import { isFeatureEnabled } from "@/constants/features";
 export const ROUTES = {
   home: "/",
   login: "/auth/login",
-  signup: "/auth/login",
+  signup: "/auth/signup",
+  forgotPassword: "/auth/forgot-password",
   onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
   admin: "/admin",

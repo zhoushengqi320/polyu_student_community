@@ -1,7 +1,10 @@
 import { type Profile } from "@/types/user";
 
 export function needsOnboarding(profile: Profile | null | undefined): boolean {
-  return Boolean(profile && !profile.onboardingCompleted);
+  return Boolean(
+    profile &&
+      !(profile.isFirstSetupCompleted || profile.onboardingCompleted),
+  );
 }
 
 export function isAuthPath(pathname: string): boolean {

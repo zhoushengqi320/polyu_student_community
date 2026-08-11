@@ -3,6 +3,7 @@ import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 export const ADMIN_TABS = [
   { id: "overview", label: "概览" },
   { id: "reports", label: "举报中心" },
+  { id: "profile-reviews", label: "资料审核" },
   { id: "forum-posts", label: "帖子管理" },
   { id: "forum-comments", label: "评论管理" },
   { id: "courses", label: "课程目录" },
@@ -43,6 +44,8 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   ban_user: "封禁用户",
   unban_user: "解封用户",
   verify_polyu_user: "理大认证",
+  approve_profile: "通过资料审核",
+  reject_profile: "驳回资料审核",
   hide_content: "隐藏内容",
   delete_forum_post: "删除帖子",
   delete_forum_comment: "删除评论",

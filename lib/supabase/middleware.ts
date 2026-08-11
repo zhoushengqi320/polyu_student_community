@@ -52,18 +52,18 @@ export async function updateSession(request: NextRequest) {
   ) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("onboarding_completed, role, status")
+      .select("onboarding_completed, is_first_setup_completed, role, status")
       .eq("id", user.id)
       .maybeSingle();
 
     const isAdminUser =
       profile?.role === "admin" && profile?.status === "active";
 
-    if (
-      profile &&
-      profile.onboarding_completed === false &&
-      !isAdminUser
-    ) {
+    const setupDone =
+      profile?.is_first_setup_completed === true ||
+      profile?.onboarding_completed === true;
+
+    if (profile && !setupDone && !isAdminUser) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = ROUTES.onboarding;
       redirectUrl.search = "";

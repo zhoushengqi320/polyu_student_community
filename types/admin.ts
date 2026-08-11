@@ -11,6 +11,7 @@ import { type UserRole, type UserStatus } from "@/constants/userRoles";
 export type AdminStats = {
   userCount: number;
   pendingReportCount: number;
+  pendingProfileReviewCount: number;
   postCount: number;
 };
 
@@ -18,6 +19,19 @@ export type AdminUserListItem = ProfileListItem & {
   status: UserStatus;
   createdAt: string;
   polyuVerifiedAt: string | null;
+};
+
+export type AdminProfileReviewItem = {
+  id: string;
+  nickname: string | null;
+  avatarUrl: string | null;
+  approvedNickname: string | null;
+  approvedAvatarUrl: string | null;
+  profileReviewStatus: "pending" | "approved" | "rejected";
+  reviewReason: string | null;
+  grade: string | null;
+  major: string | null;
+  updatedAt: string;
 };
 
 export type AdminUserFilters = {
@@ -85,6 +99,7 @@ export type AdminActionFilters = {
 export type AdminDashboardData = {
   stats: AdminStats;
   users: AdminUserListItem[];
+  profileReviews: AdminProfileReviewItem[];
   reports: ReportWithReporter[];
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];

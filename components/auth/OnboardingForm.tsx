@@ -36,46 +36,11 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
       <CardHeader>
         <CardTitle>完善个人资料</CardTitle>
         <CardDescription>
-          欢迎加入 PolyUHub！请填写以下信息，完成后即可发帖、评论与互动。
+          年级与专业必填；昵称与头像可选，提交后需管理员审核通过才公开展示。
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">昵称</Label>
-            <Input
-              id="displayName"
-              name="displayName"
-              defaultValue={profile.displayName ?? ""}
-              placeholder="在社区中展示的名称"
-              required
-            />
-            {state.fieldErrors?.displayName ? (
-              <p className="text-sm text-destructive">
-                {state.fieldErrors.displayName}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="username">用户名</Label>
-            <Input
-              id="username"
-              name="username"
-              defaultValue={profile.username}
-              placeholder="字母、数字、下划线"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              用于 @ 提及与个人主页地址，可修改系统分配的临时用户名。
-            </p>
-            {state.fieldErrors?.username ? (
-              <p className="text-sm text-destructive">
-                {state.fieldErrors.username}
-              </p>
-            ) : null}
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="grade">年级</Label>
             <select
@@ -111,6 +76,32 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
             {state.fieldErrors?.major ? (
               <p className="text-sm text-destructive">{state.fieldErrors.major}</p>
             ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nickname">昵称（可选）</Label>
+            <Input
+              id="nickname"
+              name="nickname"
+              defaultValue={profile.nickname ?? ""}
+              placeholder="在社区中展示的名称"
+              maxLength={30}
+            />
+            {state.fieldErrors?.nickname ? (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.nickname}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="avatarUrl">头像 URL（可选）</Label>
+            <Input
+              id="avatarUrl"
+              name="avatarUrl"
+              defaultValue={profile.avatarUrl?.startsWith("http") ? "" : ""}
+              placeholder="也可稍后在个人页上传"
+            />
           </div>
 
           {state.error ? (

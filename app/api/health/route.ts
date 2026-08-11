@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSiteUrl } from "@/lib/auth/getSiteUrl";
+import { getAppUrl, getAuthCallbackUrl } from "@/lib/auth/getSiteUrl";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,8 @@ export async function GET() {
     ok: true,
     service: "polyuhub",
     supabaseConfigured: isSupabaseConfigured(),
-    siteUrl: getSiteUrl(),
+    appUrl: getAppUrl(),
+    authCallbackUrl: getAuthCallbackUrl(),
     timestamp: new Date().toISOString(),
   });
 }

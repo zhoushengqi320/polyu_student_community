@@ -13,7 +13,9 @@
     "verify:deploy": "node scripts/verify-deploy-env.mjs",
     "setup:production": "node scripts/setup-production.mjs",
     "deploy:production": "node scripts/deploy-production.mjs",
-    "configure:auth": "node scripts/configure-supabase-auth.mjs"
+    "configure:auth": "node scripts/configure-supabase-auth.mjs",
+    "sanitize:filenames": "node scripts/sanitize-windows-filenames.mjs",
+    "sanitize:filenames:watch": "node scripts/sanitize-windows-filenames.mjs --watch"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

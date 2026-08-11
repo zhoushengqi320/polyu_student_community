@@ -315,6 +315,11 @@ export type Database = {
           username: string;
           display_name: string | null;
           avatar_url: string | null;
+          nickname: string | null;
+          approved_nickname: string | null;
+          approved_avatar_url: string | null;
+          profile_review_status: "pending" | "approved" | "rejected";
+          review_reason: string | null;
           role: "user" | "verified_polyu_user" | "admin";
           status: "active" | "banned";
           school_id: string;
@@ -323,6 +328,7 @@ export type Database = {
           grade: string | null;
           major: string | null;
           onboarding_completed: boolean;
+          is_first_setup_completed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -331,6 +337,11 @@ export type Database = {
           username: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          nickname?: string | null;
+          approved_nickname?: string | null;
+          approved_avatar_url?: string | null;
+          profile_review_status?: "pending" | "approved" | "rejected";
+          review_reason?: string | null;
           role?: "user" | "verified_polyu_user" | "admin";
           status?: "active" | "banned";
           school_id?: string;
@@ -339,6 +350,7 @@ export type Database = {
           grade?: string | null;
           major?: string | null;
           onboarding_completed?: boolean;
+          is_first_setup_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -347,6 +359,11 @@ export type Database = {
           username?: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          nickname?: string | null;
+          approved_nickname?: string | null;
+          approved_avatar_url?: string | null;
+          profile_review_status?: "pending" | "approved" | "rejected";
+          review_reason?: string | null;
           role?: "user" | "verified_polyu_user" | "admin";
           status?: "active" | "banned";
           school_id?: string;
@@ -355,6 +372,88 @@ export type Database = {
           grade?: string | null;
           major?: string | null;
           onboarding_completed?: boolean;
+          is_first_setup_completed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      otp_challenges: {
+        Row: {
+          id: string;
+          email: string;
+          purpose: "register" | "login" | "reset_password";
+          code_hash: string;
+          expires_at: string;
+          resend_available_at: string;
+          attempt_count: number;
+          max_attempts: number;
+          consumed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          purpose: "register" | "login" | "reset_password";
+          code_hash: string;
+          expires_at: string;
+          resend_available_at: string;
+          attempt_count?: number;
+          max_attempts?: number;
+          consumed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          purpose?: "register" | "login" | "reset_password";
+          code_hash?: string;
+          expires_at?: string;
+          resend_available_at?: string;
+          attempt_count?: number;
+          max_attempts?: number;
+          consumed_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      registration_drafts: {
+        Row: {
+          id: string;
+          email: string;
+          email_verified_at: string | null;
+          password_encrypted: string | null;
+          grade: string | null;
+          major: string | null;
+          nickname: string | null;
+          avatar_url: string | null;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          email_verified_at?: string | null;
+          password_encrypted?: string | null;
+          grade?: string | null;
+          major?: string | null;
+          nickname?: string | null;
+          avatar_url?: string | null;
+          expires_at: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          email_verified_at?: string | null;
+          password_encrypted?: string | null;
+          grade?: string | null;
+          major?: string | null;
+          nickname?: string | null;
+          avatar_url?: string | null;
+          expires_at?: string;
           created_at?: string;
           updated_at?: string;
         };

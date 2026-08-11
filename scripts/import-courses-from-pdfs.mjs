@@ -5,18 +5,38 @@ import process from "node:process";
 import { PDFParse } from "pdf-parse";
 
 const PROJECT_ROOT = process.cwd();
-const DEFAULT_COURSE_DIR = path.join(PROJECT_ROOT, "学科");
+const DEFAULT_COURSE_DIR = path.join(PROJECT_ROOT, "课程");
 const SCHOOL_ID = "polyu";
+const INSERT_BATCH_SIZE = 100;
 
 const DEPARTMENT_META = {
-  AAE: {
-    department: "aae",
-    faculty: "Faculty of Engineering",
-  },
-  ABCT: {
-    department: "abct",
-    faculty: "Faculty of Science",
-  },
+  AAE: { department: "aae", faculty: "Faculty of Engineering" },
+  ABCT: { department: "abct", faculty: "Faculty of Science" },
+  ABCT2: { department: "abct", faculty: "Faculty of Science" },
+  AF: { department: "af", faculty: "Faculty of Business" },
+  AMA: { department: "ama", faculty: "Faculty of Science" },
+  APSS: { department: "apss", faculty: "Faculty of Health and Social Sciences" },
+  AP_M: { department: "ap", faculty: "Faculty of Science" },
+  AP_RP: { department: "ap", faculty: "Faculty of Science" },
+  AP_UG: { department: "ap", faculty: "Faculty of Science" },
+  BME: { department: "bme", faculty: "Faculty of Engineering" },
+  CEE: { department: "cee", faculty: "Faculty of Construction and Environment" },
+  CHC_M: { department: "chc", faculty: "Faculty of Humanities" },
+  CHC_UG: { department: "chc", faculty: "Faculty of Humanities" },
+  CLC: { department: "clc", faculty: "Faculty of Humanities" },
+  COMP: { department: "comp", faculty: "Faculty of Engineering" },
+  COMP2: { department: "comp", faculty: "Faculty of Engineering" },
+  DSAI: { department: "dsai", faculty: "Faculty of Engineering" },
+  EEE: { department: "eee", faculty: "Faculty of Engineering" },
+  ENGL: { department: "engl", faculty: "Faculty of Humanities" },
+  FB: { department: "fb", faculty: "Faculty of Business" },
+  FSN: { department: "fsn", faculty: "Faculty of Science" },
+  LMS: { department: "lms", faculty: "Faculty of Business" },
+  LSGI: { department: "lsgi", faculty: "Faculty of Construction and Environment" },
+  ME: { department: "me", faculty: "Faculty of Engineering" },
+  MM: { department: "mm", faculty: "Faculty of Business" },
+  SFT: { department: "sft", faculty: "School of Fashion and Textiles" },
+  SHTM: { department: "shtm", faculty: "School of Hotel and Tourism Management" },
 };
 
 function parseArgs() {
@@ -148,6 +168,33 @@ function sliceSection(text, startLabels, endLabels) {
   return afterStart.slice(0, end).trim();
 }
 
+function truncate(value, maxLength) {
+  if (value == null) {
+    return value;
+  }
+  const text = String(value).trim();
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function sanitizeCourse(course) {
+  // Indexed columns must stay under Postgres btree row limit (~8191 bytes).
+  return {
+    ...course,
+    code: truncate(course.code, 64),
+    name: truncate(course.name, 300),
+    department: truncate(course.department, 64),
+    faculty: truncate(course.faculty, 200),
+    level: truncate(course.level, 64),
+    description: truncate(course.description, 20000),
+    objectives: truncate(course.objectives, 20000),
+    prerequisites: truncate(course.prerequisites, 8000),
+    teaching_pattern: truncate(course.teaching_pattern, 8000),
+  };
+}
+
 function parseCredits(raw) {
   if (!raw) {
     return null;
@@ -222,7 +269,11 @@ async function parseCoursePdf(filePath, courseDir) {
     findFieldValue(text, "Subject Code", ["Subject Title"]) ??
       buildCourseCodeFromFile(filePath),
   );
-  const name = findFieldValue(text, "Subject Title", ["Credit Value"]) ?? code;
+  const rawName = findFieldValue(text, "Subject Title", ["Credit Value"]) ?? code;
+  const name =
+    rawName.length > 300 || /\n/.test(rawName)
+      ? cleanInlineValue(rawName.split("\n")[0]).slice(0, 300) || code
+      : rawName.trim();
   const credits = parseCredits(findFieldValue(text, "Credit Value", ["Level"]));
   const level = findFieldValue(text, "Level", [
     "Pre-requisite",
@@ -325,7 +376,7 @@ async function main() {
   const newCourses = [];
   const skipped = [];
 
-  for (const filePath of pdfFiles) {
+  for (const [index, filePath] of pdfFiles.entries()) {
     try {
       const course = await parseCoursePdf(filePath, path.resolve(options.courseDir));
       const duplicateInFolder = seenInFolder.has(course.code);
@@ -356,6 +407,12 @@ async function main() {
         file: path.relative(options.courseDir, filePath),
         reason: error instanceof Error ? error.message : "parse failed",
       });
+    }
+
+    if ((index + 1) % 50 === 0 || index + 1 === pdfFiles.length) {
+      console.log(
+        `Parsed ${index + 1}/${pdfFiles.length} · to import ${newCourses.length} · skipped ${skipped.length}`,
+      );
     }
   }
 
@@ -392,21 +449,29 @@ async function main() {
     return;
   }
 
-  const payload = newCourses.map(({ _relativePath, ...course }) => course);
+  const payload = newCourses.map(({ _relativePath, ...course }) => sanitizeCourse(course));
 
   if (options.updateExisting) {
-    const { error } = await supabase
-      .from("courses")
-      .upsert(payload, { onConflict: "code,school_id" });
+    for (let i = 0; i < payload.length; i += INSERT_BATCH_SIZE) {
+      const batch = payload.slice(i, i + INSERT_BATCH_SIZE);
+      const { error } = await supabase
+        .from("courses")
+        .upsert(batch, { onConflict: "code,school_id" });
 
-    if (error) {
-      throw new Error(`Failed to upsert courses: ${error.message}`);
+      if (error) {
+        throw new Error(`Failed to upsert courses (batch ${i}): ${error.message}`);
+      }
+      console.log(`Upserted ${Math.min(i + INSERT_BATCH_SIZE, payload.length)} / ${payload.length}`);
     }
   } else {
-    const { error } = await supabase.from("courses").insert(payload);
+    for (let i = 0; i < payload.length; i += INSERT_BATCH_SIZE) {
+      const batch = payload.slice(i, i + INSERT_BATCH_SIZE);
+      const { error } = await supabase.from("courses").insert(batch);
 
-    if (error) {
-      throw new Error(`Failed to insert courses: ${error.message}`);
+      if (error) {
+        throw new Error(`Failed to insert courses (batch ${i}): ${error.message}`);
+      }
+      console.log(`Inserted ${Math.min(i + INSERT_BATCH_SIZE, payload.length)} / ${payload.length}`);
     }
   }
 

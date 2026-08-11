@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { POLYU_EMAIL_SUFFIX } from "@/constants/auth";
+import { isMagicLinkEnabled, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
 import { ROUTES } from "@/constants/routes";
 
 type LoginPageProps = {
@@ -14,17 +14,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <ModulePageShell
-      title="理大邮箱登录"
-      description={`使用 ${POLYU_EMAIL_SUFFIX} 邮箱接收 Magic Link 登录，无需密码注册。`}
+      title="登录"
+      description={`使用 ${POLYU_EMAIL_SUFFIX} 邮箱登录。支持密码或验证码登录。`}
     >
       <div className="mx-auto max-w-md space-y-4">
         <AuthNotice />
         {error === "auth_callback_failed" ? (
           <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            邮箱验证失败，请重新请求登录链接。
+            邮箱验证失败，请重新登录。
           </p>
         ) : null}
-        <LoginForm />
+        <LoginForm magicLinkEnabled={isMagicLinkEnabled()} />
         <p className="text-center text-xs text-muted-foreground">
           继续使用即表示你同意我们的
           <Link

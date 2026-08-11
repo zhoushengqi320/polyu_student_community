@@ -7,8 +7,10 @@ import {
   adminDeleteForumComment,
   adminDeleteForumPost,
   adminDeleteReportedPost,
+  approveProfileReview,
   banUser,
   hideContent,
+  rejectProfileReview,
   unbanUser,
   verifyPolyuUser,
 } from "@/lib/db/admin";
@@ -85,6 +87,41 @@ export async function verifyPolyuUserAction(
   return runAdminAction(
     () => verifyPolyuUser(userId, admin.id),
     "已授予理大认证",
+  );
+}
+
+export async function approveProfileReviewAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+
+  if (!userId) {
+    return { error: "无效的用户 ID" };
+  }
+
+  return runAdminAction(
+    () => approveProfileReview(userId, admin.id),
+    "资料已通过审核",
+  );
+}
+
+export async function rejectProfileReviewAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+  const reason = String(formData.get("reason") ?? "");
+
+  if (!userId) {
+    return { error: "无效的用户 ID" };
+  }
+
+  return runAdminAction(
+    () => rejectProfileReview(userId, admin.id, reason),
+    "资料已驳回",
   );
 }
 

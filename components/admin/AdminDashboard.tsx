@@ -5,6 +5,7 @@ import { ADMIN_TABS, type AdminTabId } from "@/constants/admin";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { AdminActionsTable } from "@/components/admin/AdminActionsTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
+import { ProfileReviewTable } from "@/components/admin/ProfileReviewTable";
 import { ReportTable } from "@/components/admin/ReportTable";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
@@ -48,6 +49,12 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
                 {data.stats.pendingReportCount}
               </span>
             ) : null}
+            {tab.id === "profile-reviews" &&
+            data.stats.pendingProfileReviewCount > 0 ? (
+              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                {data.stats.pendingProfileReviewCount}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -58,6 +65,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">快捷说明</h2>
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+              <li>在「资料审核」中可审核用户提交的昵称与头像；通过后全站立刻展示。</li>
               <li>在「举报中心」可审核用户举报，删除违规内容或更新举报状态。</li>
               <li>在「帖子管理」「评论管理」中可查看含已删除内容在内的全部讨论区数据。</li>
               <li>在「课程目录」中可新增或编辑课程基础信息。</li>
@@ -70,6 +78,10 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
 
       {activeTab === "reports" ? (
         <ReportTable reports={data.reports} />
+      ) : null}
+
+      {activeTab === "profile-reviews" ? (
+        <ProfileReviewTable items={data.profileReviews} />
       ) : null}
 
       {activeTab === "forum-posts" ? (

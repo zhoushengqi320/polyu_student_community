@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { isAllowedPolyuEmail } from "@/constants/auth";
+import {
+  isAllowedPolyuEmail,
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
+  OTP_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  WEAK_PASSWORDS,
+} from "@/constants/auth";
 import { STUDENT_GRADES } from "@/constants/profileOptions";
 
 const gradeIds = STUDENT_GRADES.map((item) => item.id) as [string, ...string[]];
@@ -15,18 +22,87 @@ export const polyuEmailSchema = z.object({
 
 export type PolyuEmailFormValues = z.infer<typeof polyuEmailSchema>;
 
+export const otpCodeSchema = z.object({
+  email: polyuEmailSchema.shape.email,
+  otp: z
+    .string()
+    .trim()
+    .regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), `请输入 ${OTP_LENGTH} 位数字验证码`),
+});
+
+function isWeakPassword(password: string): boolean {
+  const lower = password.toLowerCase();
+  if (WEAK_PASSWORDS.has(lower)) {
+    return true;
+  }
+  if (/^\d+$/.test(password)) {
+    return true;
+  }
+  if (/^(.)\1+$/.test(password)) {
+    return true;
+  }
+  if (/^[a-zA-Z]+$/.test(password)) {
+    return true;
+  }
+  return false;
+}
+
+export const passwordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `密码至少 ${PASSWORD_MIN_LENGTH} 位`)
+  .max(72, "密码过长")
+  .refine((value) => !isWeakPassword(value), {
+    message: "密码过于简单，请换一个更安全的密码",
+  });
+
+export const setPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的密码不一致",
+    path: ["confirmPassword"],
+  });
+
+export const loginPasswordSchema = z.object({
+  email: polyuEmailSchema.shape.email,
+  password: z.string().min(1, "请输入密码"),
+});
+
+export const nicknameOptionalSchema = z
+  .string()
+  .trim()
+  .max(NICKNAME_MAX_LENGTH, "昵称过长")
+  .refine(
+    (value) => value.length === 0 || value.length >= NICKNAME_MIN_LENGTH,
+    { message: `昵称至少 ${NICKNAME_MIN_LENGTH} 个字符` },
+  );
+
+export const firstSetupSchema = z.object({
+  grade: z.enum(gradeIds, { message: "请选择年级" }),
+  major: z
+    .string()
+    .trim()
+    .min(1, "请填写专业")
+    .max(100, "专业名称过长"),
+  nickname: nicknameOptionalSchema.optional().default(""),
+  avatarUrl: z
+    .string()
+    .trim()
+    .optional()
+    .default("")
+    .refine((value) => !value || /^https?:\/\//i.test(value), {
+      message: "头像地址无效",
+    }),
+});
+
+export type FirstSetupFormValues = z.infer<typeof firstSetupSchema>;
+
+/** @deprecated 使用 firstSetupSchema */
 export const onboardingSchema = z.object({
-  displayName: z
-    .string()
-    .trim()
-    .min(2, "昵称至少 2 个字符")
-    .max(30, "昵称过长"),
-  username: z
-    .string()
-    .trim()
-    .min(2, "用户名至少 2 个字符")
-    .max(30, "用户名过长")
-    .regex(/^[a-zA-Z0-9_]+$/, "用户名仅可包含字母、数字和下划线"),
+  displayName: nicknameOptionalSchema.optional().default(""),
+  username: z.string().optional().default(""),
   grade: z.enum(gradeIds, { message: "请选择年级" }),
   major: z
     .string()
@@ -36,3 +112,15 @@ export const onboardingSchema = z.object({
 });
 
 export type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+
+export const updateProfileReviewSchema = z.object({
+  nickname: nicknameOptionalSchema.optional().default(""),
+  avatarUrl: z.string().trim().optional().default(""),
+  grade: z.enum(gradeIds, { message: "请选择年级" }).optional(),
+  major: z
+    .string()
+    .trim()
+    .min(1, "请填写专业")
+    .max(100, "专业名称过长")
+    .optional(),
+});

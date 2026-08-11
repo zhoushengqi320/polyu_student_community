@@ -23,6 +23,7 @@ import { type AdminActionLogWithAdmin } from "@/types/report";
 const EMPTY_STATS: AdminStats = {
   userCount: 0,
   pendingReportCount: 0,
+  pendingProfileReviewCount: 0,
   postCount: 0,
 };
 
@@ -36,6 +37,7 @@ export async function getAdminStats(): Promise<AdminStats> {
   const [
     { count: userCount },
     { count: pendingReportCount },
+    { count: pendingProfileReviewCount },
     { count: postCount },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
@@ -43,6 +45,10 @@ export async function getAdminStats(): Promise<AdminStats> {
       .from("reports")
       .select("*", { count: "exact", head: true })
       .eq("status", REPORT_STATUS.pending),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("profile_review_status", "pending"),
     supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
@@ -53,6 +59,7 @@ export async function getAdminStats(): Promise<AdminStats> {
   return {
     userCount: userCount ?? 0,
     pendingReportCount: pendingReportCount ?? 0,
+    pendingProfileReviewCount: pendingProfileReviewCount ?? 0,
     postCount: postCount ?? 0,
   };
 }
@@ -84,7 +91,7 @@ export async function listUsers(
 
   if (search?.trim()) {
     query = query.or(
-      `username.ilike.%${search.trim()}%,display_name.ilike.%${search.trim()}%`,
+      `username.ilike.%${search.trim()}%,display_name.ilike.%${search.trim()}%,nickname.ilike.%${search.trim()}%,approved_nickname.ilike.%${search.trim()}%`,
     );
   }
 
@@ -177,6 +184,126 @@ export async function verifyPolyuUser(
     action: "verify_polyu_user",
     targetType: "user",
     targetId: userId,
+  });
+}
+
+export async function listPendingProfileReviews(
+  pageSize = 100,
+): Promise<import("@/types/admin").AdminProfileReviewItem[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, nickname, avatar_url, approved_nickname, approved_avatar_url, profile_review_status, review_reason, grade, major, updated_at",
+    )
+    .eq("profile_review_status", "pending")
+    .order("updated_at", { ascending: true })
+    .limit(pageSize);
+
+  if (error) {
+    console.error("Failed to list profile reviews:", error);
+    return [];
+  }
+
+  return (data ?? []).map((row: {
+    id: string;
+    nickname: string | null;
+    avatar_url: string | null;
+    approved_nickname: string | null;
+    approved_avatar_url: string | null;
+    profile_review_status: "pending" | "approved" | "rejected";
+    review_reason: string | null;
+    grade: string | null;
+    major: string | null;
+    updated_at: string;
+  }) => ({
+    id: row.id,
+    nickname: row.nickname,
+    avatarUrl: row.avatar_url,
+    approvedNickname: row.approved_nickname,
+    approvedAvatarUrl: row.approved_avatar_url,
+    profileReviewStatus: row.profile_review_status,
+    reviewReason: row.review_reason,
+    grade: row.grade,
+    major: row.major,
+    updatedAt: row.updated_at,
+  }));
+}
+
+export async function approveProfileReview(
+  userId: string,
+  adminId: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { data: profile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("nickname, avatar_url")
+    .eq("id", userId)
+    .single();
+
+  if (fetchError || !profile) {
+    throw new DbError(fetchError?.message ?? "用户不存在");
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      approved_nickname: profile.nickname,
+      approved_avatar_url: profile.avatar_url,
+      display_name: profile.nickname,
+      profile_review_status: "approved",
+      review_reason: null,
+    })
+    .eq("id", userId);
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  await logAdminAction({
+    adminId,
+    action: "approve_profile",
+    targetType: "user",
+    targetId: userId,
+  });
+}
+
+export async function rejectProfileReview(
+  userId: string,
+  adminId: string,
+  reason: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      profile_review_status: "rejected",
+      review_reason: reason.trim() || "资料未通过审核，请修改后重新提交",
+    })
+    .eq("id", userId);
+
+  if (error) {
+    throw new DbError(error.message);
+  }
+
+  await logAdminAction({
+    adminId,
+    action: "reject_profile",
+    targetType: "user",
+    targetId: userId,
+    metadata: { reason },
   });
 }
 

@@ -1,4 +1,4 @@
-import { FileText, Flag, Users } from "lucide-react";
+import { FileText, Flag, Users, UserRoundCheck } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -27,11 +27,16 @@ const STAT_ITEMS = [
     label: "待处理举报",
     icon: Flag,
   },
+  {
+    key: "pendingProfileReviewCount" as const,
+    label: "待审资料",
+    icon: UserRoundCheck,
+  },
 ];
 
 export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {STAT_ITEMS.map(({ key, label, icon: Icon }) => (
         <Card key={key}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

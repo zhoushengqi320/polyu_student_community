@@ -1,10 +1,18 @@
 import { type UserRole, type UserStatus } from "@/constants/userRoles";
+import { type ProfileReviewStatus } from "@/constants/profileReview";
 
 export type Profile = {
   id: string;
   username: string;
+  /** 公开展示名（已按审核规则解析） */
   displayName: string | null;
+  /** 公开展示头像（已按审核规则解析） */
   avatarUrl: string | null;
+  nickname: string | null;
+  approvedNickname: string | null;
+  approvedAvatarUrl: string | null;
+  profileReviewStatus: ProfileReviewStatus;
+  reviewReason: string | null;
   role: UserRole;
   status: UserStatus;
   schoolId: string;
@@ -13,6 +21,7 @@ export type Profile = {
   grade: string | null;
   major: string | null;
   onboardingCompleted: boolean;
+  isFirstSetupCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 };

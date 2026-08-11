@@ -15,12 +15,7 @@ type UserMenuProps = {
 };
 
 function getDisplayName(user: SessionUser): string {
-  return (
-    user.profile?.displayName ??
-    user.profile?.username ??
-    user.email?.split("@")[0] ??
-    "用户"
-  );
+  return user.profile?.displayName ?? "PolyU 同学";
 }
 
 export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {

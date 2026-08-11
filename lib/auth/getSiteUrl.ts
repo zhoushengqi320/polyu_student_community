@@ -13,14 +13,25 @@ function isPlaceholderSiteUrl(value: string): boolean {
 }
 
 /**
- * 站点根 URL，用于 Magic Link 回调等。
- * 生产环境请设置 NEXT_PUBLIC_SITE_URL（Railway / 自定义域名优先）。
- * 未设置时可回退到 RAILWAY_PUBLIC_DOMAIN 或 VERCEL_URL（仅服务端运行时）。
+ * 应用根 URL，用于 Magic Link redirectTo。
+ * 优先级：
+ * 1. NEXT_PUBLIC_APP_URL（推荐，本地/线上分别配置）
+ * 2. NEXT_PUBLIC_SITE_URL（兼容旧变量名）
+ * 3. RAILWAY_PUBLIC_DOMAIN / VERCEL_URL（托管平台回退）
+ * 4. http://localhost:3000
+ *
+ * 本地示例：NEXT_PUBLIC_APP_URL=http://localhost:3000
+ * 线上示例：NEXT_PUBLIC_APP_URL=https://polyuhub.com
  */
-export function getSiteUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "";
-  if (configured && !isPlaceholderSiteUrl(configured)) {
-    return normalizeSiteUrl(configured);
+export function getAppUrl(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? "";
+  if (appUrl && !isPlaceholderSiteUrl(appUrl)) {
+    return normalizeSiteUrl(appUrl);
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() ?? "";
+  if (siteUrl && !isPlaceholderSiteUrl(siteUrl)) {
+    return normalizeSiteUrl(siteUrl);
   }
 
   const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
@@ -38,6 +49,12 @@ export function getSiteUrl(): string {
   return "http://localhost:3000";
 }
 
+/** @deprecated 使用 getAppUrl() */
+export function getSiteUrl(): string {
+  return getAppUrl();
+}
+
+/** Magic Link / OAuth 回调地址：{APP_URL}/auth/callback */
 export function getAuthCallbackUrl(): string {
-  return `${getSiteUrl()}/auth/callback`;
+  return `${getAppUrl()}/auth/callback`;
 }

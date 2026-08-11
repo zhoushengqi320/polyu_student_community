@@ -8,6 +8,7 @@ import {
   getAllCourseReviews,
   getAllForumComments,
   getAllForumPosts,
+  listPendingProfileReviews,
   listUsers,
 } from "@/lib/db/admin";
 import { listCoursesForAdmin } from "@/lib/db/courses";
@@ -18,8 +19,14 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type AdminDashboardData } from "@/types/admin";
 
 const EMPTY_DASHBOARD: AdminDashboardData = {
-  stats: { userCount: 0, pendingReportCount: 0, postCount: 0 },
+  stats: {
+    userCount: 0,
+    pendingReportCount: 0,
+    pendingProfileReviewCount: 0,
+    postCount: 0,
+  },
   users: [],
+  profileReviews: [],
   reports: [],
   forumPosts: [],
   forumComments: [],
@@ -51,6 +58,7 @@ export default async function AdminPage() {
       const [
         stats,
         users,
+        profileReviews,
         reports,
         forumPosts,
         forumComments,
@@ -64,6 +72,7 @@ export default async function AdminPage() {
         await Promise.all([
           getAdminStats(),
           listUsers({ pageSize: 50 }),
+          listPendingProfileReviews(100),
           getReports({ pageSize: 100 }),
           getAllForumPosts({ pageSize: 100 }),
           getAllForumComments({ pageSize: 100 }),
@@ -78,6 +87,7 @@ export default async function AdminPage() {
       dashboardData = {
         stats,
         users,
+        profileReviews,
         reports,
         forumPosts,
         forumComments,
