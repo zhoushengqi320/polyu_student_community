@@ -1,18 +1,33 @@
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = "https://polyuhub.com"
+
   return [
     {
-      url: 'https://polyuhub.com',
+      url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
+      priority: 1.0
     },
     {
-      url: 'https://polyuhub.com/forum',
+      url: `${baseUrl}/forum`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/auth/login`,
+      lastModified: new Date(),
+      priority: 0.7
+    },
+    {
+      url: `${baseUrl}/courses`,
+      lastModified: new Date(),
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/guide`,
+      lastModified: new Date(),
+      priority: 0.8
     }
   ]
 }
