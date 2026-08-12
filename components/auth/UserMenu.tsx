@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Shield, Bookmark } from "lucide-react";
+import { CircleHelp, LogOut, Shield, Bookmark } from "lucide-react";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { logoutFormAction } from "@/lib/auth/actions";
 import { ROUTES } from "@/constants/routes";
@@ -47,6 +47,12 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
             我的收藏
           </Link>
         </Button>
+        <Button variant="ghost" className="w-full justify-start" asChild>
+          <Link href={ROUTES.feedback.list}>
+            <CircleHelp className="mr-2 h-4 w-4" />
+            问题反馈
+          </Link>
+        </Button>
         {showAdminLink ? (
           <Button variant="ghost" className="w-full justify-start" asChild>
             <Link href={ROUTES.admin}>
@@ -70,34 +76,26 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-3">
       {showAdminLink ? (
         <Button variant="ghost" size="sm" asChild>
           <Link href={ROUTES.admin}>管理后台</Link>
         </Button>
       ) : null}
-      <Button variant="ghost" size="icon" className="rounded-full" asChild>
-        <Link
-          href={`${profileHref}#favorites`}
-          title="我的收藏"
-          aria-label="我的收藏"
-        >
-          <Bookmark className="h-4 w-4" />
-        </Link>
-      </Button>
       <Link
         href={profileHref}
         title={displayName}
         aria-label={`${displayName} 的个人主页`}
-        className="rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="inline-flex items-center rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <UserAvatar src={avatarUrl} name={displayName} size="md" />
+        <UserAvatar src={avatarUrl} name={displayName} size="xl" />
       </Link>
-      <form action={logoutFormAction}>
-        <Button type="submit" variant="outline" size="sm">
-          退出
-        </Button>
-      </form>
+      <Button variant="outline" size="sm" asChild>
+        <Link href={ROUTES.feedback.list} title="问题反馈">
+          <CircleHelp className="mr-1.5 h-4 w-4" />
+          反馈
+        </Link>
+      </Button>
     </div>
   );
 }

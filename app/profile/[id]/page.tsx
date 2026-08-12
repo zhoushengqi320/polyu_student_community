@@ -1,11 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { TagBadge } from "@/components/common/TagBadge";
 import { ProfileFavoritesSection } from "@/components/profile/ProfileFavoritesSection";
-import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
-import { ProfileChangePasswordForm } from "@/components/profile/ProfileChangePasswordForm";
+import { ProfileEditPanel } from "@/components/profile/ProfileEditPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getUserFavorites } from "@/lib/db/favorites";
 import { getProfileById } from "@/lib/db/profiles";
@@ -30,13 +29,18 @@ type ProfilePageProps = {
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id } = await params;
   const sessionUser = await getSessionUser();
+
+  if (!sessionUser) {
+    redirect(ROUTES.login);
+  }
+
   const profile = await getProfileById(id);
 
   if (!profile) {
     notFound();
   }
 
-  const isOwnProfile = sessionUser?.id === id;
+  const isOwnProfile = sessionUser.id === id;
   const favorites = isOwnProfile ? await getUserFavorites(id) : null;
 
   return (
@@ -93,25 +97,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <p className="text-muted-foreground">
               加入时间：{formatDate(profile.createdAt)}
             </p>
-            {profile.polyuVerifiedAt ? (
-              <p className="text-muted-foreground">
-                理大认证：{formatDate(profile.polyuVerifiedAt)}
-              </p>
-            ) : null}
-            {!sessionUser && (
-              <p className="text-muted-foreground">
-                <Link href={ROUTES.login} className="text-primary hover:underline">
-                  登录
-                </Link>{" "}
-                后可查看更多信息
-              </p>
-            )}
-            {sessionUser && !isOwnProfile && (
+            {!isOwnProfile ? (
               <Button variant="outline" size="sm" asChild>
                 <Link href={ROUTES.profile(sessionUser.id)}>返回我的主页</Link>
               </Button>
-            )}
-            {sessionUser && isOwnProfile && !profile.isFirstSetupCompleted && (
+            ) : null}
+            {isOwnProfile && !profile.isFirstSetupCompleted ? (
               <p className="rounded-md bg-amber-50 px-3 py-2 text-amber-900">
                 请先{" "}
                 <Link href={ROUTES.onboarding} className="font-medium underline">
@@ -119,15 +110,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 </Link>{" "}
                 后再使用完整功能。
               </p>
-            )}
+            ) : null}
+            {isOwnProfile ? (
+              <div className="pt-2">
+                <ProfileEditPanel
+                  profile={profile}
+                  email={sessionUser.email}
+                />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
-
-        {isOwnProfile ? <ProfileEditForm profile={profile} /> : null}
-
-        {isOwnProfile && sessionUser?.email ? (
-          <ProfileChangePasswordForm email={sessionUser.email} />
-        ) : null}
 
         {favorites ? <ProfileFavoritesSection favorites={favorites} /> : null}
       </div>

@@ -11,11 +11,6 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
-  AVATAR_ALLOWED_MIME,
-  AVATAR_BUCKET,
-  AVATAR_MAX_BYTES,
-} from "@/constants/auth";
-import {
   firstSetupSchema,
   nicknameOptionalSchema,
   changePasswordWithOtpSchema,
@@ -25,6 +20,7 @@ import { isDevShowLoginOtp } from "@/lib/auth/devLoginOtp";
 import { createOtpChallenge, verifyOtpChallenge } from "@/lib/auth/otp";
 import { sendOtpEmail } from "@/lib/email/sendOtpEmail";
 import { createClient } from "@/lib/supabase/server";
+import { uploadAvatarFromFormData } from "@/lib/profile/uploadAvatar";
 import {
   OTP_SPAM_HINT,
   isAllowedPolyuEmail,
@@ -78,8 +74,22 @@ export async function completeOnboardingAction(
     return { fieldErrors, error: "请检查表单输入" };
   }
 
+  const avatarFile = formData.get("avatar");
+  let avatarUrl = parsed.data.avatarUrl?.trim() || "";
+
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    const upload = await uploadAvatarFromFormData(user.id, avatarFile);
+    if (!upload.ok) {
+      return { error: upload.error };
+    }
+    avatarUrl = upload.publicUrl;
+  }
+
   try {
-    await completeFirstSetup(user.id, parsed.data);
+    await completeFirstSetup(user.id, {
+      ...parsed.data,
+      avatarUrl,
+    });
     revalidatePath("/", "layout");
     redirect(ROUTES.home);
   } catch (error) {
@@ -147,44 +157,11 @@ export async function updateOwnProfileAction(
   let uploadedAvatarUrl: string | null | undefined;
 
   if (file instanceof File && file.size > 0) {
-    if (file.size > AVATAR_MAX_BYTES) {
-      return { error: "头像不能超过 2MB" };
+    const upload = await uploadAvatarFromFormData(user.id, file);
+    if (!upload.ok) {
+      return { error: upload.error };
     }
-
-    if (
-      !AVATAR_ALLOWED_MIME.includes(
-        file.type as (typeof AVATAR_ALLOWED_MIME)[number],
-      )
-    ) {
-      return { error: "仅支持 JPG / PNG / WebP" };
-    }
-
-    const ext =
-      file.type === "image/png"
-        ? "png"
-        : file.type === "image/webp"
-          ? "webp"
-          : "jpg";
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const supabase = await createClient();
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    const { error: uploadError } = await supabase.storage
-      .from(AVATAR_BUCKET)
-      .upload(path, buffer, {
-        contentType: file.type,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      return { error: uploadError.message };
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
-
-    uploadedAvatarUrl = publicUrl;
+    uploadedAvatarUrl = upload.publicUrl;
   }
 
   const nicknameChanged =
@@ -202,7 +179,7 @@ export async function updateOwnProfileAction(
   }
 
   try {
-    await submitProfileForReview(user.id, {
+    const result = await submitProfileForReview(user.id, {
       ...(nicknameChanged ? { nickname: parsed.data.nickname } : {}),
       ...(hasAvatarUpload ? { avatarUrl: uploadedAvatarUrl ?? null } : {}),
       ...(gradeChanged ? { grade: parsed.data.grade } : {}),
@@ -212,9 +189,10 @@ export async function updateOwnProfileAction(
     revalidatePath("/", "layout");
     return {
       success:
-        nicknameChanged || hasAvatarUpload
-          ? "已提交，昵称/头像进入审核队列。审核通过前全站仍显示默认资料。"
-          : "资料已更新",
+        result.riskMessage ??
+        (nicknameChanged || hasAvatarUpload
+          ? "资料已更新"
+          : "资料已更新"),
     };
   } catch (error) {
     const message =

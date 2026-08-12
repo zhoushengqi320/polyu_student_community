@@ -7,7 +7,6 @@ import {
   OTP_SPAM_HINT,
   REGISTRATION_DRAFT_TTL_MS,
 } from "@/constants/auth";
-import { PROFILE_REVIEW_STATUS } from "@/constants/profileReview";
 import { ROUTES } from "@/constants/routes";
 import { isDevShowLoginOtp } from "@/lib/auth/devLoginOtp";
 import { mapAuthErrorMessage } from "@/lib/auth/errors";
@@ -406,8 +405,9 @@ export async function completeRegisterAction(
   }
 
   const nickname = parsed.data.nickname?.trim() || "";
-  const avatarUrl = parsed.data.avatarUrl?.trim() || "";
-  const hasProfileSubmission = Boolean(nickname || avatarUrl);
+  let avatarUrl = parsed.data.avatarUrl?.trim() || "";
+  const avatarFile = formData.get("avatar");
+  const hasAvatarFile = avatarFile instanceof File && avatarFile.size > 0;
 
   if (nickname) {
     const available = await isNicknameAvailable(nickname);
@@ -446,19 +446,41 @@ export async function completeRegisterAction(
 
   const userId = created.user.id;
 
+  if (hasAvatarFile && avatarFile instanceof File) {
+    const { uploadAvatarFromFormData } = await import(
+      "@/lib/profile/uploadAvatar"
+    );
+    const upload = await uploadAvatarFromFormData(userId, avatarFile, {
+      useServiceRole: true,
+    });
+    if (!upload.ok) {
+      return { error: upload.error, step: "profile" };
+    }
+    avatarUrl = upload.publicUrl;
+  }
+
   try {
+    const { decideProfileSubmissionRisk } = await import(
+      "@/lib/profile/profileRiskDecision"
+    );
+    const decision = decideProfileSubmissionRisk({
+      nickname,
+      avatarUrl,
+    });
+
     const profileUpdate = {
       grade: parsed.data.grade,
       major: parsed.data.major.trim(),
       nickname: nickname || null,
       avatar_url: avatarUrl || null,
-      display_name: nickname || null,
-      approved_nickname: null as string | null,
-      approved_avatar_url: null as string | null,
-      profile_review_status: hasProfileSubmission
-        ? PROFILE_REVIEW_STATUS.pending
-        : PROFILE_REVIEW_STATUS.approved,
+      display_name: decision.autoApprove ? nickname || null : null,
+      approved_nickname: decision.autoApprove ? nickname || null : null,
+      approved_avatar_url: decision.autoApprove ? avatarUrl || null : null,
+      profile_review_status: decision.reviewStatus,
       review_reason: null as string | null,
+      profile_risk_level: decision.level,
+      profile_risk_flags: decision.flags,
+      profile_risk_attention: decision.needsAttention,
       is_first_setup_completed: true,
       onboarding_completed: true,
     };

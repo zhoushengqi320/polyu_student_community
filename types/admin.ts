@@ -35,6 +35,9 @@ export type AdminProfileReviewItem = {
   grade: string | null;
   major: string | null;
   updatedAt: string;
+  riskLevel: "low" | "medium" | "high";
+  riskFlags: string[];
+  riskAttention: boolean;
 };
 
 export type AdminUserFilters = {

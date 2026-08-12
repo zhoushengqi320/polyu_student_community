@@ -4,7 +4,8 @@ export type ModuleKey =
   | "study"
   | "life"
   | "forum"
-  | "guides";
+  | "guides"
+  | "feedback";
 
 export type PaginatedResult<T> = {
   data: T[];

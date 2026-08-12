@@ -59,6 +59,11 @@ export const ROUTES = {
     new: `${MODULE_REGISTRY.forum.route}/new`,
     edit: (id: string) => `/forum/${id}/edit`,
   },
+  feedback: {
+    list: MODULE_REGISTRY.feedback.route,
+    detail: (id: string) => `/feedback/${id}`,
+    new: `${MODULE_REGISTRY.feedback.route}/new`,
+  },
   guides: {
     list: MODULE_REGISTRY.guides.route,
     detail: (id: string) => `/guides/${id}`,

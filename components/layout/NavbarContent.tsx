@@ -44,11 +44,11 @@ export function NavbarContent({
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex h-full items-center gap-2">
           {user && isFeatureEnabled("notifications") ? (
             <NotificationBell unreadCount={unreadNotificationCount} />
           ) : null}
-          <div className="hidden lg:flex">
+          <div className="hidden h-full items-center lg:flex">
             {user ? <UserMenu user={user} /> : <AuthButtons />}
           </div>
 

@@ -30,7 +30,7 @@ const STAT_ITEMS = [
   },
   {
     key: "pendingProfileReviewCount" as const,
-    label: "待审资料",
+    label: "资料风控队列",
     icon: UserRoundCheck,
   },
 ];

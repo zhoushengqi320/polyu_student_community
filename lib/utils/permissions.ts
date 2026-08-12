@@ -14,6 +14,7 @@ export type Permission =
   | "content:create:life"
   | "content:create:course_review"
   | "content:create:food"
+  | "content:create:feedback"
   | "admin:access"
   | "admin:manage_users"
   | "admin:manage_content";
@@ -29,6 +30,7 @@ const ROLE_PERMISSIONS: Record<
     "interaction:favorite",
     "interaction:comment",
     "content:create:food",
+    "content:create:feedback",
   ],
   verified_polyu_user: [
     "content:view",
@@ -41,6 +43,7 @@ const ROLE_PERMISSIONS: Record<
     "content:create:study",
     "content:create:life",
     "content:create:course_review",
+    "content:create:feedback",
   ],
   admin: [
     "content:view",
@@ -53,6 +56,7 @@ const ROLE_PERMISSIONS: Record<
     "content:create:study",
     "content:create:life",
     "content:create:course_review",
+    "content:create:feedback",
     "admin:access",
     "admin:manage_users",
     "admin:manage_content",
@@ -67,6 +71,7 @@ const MODULE_CREATE_PERMISSION: Partial<Record<ModuleKey, Permission>> = {
   life: "content:create:life",
   food: "content:create:food",
   forum: "content:create:forum",
+  feedback: "content:create:feedback",
 };
 
 function isTemporarilyBanned(user: SessionUser): boolean {

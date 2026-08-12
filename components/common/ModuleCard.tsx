@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   BookOpen,
+  CircleHelp,
   GraduationCap,
   House,
   MessageSquare,
@@ -26,6 +27,7 @@ const MODULE_ICONS = {
   NotebookPen,
   House,
   MessageSquare,
+  CircleHelp,
 } as const satisfies Record<ModuleIconName, typeof BookOpen>;
 
 type ModuleCardProps = {

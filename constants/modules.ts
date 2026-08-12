@@ -7,6 +7,7 @@ export const MODULE_ICON_NAMES = [
   "NotebookPen",
   "House",
   "MessageSquare",
+  "CircleHelp",
 ] as const;
 
 export type ModuleIconName = (typeof MODULE_ICON_NAMES)[number];
@@ -62,6 +63,14 @@ export const MODULE_REGISTRY = {
     description: "课程求助、校园生活、找搭子等自由交流",
     requiresVerification: true,
     icon: "MessageSquare",
+  },
+  feedback: {
+    key: "feedback" as const,
+    route: "/feedback",
+    label: "问题反馈",
+    description: "反馈使用问题与建议，由管理员回复",
+    requiresVerification: false,
+    icon: "CircleHelp",
   },
   guides: {
     key: "guides" as const,

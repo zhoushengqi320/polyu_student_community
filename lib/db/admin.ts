@@ -49,7 +49,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .eq("profile_review_status", "pending"),
+      .or("profile_review_status.eq.pending,profile_risk_attention.eq.true"),
     supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
@@ -244,10 +244,10 @@ export async function listPendingProfileReviews(
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, nickname, avatar_url, approved_nickname, approved_avatar_url, profile_review_status, review_reason, grade, major, updated_at",
+      "id, nickname, avatar_url, approved_nickname, approved_avatar_url, profile_review_status, review_reason, grade, major, updated_at, profile_risk_level, profile_risk_flags, profile_risk_attention",
     )
-    .eq("profile_review_status", "pending")
-    .order("updated_at", { ascending: true })
+    .or("profile_review_status.eq.pending,profile_risk_attention.eq.true")
+    .order("updated_at", { ascending: false })
     .limit(pageSize);
 
   if (error) {
@@ -255,29 +255,51 @@ export async function listPendingProfileReviews(
     return [];
   }
 
-  return (data ?? []).map((row: {
-    id: string;
-    nickname: string | null;
-    avatar_url: string | null;
-    approved_nickname: string | null;
-    approved_avatar_url: string | null;
-    profile_review_status: "pending" | "approved" | "rejected";
-    review_reason: string | null;
-    grade: string | null;
-    major: string | null;
-    updated_at: string;
-  }) => ({
-    id: row.id,
-    nickname: row.nickname,
-    avatarUrl: row.avatar_url,
-    approvedNickname: row.approved_nickname,
-    approvedAvatarUrl: row.approved_avatar_url,
-    profileReviewStatus: row.profile_review_status,
-    reviewReason: row.review_reason,
-    grade: row.grade,
-    major: row.major,
-    updatedAt: row.updated_at,
-  }));
+  const riskRank: Record<"low" | "medium" | "high", number> = {
+    high: 0,
+    medium: 1,
+    low: 2,
+  };
+
+  const items: import("@/types/admin").AdminProfileReviewItem[] = (
+    data ?? []
+  ).map(
+    (row: {
+      id: string;
+      nickname: string | null;
+      avatar_url: string | null;
+      approved_nickname: string | null;
+      approved_avatar_url: string | null;
+      profile_review_status: "pending" | "approved" | "rejected";
+      review_reason: string | null;
+      grade: string | null;
+      major: string | null;
+      updated_at: string;
+      profile_risk_level?: "low" | "medium" | "high" | null;
+      profile_risk_flags?: string[] | null;
+      profile_risk_attention?: boolean | null;
+    }) => ({
+      id: row.id,
+      nickname: row.nickname,
+      avatarUrl: row.avatar_url,
+      approvedNickname: row.approved_nickname,
+      approvedAvatarUrl: row.approved_avatar_url,
+      profileReviewStatus: row.profile_review_status,
+      reviewReason: row.review_reason,
+      grade: row.grade,
+      major: row.major,
+      updatedAt: row.updated_at,
+      riskLevel: row.profile_risk_level ?? "low",
+      riskFlags: row.profile_risk_flags ?? [],
+      riskAttention: Boolean(row.profile_risk_attention),
+    }),
+  );
+
+  return items.sort((a, b) => {
+    const byRisk = riskRank[a.riskLevel] - riskRank[b.riskLevel];
+    if (byRisk !== 0) return byRisk;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
 }
 
 export async function approveProfileReview(
@@ -307,6 +329,9 @@ export async function approveProfileReview(
       display_name: profile.nickname,
       profile_review_status: "approved",
       review_reason: null,
+      profile_risk_attention: false,
+      profile_risk_level: "low",
+      profile_risk_flags: [],
     })
     .eq("id", userId);
 
@@ -332,12 +357,37 @@ export async function rejectProfileReview(
   }
 
   const supabase = await createClient();
+  const { data: profile, error: fetchError } = await supabase
+    .from("profiles")
+    .select(
+      "nickname, avatar_url, approved_nickname, approved_avatar_url, profile_review_status, profile_risk_level",
+    )
+    .eq("id", userId)
+    .single();
+
+  if (fetchError || !profile) {
+    throw new DbError(fetchError?.message ?? "用户不存在");
+  }
+
+  const payload: Record<string, unknown> = {
+    profile_review_status: "rejected",
+    review_reason: reason.trim() || "资料未通过审核，请修改后重新提交",
+    profile_risk_attention: false,
+  };
+
+  // 中风险已放行：驳回时撤销公开展示，回到默认
+  if (
+    profile.profile_review_status === "approved" ||
+    profile.profile_risk_level === "medium"
+  ) {
+    payload.approved_nickname = null;
+    payload.approved_avatar_url = null;
+    payload.display_name = null;
+  }
+
   const { error } = await supabase
     .from("profiles")
-    .update({
-      profile_review_status: "rejected",
-      review_reason: reason.trim() || "资料未通过审核，请修改后重新提交",
-    })
+    .update(payload)
     .eq("id", userId);
 
   if (error) {

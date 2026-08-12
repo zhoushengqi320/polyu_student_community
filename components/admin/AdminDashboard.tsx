@@ -71,7 +71,7 @@ export function AdminDashboard({
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">快捷说明</h2>
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
-              <li>在「资料审核」中可审核用户提交的昵称与头像；通过后全站立刻展示。</li>
+              <li>在「资料审核」中优先处理高风险待审与中风险复核；低风险昵称/头像会自动公开。</li>
               <li>在「举报中心」可审核用户举报，删除违规内容或更新举报状态。</li>
               <li>在「帖子管理」「评论管理」中可查看含已删除内容在内的全部讨论区数据。</li>
               <li>在「课程目录」中可新增或编辑课程基础信息。</li>

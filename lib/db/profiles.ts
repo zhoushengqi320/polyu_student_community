@@ -3,7 +3,7 @@ import { DbError } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { PROFILE_REVIEW_STATUS } from "@/constants/profileReview";
+import { decideProfileSubmissionRisk } from "@/lib/profile/profileRiskDecision";
 import { type FirstSetupFormValues } from "@/lib/validations/authSchema";
 import { type Profile } from "@/types/user";
 
@@ -108,7 +108,11 @@ export async function completeFirstSetup(
     }
   }
 
-  const hasSubmission = Boolean(nickname || avatarUrl);
+  const decision = decideProfileSubmissionRisk({
+    nickname,
+    avatarUrl,
+  });
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -117,13 +121,14 @@ export async function completeFirstSetup(
       major: input.major.trim(),
       nickname: nickname || null,
       avatar_url: avatarUrl || null,
-      display_name: nickname || null,
-      approved_nickname: null,
-      approved_avatar_url: null,
-      profile_review_status: hasSubmission
-        ? PROFILE_REVIEW_STATUS.pending
-        : PROFILE_REVIEW_STATUS.approved,
+      display_name: decision.autoApprove ? nickname || null : null,
+      approved_nickname: decision.autoApprove ? nickname || null : null,
+      approved_avatar_url: decision.autoApprove ? avatarUrl || null : null,
+      profile_review_status: decision.reviewStatus,
       review_reason: null,
+      profile_risk_level: decision.level,
+      profile_risk_flags: decision.flags,
+      profile_risk_attention: decision.needsAttention,
       is_first_setup_completed: true,
       onboarding_completed: true,
     })
@@ -146,7 +151,7 @@ export async function submitProfileForReview(
     grade?: string;
     major?: string;
   },
-): Promise<Profile> {
+): Promise<{ profile: Profile; riskMessage?: string }> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
   }
@@ -163,6 +168,17 @@ export async function submitProfileForReview(
     }
   }
 
+  const supabase = await createClient();
+  const { data: current, error: currentError } = await supabase
+    .from("profiles")
+    .select("nickname, avatar_url, approved_nickname, approved_avatar_url")
+    .eq("id", userId)
+    .single();
+
+  if (currentError || !current) {
+    throw new DbError(currentError?.message ?? "用户不存在");
+  }
+
   const payload: Record<string, unknown> = {};
 
   if (input.grade) {
@@ -172,29 +188,66 @@ export async function submitProfileForReview(
     payload.major = input.major.trim();
   }
 
-  if (nicknameProvided) {
-    payload.nickname = nickname || null;
-    payload.display_name = nickname || null;
-  }
-
-  if (avatarProvided) {
-    payload.avatar_url = avatarUrl || null;
-  }
-
   const hasReviewSubmission =
     (nicknameProvided && Boolean(nickname)) ||
     (avatarProvided && Boolean(avatarUrl));
 
+  let riskMessage: string | undefined;
+
   if (hasReviewSubmission) {
-    payload.profile_review_status = PROFILE_REVIEW_STATUS.pending;
+    const nextNickname = nicknameProvided
+      ? nickname || null
+      : (current.nickname as string | null);
+    const nextAvatar = avatarProvided
+      ? avatarUrl || null
+      : (current.avatar_url as string | null);
+
+    const decision = decideProfileSubmissionRisk({
+      nickname: nextNickname,
+      avatarUrl: nextAvatar,
+    });
+
+    if (nicknameProvided) {
+      payload.nickname = nickname || null;
+    }
+    if (avatarProvided) {
+      payload.avatar_url = avatarUrl || null;
+    }
+
+    payload.profile_review_status = decision.reviewStatus;
     payload.review_reason = null;
+    payload.profile_risk_level = decision.level;
+    payload.profile_risk_flags = decision.flags;
+    payload.profile_risk_attention = decision.needsAttention;
+
+    if (decision.autoApprove) {
+      if (nicknameProvided) {
+        payload.approved_nickname = nickname || null;
+        payload.display_name = nickname || null;
+      }
+      if (avatarProvided) {
+        payload.approved_avatar_url = avatarUrl || null;
+      }
+    } else {
+      // 高风险：保留已通过的旧公开资料，待审字段写入 nickname/avatar_url
+      if (nicknameProvided) {
+        payload.display_name = current.approved_nickname;
+      }
+    }
+
+    const { profileRiskUserMessage } = await import(
+      "@/lib/profile/profileRiskDecision"
+    );
+    riskMessage = profileRiskUserMessage(decision);
+  } else if (nicknameProvided) {
+    payload.nickname = nickname || null;
+    payload.display_name = nickname || null;
   }
 
   if (Object.keys(payload).length === 0) {
     throw new DbError("没有可保存的修改");
   }
 
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
     .update(payload)
@@ -206,14 +259,12 @@ export async function submitProfileForReview(
     throw new DbError(error?.message ?? "更新资料失败");
   }
 
-  return mapProfile(data);
+  return { profile: mapProfile(data), riskMessage };
 }
 
 export async function updateProfile(
   id: string,
-  input: Partial<
-    Pick<Profile, "bio" | "grade" | "major">
-  >,
+  input: Partial<Pick<Profile, "bio" | "grade" | "major">>,
 ): Promise<Profile | null> {
   if (!isSupabaseConfigured()) {
     throw new Error("数据库未配置");

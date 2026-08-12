@@ -742,7 +742,8 @@ export type Database = {
         | "study"
         | "life"
         | "buddy"
-        | "forum";
+        | "forum"
+        | "feedback";
       target_type:
         | "post"
         | "comment"

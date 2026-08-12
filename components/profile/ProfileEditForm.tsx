@@ -1,21 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import { useActionState } from "react";
 import {
   updateOwnProfileAction,
   type OnboardingFormState,
 } from "@/lib/profile/actions";
 import { STUDENT_GRADES } from "@/constants/profileOptions";
-import { PROFILE_REVIEW_STATUS_LABELS } from "@/constants/profileReview";
 import { type Profile } from "@/types/user";
+import { AvatarCropField } from "@/components/common/AvatarCropField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -33,70 +31,51 @@ export function ProfileEditForm({ profile }: { profile: Profile }) {
 
   return (
     <Card className="max-w-2xl">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <CardTitle>修改昵称与头像</CardTitle>
-        <CardDescription>
-          当前审核状态：
-          {PROFILE_REVIEW_STATUS_LABELS[profile.profileReviewStatus]}
-          {profile.reviewReason ? `（驳回理由：${profile.reviewReason}）` : ""}
-          。提交后将重新进入审核；审核通过前全站展示默认昵称与头像。
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form action={formAction} className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full bg-muted">
-              {previewAvatar ? (
-                <Image
-                  src={previewAvatar}
-                  alt="头像预览"
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : null}
-            </div>
-            <div className="space-y-1 text-sm text-muted-foreground">
-              <p>公开展示：{profile.displayName}</p>
-              {profile.nickname ? <p>待审昵称：{profile.nickname}</p> : null}
-              {profile.pendingAvatarUrl &&
-              profile.profileReviewStatus === "pending" ? (
-                <p className="text-xs">已上传头像，等待审核</p>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="nickname">昵称</Label>
-            <Input
-              id="nickname"
-              name="nickname"
-              defaultValue={profile.nickname ?? profile.approvedNickname ?? ""}
-              maxLength={30}
-              placeholder="2–30 个字符，留空表示不修改"
-            />
-            {state.fieldErrors?.nickname ? (
-              <p className="text-sm text-destructive">
-                {state.fieldErrors.nickname}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="avatar">上传新头像（JPG / PNG / WebP，≤2MB）</Label>
-            <Input
-              id="avatar"
+      <CardContent className="pt-0">
+        <form action={formAction} className="space-y-8">
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold">头像</h3>
+            <AvatarCropField
               name="avatar"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
+              label=""
+              initialPreviewUrl={previewAvatar}
             />
-          </div>
+          </section>
 
-          <details className="rounded-md border px-3 py-2 text-sm">
-            <summary className="cursor-pointer font-medium">
-              年级与专业（修改后直接生效，无需审核）
-            </summary>
-            <div className="mt-3 space-y-3">
+          <section className="space-y-4 border-t pt-8">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold">昵称</h3>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                2–30 个字符。留空表示不修改当前昵称。
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nickname" className="sr-only">
+                昵称
+              </Label>
+              <Input
+                id="nickname"
+                name="nickname"
+                defaultValue={profile.nickname ?? profile.approvedNickname ?? ""}
+                maxLength={30}
+                placeholder="输入新昵称"
+                className="max-w-md"
+              />
+              {state.fieldErrors?.nickname ? (
+                <p className="text-sm text-destructive">
+                  {state.fieldErrors.nickname}
+                </p>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t pt-8">
+            <h3 className="text-sm font-semibold">年级与专业</h3>
+            <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="grade">年级</Label>
                 <select
@@ -133,18 +112,23 @@ export function ProfileEditForm({ profile }: { profile: Profile }) {
                 ) : null}
               </div>
             </div>
-          </details>
+          </section>
 
-          {state.error ? (
-            <p className="text-sm text-destructive">{state.error}</p>
-          ) : null}
-          {state.success ? (
-            <p className="text-sm text-green-700">{state.success}</p>
-          ) : null}
-
-          <Button type="submit" disabled={pending}>
-            {pending ? "提交中..." : "保存并提交审核"}
-          </Button>
+          <div className="space-y-3 border-t pt-8">
+            {state.error ? (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {state.error}
+              </p>
+            ) : null}
+            {state.success ? (
+              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+                {state.success}
+              </p>
+            ) : null}
+            <Button type="submit" disabled={pending}>
+              {pending ? "提交中..." : "保存修改"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

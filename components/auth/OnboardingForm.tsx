@@ -7,6 +7,7 @@ import {
 } from "@/lib/profile/actions";
 import { STUDENT_GRADES } from "@/constants/profileOptions";
 import { type Profile } from "@/types/user";
+import { AvatarCropField } from "@/components/common/AvatarCropField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,7 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
       <CardHeader>
         <CardTitle>完善个人资料</CardTitle>
         <CardDescription>
-          年级与专业必填；昵称与头像可选，提交后需管理员审核通过才公开展示。
+          年级与专业必填；昵称与头像可选。系统自动检测风险：低风险直接公开，中风险公开并标记，高风险需后台审核。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,15 +95,13 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
             ) : null}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="avatarUrl">头像 URL（可选）</Label>
-            <Input
-              id="avatarUrl"
-              name="avatarUrl"
-              defaultValue={profile.avatarUrl?.startsWith("http") ? "" : ""}
-              placeholder="也可稍后在个人页上传"
-            />
-          </div>
+          <AvatarCropField
+            name="avatar"
+            label="头像（可选，圆形裁剪）"
+            initialPreviewUrl={
+              profile.pendingAvatarUrl || profile.approvedAvatarUrl || null
+            }
+          />
 
           {state.error ? (
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
