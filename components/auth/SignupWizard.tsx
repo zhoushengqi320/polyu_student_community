@@ -65,12 +65,15 @@ function useResendCountdown(resendAvailableAt?: string) {
 export function SignupWizard({
   initialStep = "email",
   draftEmail = "",
+  initialWhitelisted = false,
 }: {
   initialStep?: Step;
   draftEmail?: string;
+  initialWhitelisted?: boolean;
 }) {
   const [step, setStep] = useState<Step>(initialStep);
   const [email, setEmail] = useState(draftEmail);
+  const [whitelisted, setWhitelisted] = useState(initialWhitelisted);
   /** 用户主动返回改邮箱时，避免旧的 emailState.success 再次把步骤推到验证码 */
   const holdOnEmailStepRef = useRef(false);
 
@@ -102,6 +105,11 @@ export function SignupWizard({
       return;
     }
     if (holdOnEmailStepRef.current) {
+      return;
+    }
+    if (emailState.step === "password") {
+      setWhitelisted(Boolean(emailState.whitelisted));
+      setStep("password");
       return;
     }
     if (emailState.success || emailState.devInfo) {
@@ -154,9 +162,19 @@ export function SignupWizard({
             : step === "otp"
               ? "2/4 验证码"
               : step === "password"
-                ? "3/4 设置密码"
-                : "4/4 完善资料"}
+                ? whitelisted
+                  ? "2/3 设置密码"
+                  : "3/4 设置密码"
+                : whitelisted
+                  ? "3/3 完善资料"
+                  : "4/4 完善资料"}
         </p>
+
+        {step === "password" && whitelisted ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
+            欢迎，尊贵的白名单用户
+          </p>
+        ) : null}
 
         {step === "email" ? (
           <form

@@ -16,6 +16,7 @@ import {
   listActiveContentArchives,
   listPendingArchiveAppeals,
 } from "@/lib/db/contentArchives";
+import { listEmailWhitelist } from "@/lib/db/emailWhitelist";
 import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
 import { getReports } from "@/lib/db/reports";
@@ -44,6 +45,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   contentArchives: [],
   pendingArchiveAppeals: [],
   expiredArchiveCount: 0,
+  emailWhitelist: [],
   isDatabaseConfigured: false,
 };
 
@@ -95,6 +97,7 @@ export default async function AdminPage({
         adminActionsResult,
         contentArchives,
         pendingArchiveAppeals,
+        emailWhitelist,
       ] = await Promise.all([
         getAdminStats(),
         listUsers({ pageSize: 50 }),
@@ -113,6 +116,7 @@ export default async function AdminPage({
         }),
         listActiveContentArchives(100),
         listPendingArchiveAppeals(100),
+        listEmailWhitelist(100),
       ]);
 
       dashboardData = {
@@ -135,6 +139,7 @@ export default async function AdminPage({
         contentArchives,
         pendingArchiveAppeals,
         expiredArchiveCount,
+        emailWhitelist,
         isDatabaseConfigured,
       };
     } catch (error) {

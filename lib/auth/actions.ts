@@ -35,10 +35,17 @@ import {
   loginPasswordSchema,
   otpCodeSchema,
   polyuEmailSchema,
+  registerEmailSchema,
   setPasswordSchema,
 } from "@/lib/validations/authSchema";
 import { type ActionResult } from "@/types/common";
 import { isNicknameAvailable } from "@/lib/db/profiles";
+import { isAllowedPolyuEmail } from "@/constants/auth";
+import {
+  canStartRegistrationWithEmail,
+  consumeWhitelistEmail,
+  isActiveWhitelistEmail,
+} from "@/lib/db/emailWhitelist";
 
 export type AuthDevInfo = {
   email: string;
@@ -66,6 +73,8 @@ export type AuthFormState = {
   devInfo?: AuthDevInfo | null;
   step?: string;
   resendAvailableAt?: string;
+  /** 白名单注册：跳过验证码，设密码页展示欢迎语 */
+  whitelisted?: boolean;
 };
 
 function authUnavailableState(): AuthFormState {
@@ -239,7 +248,7 @@ export async function startRegisterAction(
     return authUnavailableState();
   }
 
-  const parsed = polyuEmailSchema.safeParse({
+  const parsed = registerEmailSchema.safeParse({
     email: formData.get("email"),
   });
   if (!parsed.success) {
@@ -252,6 +261,16 @@ export async function startRegisterAction(
   const email = parsed.data.email.trim().toLowerCase();
 
   try {
+    const allowed = await canStartRegistrationWithEmail(email);
+    if (!allowed) {
+      return {
+        fieldErrors: {
+          email: "仅支持理大学生邮箱（@connect.polyu.hk）",
+        },
+        error: "请检查邮箱地址",
+      };
+    }
+
     const existingId = await findAuthUserIdByEmail(email);
     if (existingId) {
       return {
@@ -262,6 +281,27 @@ export async function startRegisterAction(
 
     const draft = await getOrCreateRegistrationDraft(email);
     await setRegistrationDraftCookie(draft.id);
+
+    // 白名单：跳过验证码，直接进入设密码
+    if (!isAllowedPolyuEmail(email) && (await isActiveWhitelistEmail(email))) {
+      const admin = createAdminClient();
+      await admin
+        .from("registration_drafts")
+        .update({
+          email_verified_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          expires_at: new Date(
+            Date.now() + REGISTRATION_DRAFT_TTL_MS,
+          ).toISOString(),
+        })
+        .eq("id", draft.id);
+
+      return {
+        success: "邮箱已确认，请设置密码",
+        step: "password",
+        whitelisted: true,
+      };
+    }
 
     return issueOtpAndMaybeEmail(email, "register");
   } catch (error) {
@@ -517,6 +557,9 @@ export async function completeRegisterAction(
     await admin.from("registration_drafts").delete().eq("id", draft.id);
     await clearRegistrationDraftCookie();
 
+    // 白名单名额作废但保留记录
+    await consumeWhitelistEmail({ email: draft.email, userId });
+
     revalidatePath("/", "layout");
     redirect(ROUTES.home);
   } catch (error) {
@@ -691,7 +734,7 @@ export async function sendResetOtpAction(
     return authUnavailableState();
   }
 
-  const parsed = polyuEmailSchema.safeParse({
+  const parsed = registerEmailSchema.safeParse({
     email: formData.get("email"),
   });
   if (!parsed.success) {

@@ -2,7 +2,7 @@ import { AuthNotice } from "@/components/auth/AuthNotice";
 import { SignupWizard } from "@/components/auth/SignupWizard";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { AuthLegalFooter } from "@/components/legal/AuthLegalFooter";
-import { POLYU_EMAIL_SUFFIX } from "@/constants/auth";
+import { isAllowedPolyuEmail, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
 import { getRegistrationDraftByCookie } from "@/lib/auth/registrationDraft";
 
 export default async function SignupPage() {
@@ -16,6 +16,12 @@ export default async function SignupPage() {
     initialStep = "otp";
   }
 
+  const initialWhitelisted = Boolean(
+    draft?.email &&
+      draft.email_verified_at &&
+      !isAllowedPolyuEmail(draft.email),
+  );
+
   return (
     <ModulePageShell
       title="注册"
@@ -26,6 +32,7 @@ export default async function SignupPage() {
         <SignupWizard
           initialStep={initialStep}
           draftEmail={draft?.email ?? ""}
+          initialWhitelisted={initialWhitelisted}
         />
         <AuthLegalFooter prefix="注册即表示你同意" />
       </div>

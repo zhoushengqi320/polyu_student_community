@@ -87,6 +87,7 @@ export function AdminDashboard({
               <li>在「社区内容」中可统一查看帖子、评论与课程评价（含已删除日志项）。</li>
               <li>在「课程目录」中可新增或编辑课程基础信息。</li>
               <li>在「内容管理」中可维护入学攻略、学习指南、生活指南（支持 Markdown 预览与图片上传）。</li>
+              <li>在「用户管理」可添加非理大邮箱白名单：对方注册跳过验证码，成功后名额作废但保留记录；白名单用户仅密码登录。</li>
               <li>所有管理操作会写入操作记录；逾期永久删除的完整备份在操作记录 metadata 中可查看。</li>
             </ul>
           </section>
@@ -130,7 +131,10 @@ export function AdminDashboard({
       ) : null}
 
       {activeTab === "users" ? (
-        <UserManagementTable users={data.users} />
+        <UserManagementTable
+          users={data.users}
+          whitelistEntries={data.emailWhitelist ?? []}
+        />
       ) : null}
 
       {activeTab === "actions" ? (

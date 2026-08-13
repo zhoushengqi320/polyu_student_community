@@ -124,5 +124,6 @@ export type AdminDashboardData = {
   contentArchives?: ContentArchiveRow[];
   pendingArchiveAppeals?: ContentArchiveRow[];
   expiredArchiveCount?: number;
+  emailWhitelist?: import("@/lib/db/emailWhitelist").EmailWhitelistRow[];
   isDatabaseConfigured: boolean;
 };

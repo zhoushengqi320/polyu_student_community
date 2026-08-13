@@ -19,8 +19,13 @@ import {
   adminHideFoodPlace,
   adminSoftDeleteFoodRecommendation,
 } from "@/lib/db/food";
+import {
+  addEmailToWhitelist,
+  removeUnusedWhitelistEntry,
+} from "@/lib/db/emailWhitelist";
 import { getContentSnapshot } from "@/lib/db/moderation";
-import { updateReportStatus } from "@/lib/db/reports";
+import { logAdminAction, updateReportStatus } from "@/lib/db/reports";
+import { DbError } from "@/lib/db/shared";
 import {
   confirmReportViolation,
   dismissReportWithReview,
@@ -160,6 +165,74 @@ export async function verifyPolyuUserAction(
     () => verifyPolyuUser(userId, admin.id),
     "已授予理大认证",
   );
+}
+
+export async function addEmailWhitelistAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  try {
+    const admin = await requireAdmin();
+    const email = String(formData.get("email") ?? "");
+    const note = String(formData.get("note") ?? "");
+
+    const row = await addEmailToWhitelist({
+      email,
+      note,
+      createdBy: admin.id,
+    });
+
+    await logAdminAction({
+      adminId: admin.id,
+      action: "add_email_whitelist",
+      targetType: "user",
+      targetId: admin.id,
+      metadata: { email: row.email, whitelistId: row.id, note: row.note },
+    });
+
+    revalidatePath(ROUTES.admin);
+    return { success: `已将 ${row.email} 加入白名单` };
+  } catch (error) {
+    if (error instanceof DbError) {
+      return { error: error.message };
+    }
+    return {
+      error: error instanceof Error ? error.message : "添加白名单失败",
+    };
+  }
+}
+
+export async function removeEmailWhitelistAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  try {
+    const admin = await requireAdmin();
+    const id = String(formData.get("id") ?? "");
+    if (!id) {
+      return { error: "无效的白名单记录" };
+    }
+
+    await removeUnusedWhitelistEntry(id);
+
+    await logAdminAction({
+      adminId: admin.id,
+      action: "remove_email_whitelist",
+      targetType: "user",
+      targetId: admin.id,
+      metadata: { whitelistId: id },
+    });
+
+    revalidatePath(ROUTES.admin);
+    return { success: "已删除未使用的白名单记录" };
+  } catch (error) {
+    if (error instanceof DbError) {
+      return { error: error.message };
+    }
+    return {
+      error: error instanceof Error ? error.message : "删除失败",
+    };
+  }
 }
 
 export async function approveProfileReviewAction(
