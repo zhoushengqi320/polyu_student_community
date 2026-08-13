@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { AuthNotice } from "@/components/auth/AuthNotice";
 import { SignupWizard } from "@/components/auth/SignupWizard";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
+import { AuthLegalFooter } from "@/components/legal/AuthLegalFooter";
 import { POLYU_EMAIL_SUFFIX } from "@/constants/auth";
-import { ROUTES } from "@/constants/routes";
 import { getRegistrationDraftByCookie } from "@/lib/auth/registrationDraft";
 
 export default async function SignupPage() {
@@ -28,16 +27,7 @@ export default async function SignupPage() {
           initialStep={initialStep}
           draftEmail={draft?.email ?? ""}
         />
-        <p className="text-center text-xs text-muted-foreground">
-          注册即表示你同意
-          <Link
-            href={ROUTES.about.communityRules}
-            className="mx-1 underline underline-offset-2"
-          >
-            社区规则
-          </Link>
-          与相关条款。
-        </p>
+        <AuthLegalFooter prefix="注册即表示你同意" />
       </div>
     </ModulePageShell>
   );

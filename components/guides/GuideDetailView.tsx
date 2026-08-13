@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TARGET_TYPES } from "@/constants/reportReasons";
-import { getGuideCategoryLabel } from "@/constants/guides";
 import { formatDate } from "@/lib/utils/formatDate";
 import { type GuideDetail } from "@/types/guide";
 import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
@@ -45,25 +44,18 @@ export function GuideDetailView({
   revalidatePath,
   commentReactionMap,
 }: GuideDetailViewProps) {
-  const categoryLabel = getGuideCategoryLabel(
-    guide.meta?.category ?? guide.categoryId,
-  );
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
-              {categoryLabel}
-            </span>
-            {guide.isFavorited ? (
+          {guide.isFavorited ? (
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1 text-primary">
                 <Bookmark className="h-4 w-4" aria-hidden="true" />
                 已收藏
               </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
           <div>
             <CardDescription>
               {guide.author.displayName ?? guide.author.username}

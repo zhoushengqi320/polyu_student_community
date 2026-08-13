@@ -33,6 +33,24 @@ export async function logAdminAction(input: CreateAdminActionInput): Promise<voi
     return;
   }
 
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { error } = await admin.from("admin_action_logs").insert({
+      admin_id: input.adminId,
+      action: input.action,
+      target_type: input.targetType,
+      target_id: input.targetId,
+      metadata: input.metadata ?? null,
+    });
+    if (error) {
+      console.error("Failed to log admin action:", error);
+    }
+    return;
+  } catch {
+    // fall through to session client（管理员本人才写得进）
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from("admin_action_logs").insert({
     admin_id: input.adminId,

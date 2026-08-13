@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { DeleteContentButton } from "@/components/common/DeleteContentButton";
 import { RatingDisplay } from "@/components/common/RatingDisplay";
 import { UserIdentity } from "@/components/common/UserIdentity";
 import { FoodFavoriteButton } from "@/components/food/FoodFavoriteButton";
-import { FoodRecommendationForm } from "@/components/food/FoodRecommendationForm";
+import { FoodRecommendSection } from "@/components/food/FoodRecommendSection";
 import { ReportDialog } from "@/components/common/ReportDialog";
 import {
   Card,
@@ -103,16 +102,7 @@ export function FoodDetailView({
         </CardContent>
       </Card>
 
-      {canRecommend ? (
-        <FoodRecommendationForm placeId={place.id} />
-      ) : (
-        <p className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-          <Link href={ROUTES.login} className="font-medium text-primary hover:underline">
-            登录
-          </Link>{" "}
-          后即可写下推荐
-        </p>
-      )}
+      <FoodRecommendSection placeId={place.id} canRecommend={canRecommend} />
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">同学推荐</h2>

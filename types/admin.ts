@@ -1,4 +1,5 @@
 import { type AdminContentArticle } from "@/lib/db/contentCms";
+import { type ContentArchiveRow } from "@/lib/db/contentArchives";
 import { type AdminGuideDetail } from "@/types/guide";
 import { type CourseWithStats } from "@/types/course";
 import {
@@ -100,6 +101,7 @@ export type AdminListFilters = {
 export type AdminActionFilters = {
   page?: number;
   pageSize?: number;
+  query?: string;
 };
 
 export type AdminDashboardData = {
@@ -115,5 +117,12 @@ export type AdminDashboardData = {
   studyArticles: AdminContentArticle[];
   lifeArticles: AdminContentArticle[];
   adminActions: AdminActionLogWithAdmin[];
+  adminActionsTotal?: number;
+  adminActionsPage?: number;
+  adminActionsPageSize?: number;
+  adminActionsQuery?: string;
+  contentArchives?: ContentArchiveRow[];
+  pendingArchiveAppeals?: ContentArchiveRow[];
+  expiredArchiveCount?: number;
   isDatabaseConfigured: boolean;
 };

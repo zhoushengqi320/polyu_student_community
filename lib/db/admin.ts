@@ -2,7 +2,7 @@ import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { REPORT_STATUS } from "@/constants/reportReasons";
 import { USER_STATUS } from "@/constants/userRoles";
 import { mapAdminUserListItem } from "@/lib/db/mappers/admin";
-import { mapProfileListItem, type ProfileRow } from "@/lib/db/mappers/profile";
+import { mapProfileListItemOrFallback, type ProfileRow } from "@/lib/db/mappers/profile";
 import { createAdminAction, logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { DbError, getPagination } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
@@ -470,12 +470,16 @@ export async function getAllForumPosts(
   }
 
   return (data as Array<Record<string, unknown>>).map((row) => {
-    const profile = row.profiles as ProfileRow;
+    const profile = row.profiles as ProfileRow | null;
     return {
       id: String(row.id),
       title: String(row.title),
       categoryId: (row.category_id as string | null) ?? null,
-      author: mapProfileListItem(profile),
+      author: mapProfileListItemOrFallback(
+        profile,
+        String(row.user_id ?? "unknown"),
+        "已删除用户",
+      ),
       createdAt: String(row.created_at),
       deletedAt: (row.deleted_at as string | null) ?? null,
       status: String(row.status),
@@ -525,12 +529,16 @@ export async function getAllForumComments(
   }
 
   return (data as Array<Record<string, unknown>>).map((row) => {
-    const profile = row.profiles as ProfileRow;
+    const profile = row.profiles as ProfileRow | null;
     const postId = String(row.target_id);
     return {
       id: String(row.id),
       content: String(row.content),
-      author: mapProfileListItem(profile),
+      author: mapProfileListItemOrFallback(
+        profile,
+        String(row.user_id ?? "unknown"),
+        "已删除用户",
+      ),
       postId,
       postTitle: postMap.get(postId) ?? "未知帖子",
       createdAt: String(row.created_at),
@@ -563,7 +571,7 @@ export async function getAllCourseReviews(
   }
 
   return (data as Array<Record<string, unknown>>).map((row) => {
-    const profile = row.profiles as ProfileRow;
+    const profile = row.profiles as ProfileRow | null;
     const course = row.courses as Record<string, unknown> | null;
 
     return {
@@ -571,7 +579,11 @@ export async function getAllCourseReviews(
       courseId: String(row.course_id),
       courseCode: String(course?.code ?? "UNKNOWN"),
       courseName: String(course?.name ?? "未知课程"),
-      author: mapProfileListItem(profile),
+      author: mapProfileListItemOrFallback(
+        profile,
+        String(row.user_id ?? "unknown"),
+        "已删除用户",
+      ),
       overallRating: Number(row.overall_rating ?? 0),
       difficultyRating: Number(row.difficulty_rating ?? 0),
       tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
@@ -746,51 +758,80 @@ export async function adminDeleteCourseReview(
 
 export async function getAdminActions(
   filters: AdminActionFilters = {},
-): Promise<AdminActionLogWithAdmin[]> {
+): Promise<{ items: AdminActionLogWithAdmin[]; total: number }> {
   if (!isSupabaseConfigured()) {
-    return [];
+    return { items: [], total: 0 };
   }
 
-  const { page = 1, pageSize = 50 } = filters;
+  const { page = 1, pageSize = 20, query } = filters;
   const pagination = getPagination(page, pageSize);
   const supabase = await createClient();
+  const trimmedQuery = query?.trim();
+  const escaped = trimmedQuery?.replace(/[%_,]/g, "") ?? "";
+  const pattern = escaped ? `%${escaped}%` : "";
 
-  const { data, error } = await supabase
-    .from("admin_action_logs")
-    .select("*, profiles!admin_action_logs_admin_id_fkey(*)")
-    .order("created_at", { ascending: false })
-    .range(pagination.from, pagination.to);
+  const runQuery = async (useFkey: boolean) => {
+    const select = useFkey
+      ? "*, profiles!admin_action_logs_admin_id_fkey(*)"
+      : "*, profiles(*)";
 
-  if (error) {
-    const fallback = await supabase
+    let builder = supabase
       .from("admin_action_logs")
-      .select("*, profiles(*)")
-      .order("created_at", { ascending: false })
-      .range(pagination.from, pagination.to);
+      .select(select, { count: "exact" })
+      .order("created_at", { ascending: false });
 
-    if (fallback.error || !fallback.data) {
-      console.error("Failed to get admin actions:", error);
-      return [];
+    if (pattern) {
+      builder = builder.or(
+        `action.ilike.${pattern},target_type.ilike.${pattern},target_id.ilike.${pattern}`,
+      );
     }
 
-    return mapAdminActionRows(fallback.data as Array<Record<string, unknown>>);
+    return builder.range(pagination.from, pagination.to);
+  };
+
+  const primary = await runQuery(true);
+
+  if (primary.error) {
+    const fallback = await runQuery(false);
+    if (fallback.error || !fallback.data) {
+      console.error("Failed to get admin actions:", primary.error);
+      return { items: [], total: 0 };
+    }
+
+    return {
+      items: mapAdminActionRows(fallback.data as Array<Record<string, unknown>>),
+      total: fallback.count ?? 0,
+    };
   }
 
-  return mapAdminActionRows((data ?? []) as Array<Record<string, unknown>>);
+  return {
+    items: mapAdminActionRows((primary.data ?? []) as Array<Record<string, unknown>>),
+    total: primary.count ?? 0,
+  };
 }
 
 function mapAdminActionRows(rows: Array<Record<string, unknown>>): AdminActionLogWithAdmin[] {
   return rows.map((row) => {
-    const profile = row.profiles as ProfileRow;
+    const profile = row.profiles as ProfileRow | null;
+    const adminId = row.admin_id == null ? null : String(row.admin_id);
+
     return {
       id: String(row.id),
-      adminId: String(row.admin_id),
+      adminId: adminId ?? "system",
       action: String(row.action),
       targetType: String(row.target_type) as TargetType | "user",
       targetId: String(row.target_id),
       metadata: (row.metadata as Record<string, unknown> | null) ?? null,
       createdAt: String(row.created_at),
-      admin: mapProfileListItem(profile),
+      admin: profile
+        ? mapProfileListItemOrFallback(profile)
+        : {
+            id: "system",
+            username: "system",
+            displayName: "系统",
+            avatarUrl: null,
+            role: "admin" as const,
+          },
     };
   });
 }

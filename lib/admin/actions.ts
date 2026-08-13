@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/session";
 import {
   adminDeleteCourseReview,
@@ -18,15 +19,82 @@ import {
   adminHideFoodPlace,
   adminSoftDeleteFoodRecommendation,
 } from "@/lib/db/food";
+import { getContentSnapshot } from "@/lib/db/moderation";
 import { updateReportStatus } from "@/lib/db/reports";
 import {
   confirmReportViolation,
   dismissReportWithReview,
+  approveArchiveAppeal,
+  rejectArchiveAppealReview,
 } from "@/lib/moderation/reportWorkflow";
-import { REPORT_STATUS } from "@/constants/reportReasons";
+import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { type TargetType } from "@/constants/reportReasons";
 import { type AdminActionState } from "@/lib/admin/state";
+
+const previewSchema = z.object({
+  targetType: z.enum([
+    TARGET_TYPES.post,
+    TARGET_TYPES.comment,
+    TARGET_TYPES.course_review,
+    TARGET_TYPES.food_place,
+    TARGET_TYPES.food_recommendation,
+    TARGET_TYPES.course,
+    TARGET_TYPES.buddy_post,
+    TARGET_TYPES.profile,
+  ]),
+  targetId: z.string().uuid(),
+});
+
+export type AdminContentPreview = {
+  targetType: TargetType;
+  targetId: string;
+  title: string | null;
+  body: string | null;
+  excerpt: string | null;
+  module: string | null;
+  deletedAt: string | null;
+  status: string | null;
+};
+
+export async function getAdminContentPreviewAction(input: {
+  targetType: string;
+  targetId: string;
+}): Promise<{ data?: AdminContentPreview; error?: string }> {
+  try {
+    await requireAdmin();
+    const parsed = previewSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: "无效的内容目标" };
+    }
+
+    const snapshot = await getContentSnapshot(
+      parsed.data.targetType,
+      parsed.data.targetId,
+    );
+
+    if (!snapshot) {
+      return { error: "内容不存在或无法预览" };
+    }
+
+    return {
+      data: {
+        targetType: parsed.data.targetType,
+        targetId: parsed.data.targetId,
+        title: snapshot.title,
+        body: snapshot.body,
+        excerpt: snapshot.excerpt,
+        module: snapshot.module,
+        deletedAt: snapshot.deletedAt,
+        status: snapshot.status,
+      },
+    };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "预览加载失败",
+    };
+  }
+}
 
 async function runAdminAction(
   action: () => Promise<void>,
@@ -311,6 +379,40 @@ export async function dismissReportAction(
   return runAdminAction(
     () => dismissReportWithReview(reportId, admin.id),
     "举报已驳回，内容已恢复（如适用）",
+  );
+}
+
+export async function approveArchiveAppealAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const archiveId = String(formData.get("archiveId") ?? "");
+
+  if (!archiveId) {
+    return { error: "无效的封存 ID" };
+  }
+
+  return runAdminAction(
+    () => approveArchiveAppeal(archiveId, admin.id),
+    "申诉已通过，内容已恢复",
+  );
+}
+
+export async function rejectArchiveAppealAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const archiveId = String(formData.get("archiveId") ?? "");
+
+  if (!archiveId) {
+    return { error: "无效的封存 ID" };
+  }
+
+  return runAdminAction(
+    () => rejectArchiveAppealReview(archiveId, admin.id),
+    "申诉已驳回，已通知作者",
   );
 }
 

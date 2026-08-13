@@ -48,6 +48,12 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
           </Link>
         </Button>
         <Button variant="ghost" className="w-full justify-start" asChild>
+          <Link href={`${profileHref}#works`}>
+            <Bookmark className="mr-2 h-4 w-4" />
+            我的作品
+          </Link>
+        </Button>
+        <Button variant="ghost" className="w-full justify-start" asChild>
           <Link href={ROUTES.feedback.list}>
             <CircleHelp className="mr-2 h-4 w-4" />
             问题反馈
@@ -55,7 +61,11 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
         </Button>
         {showAdminLink ? (
           <Button variant="ghost" className="w-full justify-start" asChild>
-            <Link href={ROUTES.admin}>
+            <Link
+              href={ROUTES.admin}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Shield className="mr-2 h-4 w-4" />
               管理后台
             </Link>
@@ -75,20 +85,16 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
     );
   }
 
+  // 桌面：头像 + 反馈（通知与管理后台在 Navbar 外侧，保证从右至左顺序）
   return (
-    <div className="flex items-center gap-3">
-      {showAdminLink ? (
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={ROUTES.admin}>管理后台</Link>
-        </Button>
-      ) : null}
+    <div className="flex items-center gap-2">
       <Link
         href={profileHref}
         title={displayName}
         aria-label={`${displayName} 的个人主页`}
         className="inline-flex items-center rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <UserAvatar src={avatarUrl} name={displayName} size="xl" />
+        <UserAvatar src={avatarUrl} name={displayName} size="nav" />
       </Link>
       <Button variant="outline" size="sm" asChild>
         <Link href={ROUTES.feedback.list} title="问题反馈">

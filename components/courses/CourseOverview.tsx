@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getDepartmentCode } from "@/constants/courseOptions";
 import {
   normalizeDisplayCode,
   normalizeDisplayLevel,
@@ -50,7 +51,10 @@ export function CourseOverview({ course }: CourseOverviewProps) {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <InfoBlock label="Course Code" value={displayCode} />
           <InfoBlock label="Course Name" value={displayName} />
-          <InfoBlock label="Department" value={course.department} />
+          <InfoBlock
+            label="Department"
+            value={getDepartmentCode(course.department)}
+          />
           <InfoBlock label="School ID" value={course.schoolId} />
           <InfoBlock label="Faculty" value={course.faculty} />
           <InfoBlock

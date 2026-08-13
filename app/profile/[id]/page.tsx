@@ -4,9 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { TagBadge } from "@/components/common/TagBadge";
 import { ProfileFavoritesSection } from "@/components/profile/ProfileFavoritesSection";
+import { ProfileWorksSection } from "@/components/profile/ProfileWorksSection";
 import { ProfileEditPanel } from "@/components/profile/ProfileEditPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getUserFavorites } from "@/lib/db/favorites";
+import { listProfileWorks } from "@/lib/db/profileWorks";
 import { getProfileById } from "@/lib/db/profiles";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
@@ -41,7 +43,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const isOwnProfile = sessionUser.id === id;
-  const favorites = isOwnProfile ? await getUserFavorites(id) : null;
+  const [favorites, works] = isOwnProfile
+    ? await Promise.all([getUserFavorites(id), listProfileWorks(id)])
+    : [null, null];
 
   return (
     <ModulePageShell
@@ -122,7 +126,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </CardContent>
         </Card>
 
-        {favorites ? <ProfileFavoritesSection favorites={favorites} /> : null}
+        {favorites && works ? (
+          <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
+            <ProfileFavoritesSection favorites={favorites} />
+            <ProfileWorksSection works={works} />
+          </div>
+        ) : null}
       </div>
     </ModulePageShell>
   );

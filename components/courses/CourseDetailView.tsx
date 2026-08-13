@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getDepartmentCode } from "@/constants/courseOptions";
 import { ROUTES } from "@/constants/routes";
 import {
   normalizeDisplayCode,
@@ -50,7 +51,7 @@ export function CourseDetailView({
             <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
               {displayCode}
             </span>
-            <span>{course.department}</span>
+            <span>{getDepartmentCode(course.department)}</span>
             {course.faculty ? <span>{course.faculty}</span> : null}
             {course.credits ? <span>{course.credits} credits</span> : null}
           </div>

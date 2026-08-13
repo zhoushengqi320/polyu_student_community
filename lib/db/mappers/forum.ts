@@ -1,5 +1,5 @@
 import {
-  mapProfileListItem,
+  mapProfileListItemOrFallback,
   type ProfileRow,
 } from "@/lib/db/mappers/profile";
 import {
@@ -52,11 +52,11 @@ function mapAuthor(row: ForumPostWithProfileRow) {
       username: "anonymous",
       displayName: "匿名用户",
       avatarUrl: null,
-      role: row.profiles.role,
+      role: row.profiles?.role ?? ("user" as const),
     };
   }
 
-  return mapProfileListItem(row.profiles);
+  return mapProfileListItemOrFallback(row.profiles, row.user_id, "已删除用户");
 }
 
 export function mapForumPostListItem(row: ForumPostWithProfileRow): ForumPostListItem {

@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { ROUTES } from "@/constants/routes";
+"use client";
+
+import { CommunityRulesDialog } from "@/components/legal/CommunityRulesDialog";
 import { cn } from "@/lib/utils/cn";
 
 type CommunityRulesNoticeProps = {
@@ -15,12 +16,7 @@ export function CommunityRulesNotice({
   return (
     <p className={cn("text-xs leading-5 text-muted-foreground", className)}>
       {message}{" "}
-      <Link
-        href={ROUTES.about.communityRules}
-        className="underline underline-offset-2 hover:text-foreground"
-      >
-        查看社区规则
-      </Link>
+      <CommunityRulesDialog triggerLabel="查看社区规则" />
     </p>
   );
 }

@@ -6,7 +6,7 @@ import {
 import { type Report, type ReportWithReporter } from "@/types/report";
 import { type Database } from "@/types/database";
 import {
-  mapProfileListItem,
+  mapProfileListItemOrFallback,
   type ProfileRow,
 } from "@/lib/db/mappers/profile";
 
@@ -25,7 +25,7 @@ export type ReportRow = {
 };
 
 export type ReportWithProfileRow = ReportRow & {
-  profiles: ProfileRow;
+  profiles: ProfileRow | null;
 };
 
 export function mapReport(row: ReportRow): Report {
@@ -47,7 +47,11 @@ export function mapReport(row: ReportRow): Report {
 export function mapReportWithReporter(row: ReportWithProfileRow): ReportWithReporter {
   return {
     ...mapReport(row),
-    reporter: mapProfileListItem(row.profiles),
+    reporter: mapProfileListItemOrFallback(
+      row.profiles,
+      row.reporter_id,
+      "已删除用户",
+    ),
   };
 }
 

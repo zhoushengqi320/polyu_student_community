@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getDepartmentCode } from "@/constants/courseOptions";
 import { ROUTES } from "@/constants/routes";
 import { type CourseWithStats } from "@/types/course";
 
@@ -29,7 +30,7 @@ export function CourseCard({ course, canReview }: CourseCardProps) {
           <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
             {course.code}
           </span>
-          <span>{course.department}</span>
+          <span>{getDepartmentCode(course.department)}</span>
           {course.credits ? <span>{course.credits} credits</span> : null}
         </div>
         <div className="space-y-2">

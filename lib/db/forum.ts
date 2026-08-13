@@ -1,7 +1,12 @@
 import { DEFAULT_SCHOOL_ID } from "@/constants/categories";
 import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { CONTENT_RISK_LEVELS } from "@/constants/moderation";
-import { FORUM_PAGE_SIZE, type ForumSortId } from "@/constants/forum";
+import {
+  FORUM_PAGE_SIZE,
+  FORUM_POPULAR_TOPICS_LIMIT,
+  FORUM_SEARCH_FETCH_LIMIT,
+  type ForumSortId,
+} from "@/constants/forum";
 import {
   buildPostExcerpt,
   mapForumPostDetail,
@@ -9,7 +14,10 @@ import {
   type ForumPostWithProfileRow,
 } from "@/lib/db/mappers/forum";
 import { DbError, getPagination, toPaginatedResult } from "@/lib/db/shared";
-import { buildSearchPattern } from "@/lib/utils/search";
+import {
+  matchesForumSearch,
+  sortForumPostsBySearchRelevance,
+} from "@/lib/utils/forumSearch";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
@@ -70,16 +78,45 @@ export async function getForumPosts(
   }
 
   const supabase = await createClient();
+  const trimmedQuery = query?.trim();
+
+  if (trimmedQuery) {
+    const { data, error } = await buildForumBaseQuery(supabase)
+      .order("created_at", { ascending: false })
+      .limit(FORUM_SEARCH_FETCH_LIMIT);
+
+    if (error) {
+      console.error("Failed to search forum posts:", error);
+      return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+    }
+
+    let rows = ((data ?? []) as ForumPostWithProfileRow[]).filter((row) =>
+      matchesForumSearch(trimmedQuery, {
+        title: row.title,
+        content: row.content,
+        excerpt: row.excerpt,
+        topics: row.topics,
+      }),
+    );
+
+    rows = sortForumPostsBySearchRelevance(rows, trimmedQuery);
+
+    if (topic?.trim()) {
+      const topicValue = topic.trim();
+      rows = rows.filter((row) =>
+        (row.topics ?? []).some((item) => item.trim() === topicValue),
+      );
+    }
+
+    // 有关键词时固定按相关度排序，避免点赞/评论排序覆盖检索结果
+    const total = rows.length;
+    const pageRows = rows.slice(pagination.from, pagination.to + 1);
+    const items = pageRows.map(mapForumPostListItem);
+    return toPaginatedResult(items, total, pagination.page, pagination.pageSize);
+  }
+
   let dbQuery = buildForumBaseQuery(supabase).range(pagination.from, pagination.to);
   dbQuery = applyForumSort(dbQuery, sort);
-
-  const trimmedQuery = query?.trim();
-  if (trimmedQuery) {
-    const pattern = buildSearchPattern(trimmedQuery);
-    dbQuery = dbQuery.or(
-      `title.ilike.${pattern},content.ilike.${pattern},excerpt.ilike.${pattern}`,
-    );
-  }
 
   if (topic?.trim()) {
     dbQuery = dbQuery.contains("topics", [topic.trim()]);
@@ -255,7 +292,9 @@ export async function getPostsByTopic(
   return result.data;
 }
 
-export async function getForumTopics(limit = 20): Promise<string[]> {
+export async function getForumTopics(
+  limit = FORUM_POPULAR_TOPICS_LIMIT,
+): Promise<string[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -266,8 +305,7 @@ export async function getForumTopics(limit = 20): Promise<string[]> {
     .select("topics")
     .eq("module", FORUM_MODULE)
     .eq("status", CONTENT_STATUS.published)
-    .is("deleted_at", null)
-    .limit(200);
+    .is("deleted_at", null);
 
   if (error || !data) {
     return [];
@@ -286,7 +324,7 @@ export async function getForumTopics(limit = 20): Promise<string[]> {
   }
 
   return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-CN"))
     .slice(0, limit)
     .map(([topic]) => topic);
 }

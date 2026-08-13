@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Image } from "@tiptap/extension-image";
 import { Link } from "@tiptap/extension-link";
 import { Underline } from "@tiptap/extension-underline";
 import { Placeholder } from "@tiptap/extension-placeholder";
@@ -34,6 +33,7 @@ import {
   Underline as UnderlineIcon,
   Undo2,
 } from "lucide-react";
+import { ResizableImage } from "@/components/admin/content/ResizableImage";
 import { uploadContentImageAction } from "@/lib/content/uploadImageAction";
 import { toEditorHtml } from "@/lib/utils/contentFormat";
 import { cn } from "@/lib/utils/cn";
@@ -46,6 +46,22 @@ type RichTextEditorClientProps = {
   /** ⌘/Ctrl+S：在编辑器内拦截浏览器存网页并触发保存 */
   onSaveShortcut?: () => void;
 };
+
+function dataUrlToFile(dataUrl: string): File | null {
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) {
+    return null;
+  }
+  const mime = match[1];
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const ext =
+    mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : mime.includes("gif") ? "gif" : "jpg";
+  return new File([bytes], `paste-${Date.now()}.${ext}`, { type: mime });
+}
 
 const FONT_SIZES = [
   { label: "字号", value: "" },
@@ -95,6 +111,7 @@ export function RichTextEditorClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef(false);
   const onSaveShortcutRef = useRef(onSaveShortcut);
+  const handleUploadRef = useRef<(file: File | undefined) => void>(() => {});
   onSaveShortcutRef.current = onSaveShortcut;
   const [uploading, startUpload] = useTransition();
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -120,11 +137,10 @@ export function RichTextEditorClient({
           target: "_blank",
         },
       }),
-      Image.configure({
+      ResizableImage.configure({
         allowBase64: false,
         HTMLAttributes: {
-          class:
-            "my-3 h-auto max-h-[28rem] w-full max-w-full rounded-lg border object-contain",
+          class: "my-3 h-auto max-w-full",
         },
       }),
       Table.configure({ resizable: true }),
@@ -143,6 +159,86 @@ export function RichTextEditorClient({
     editorProps: {
       attributes: {
         class: "prose-editor min-h-[320px] max-w-none px-4 py-3 outline-none",
+      },
+      handlePaste: (_view, event) => {
+        const clipboard = event.clipboardData;
+        if (!clipboard) {
+          return false;
+        }
+
+        const candidates: File[] = [];
+
+        // 1) clipboard.files（部分浏览器/应用只走这里）
+        for (const file of Array.from(clipboard.files ?? [])) {
+          if (file.type.startsWith("image/")) {
+            candidates.push(file);
+          }
+        }
+
+        // 2) clipboard.items
+        for (const item of Array.from(clipboard.items ?? [])) {
+          if (!item.type.startsWith("image/")) {
+            continue;
+          }
+          const file = item.getAsFile();
+          if (file) {
+            candidates.push(file);
+          }
+        }
+
+        // 3) HTML 里的 data:image（无 File 时，避免 TipTap 插入低清外链缩略图）
+        if (candidates.length === 0) {
+          const html = clipboard.getData("text/html");
+          const dataUrls = html
+            ? [...html.matchAll(/src=["'](data:image\/[a-zA-Z0-9.+-]+;base64,[^"']+)["']/g)].map(
+                (match) => match[1],
+              )
+            : [];
+          for (const dataUrl of dataUrls) {
+            const file = dataUrlToFile(dataUrl);
+            if (file) {
+              candidates.push(file);
+            }
+          }
+        }
+
+        if (candidates.length === 0) {
+          // 若 HTML 含远程 img，拦截默认粘贴，避免插入外链小图导致发糊
+          const html = clipboard.getData("text/html");
+          if (html && /<img[\s>]/i.test(html)) {
+            event.preventDefault();
+            setUploadError("请用「插入图片」上传，或粘贴本地截图/图片文件，勿粘贴网页缩略图。");
+            return true;
+          }
+          return false;
+        }
+
+        // 优先体积最大（通常更清晰）；同体积优先 PNG
+        candidates.sort((a, b) => {
+          if (b.size !== a.size) {
+            return b.size - a.size;
+          }
+          const score = (file: File) =>
+            file.type === "image/png" ? 2 : file.type === "image/webp" ? 1 : 0;
+          return score(b) - score(a);
+        });
+
+        event.preventDefault();
+        handleUploadRef.current?.(candidates[0]);
+        return true;
+      },
+      handleDrop: (_view, event) => {
+        const files = event.dataTransfer?.files;
+        if (!files?.length) {
+          return false;
+        }
+        const imageFile = [...files].find((file) => file.type.startsWith("image/"));
+        if (!imageFile) {
+          return false;
+        }
+        event.preventDefault();
+        handleUploadRef.current?.(imageFile);
+        return true;
       },
       handleDOMEvents: {
         keydown: (_view, event) => {
@@ -218,8 +314,17 @@ export function RichTextEditorClient({
     if (!file || !editor) return;
     setUploadError(null);
     const formData = new FormData();
-    formData.set("file", file);
-    formData.set("alt", file.name.replace(/\.[^.]+$/, "") || "图片");
+    // 尽量保留原 MIME / 文件名，避免剪贴板默认被当成低质量 jpeg
+    const safeName =
+      file.name && file.name !== "image.png" && file.name !== "image.jpg"
+        ? file.name
+        : `paste-${Date.now()}.${file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : "jpg"}`;
+    const uploadFile =
+      file.name === safeName
+        ? file
+        : new File([file], safeName, { type: file.type || "image/png" });
+    formData.set("file", uploadFile);
+    formData.set("alt", safeName.replace(/\.[^.]+$/, "") || "图片");
 
     startUpload(async () => {
       const result = await uploadContentImageAction(formData);
@@ -227,9 +332,40 @@ export function RichTextEditorClient({
         setUploadError(result.error);
         return;
       }
-      editor.chain().focus().setImage({ src: result.url, alt: "图片" }).run();
+
+      // 按原图像素宽度写入，避免编辑器默认拉满后再被 CSS 压糊
+      const naturalWidth = await new Promise<number | null>((resolve) => {
+        const probe = new window.Image();
+        probe.onload = () => resolve(probe.naturalWidth || null);
+        probe.onerror = () => resolve(null);
+        probe.src = result.url;
+      });
+
+      // 显示宽度不超过原稿像素，避免小图被拉满容器后发糊
+      const editorWidth =
+        editor.view.dom.clientWidth ||
+        editor.view.dom.parentElement?.clientWidth ||
+        720;
+      const width = naturalWidth
+        ? Math.min(naturalWidth, Math.max(120, editorWidth - 32))
+        : null;
+
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "image",
+          attrs: {
+            src: result.url,
+            alt: "图片",
+            ...(width ? { width } : {}),
+          },
+        })
+        .run();
     });
   }
+
+  handleUploadRef.current = handleUpload;
 
   if (!editor) {
     return (

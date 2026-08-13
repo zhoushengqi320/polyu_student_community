@@ -33,15 +33,32 @@ body {
   font-family: var(--font-sans);
 }
 
+/* 管理后台独立壳层：隐藏全站导航与页脚，避免跳回前台 */
+body.admin-shell-active .site-header,
+body.admin-shell-active .site-footer {
+  display: none;
+}
+
 .container {
   width: 100%;
   margin-inline: auto;
   padding-inline: 1rem;
 }
 
+.site-header-inner {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 0.75rem;
+}
+
 @media (min-width: 640px) {
   .container {
     max-width: 640px;
+  }
+
+  .site-header-inner {
+    max-width: none;
+    padding-inline: 1rem;
   }
 }
 
@@ -49,17 +66,37 @@ body {
   .container {
     max-width: 768px;
   }
+
+  .site-header-inner {
+    padding-inline: 1.25rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .container {
     max-width: 1024px;
   }
+
+  .site-header-inner {
+    padding-inline: 1.5rem;
+  }
 }
 
 @media (min-width: 1280px) {
   .container {
     max-width: 1280px;
+  }
+
+  .site-header-inner {
+    max-width: 1600px;
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .site-header-inner {
+    max-width: 1760px;
+    padding-inline: 2.5rem;
   }
 }
 
@@ -126,15 +163,20 @@ body {
   text-underline-offset: 2px;
 }
 
-.prose-editor img {
+.prose-editor img,
+.rich-content img,
+.content-image {
   display: block;
   max-width: 100%;
   height: auto;
-  max-height: 28rem;
-  margin: 0.75rem 0;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  object-fit: contain;
+  cursor: zoom-in;
+  /* 避免部分浏览器对缩放图过度平滑导致发糊 */
+  image-rendering: auto;
+  -ms-interpolation-mode: bicubic;
+}
+
+.prose-editor img {
+  cursor: default;
 }
 
 .prose-editor table {

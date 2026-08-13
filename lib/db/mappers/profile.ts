@@ -69,6 +69,24 @@ export function mapProfileListItem(row: ProfileRow): ProfileListItem {
   };
 }
 
+/** profiles join 为空时的安全占位，避免后台列表崩溃 */
+export function mapProfileListItemOrFallback(
+  row: ProfileRow | null | undefined,
+  fallbackId = "unknown",
+  fallbackName = "未知用户",
+): ProfileListItem {
+  if (row?.id) {
+    return mapProfileListItem(row);
+  }
+  return {
+    id: fallbackId,
+    username: "unknown",
+    displayName: fallbackName,
+    avatarUrl: null,
+    role: "user",
+  };
+}
+
 export function toProfileListItem(profile: Profile): ProfileListItem {
   return {
     id: profile.id,

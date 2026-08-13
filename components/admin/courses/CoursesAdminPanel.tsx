@@ -8,7 +8,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { COURSE_DEPARTMENTS } from "@/constants/courseOptions";
+import { COURSE_DEPARTMENTS, getDepartmentCode } from "@/constants/courseOptions";
 import { ROUTES } from "@/constants/routes";
 import {
   createCourseAdminAction,
@@ -225,9 +225,6 @@ function CourseForm({
             </Button>
             {mode === "edit" && course ? (
               <>
-                <Button type="button" variant="outline" asChild>
-                  <Link href={ROUTES.courses.detail(course.code)}>查看课程页</Link>
-                </Button>
                 <Button
                   type="button"
                   variant="destructive"
@@ -403,7 +400,7 @@ export function CoursesAdminPanel({
                 <tr key={course.id} className="border-b">
                   <td className="px-2 py-2 font-medium">{course.code}</td>
                   <td className="px-2 py-2">{course.name}</td>
-                  <td className="px-2 py-2">{course.department}</td>
+                  <td className="px-2 py-2">{getDepartmentCode(course.department)}</td>
                   <td className="px-2 py-2">{course.reviewCount}</td>
                   <td className="px-2 py-2">
                     <div className="flex flex-wrap gap-2">
@@ -417,9 +414,6 @@ export function CoursesAdminPanel({
                         }}
                       >
                         编辑
-                      </Button>
-                      <Button type="button" size="sm" variant="ghost" asChild>
-                        <Link href={ROUTES.courses.detail(course.code)}>查看</Link>
                       </Button>
                     </div>
                   </td>

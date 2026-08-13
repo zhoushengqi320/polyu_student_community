@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import {
   FORUM_MAX_TOPICS,
-  FORUM_TOPIC_SUGGESTIONS,
 } from "@/constants/forum";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -36,6 +35,7 @@ const initialState: ForumPostFormState = {};
 type ForumPostFormProps = {
   mode?: "create" | "edit";
   postId?: string;
+  popularTopics?: string[];
   initialValues?: {
     title: string;
     content: string;
@@ -47,6 +47,7 @@ type ForumPostFormProps = {
 export function ForumPostForm({
   mode = "create",
   postId,
+  popularTopics = [],
   initialValues,
 }: ForumPostFormProps) {
   const router = useRouter();
@@ -199,7 +200,7 @@ export function ForumPostForm({
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {FORUM_TOPIC_SUGGESTIONS.map((suggestion) => (
+                {(popularTopics.length > 0 ? popularTopics : []).slice(0, 5).map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
@@ -212,6 +213,11 @@ export function ForumPostForm({
                     #{suggestion}
                   </button>
                 ))}
+                {popularTopics.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    暂无热门话题，可在上方自行添加（最多 5 个）
+                  </p>
+                ) : null}
               </div>
               {topics.length > 0 ? (
                 <div className="flex flex-wrap gap-2">

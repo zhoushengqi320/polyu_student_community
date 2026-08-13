@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useActionState } from "react";
-import { GUIDE_CATEGORIES } from "@/constants/guides";
 import {
   createGuideAction,
   updateGuideAction,
@@ -39,9 +38,6 @@ const initialState: GuideFormState = {};
 
 const textareaClassName =
   "flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
-const selectClassName =
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function emptySourceLink(): GuideSourceLink {
   return { label: "", url: "" };
@@ -163,28 +159,7 @@ export function GuideForm({
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="guide-category">分类</Label>
-        <select
-          id="guide-category"
-          name="category"
-          defaultValue={initialValues?.category ?? ""}
-          required
-          className={selectClassName}
-        >
-          <option value="" disabled>
-            请选择分类
-          </option>
-          {GUIDE_CATEGORIES.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-        {state.fieldErrors?.category ? (
-          <p className="text-sm text-destructive">{state.fieldErrors.category}</p>
-        ) : null}
-      </div>
+      <input type="hidden" name="category" value={initialValues?.category ?? "admission"} />
 
       <RichTextEditor
         key={initialValues?.guideId ?? `create-${mode}`}

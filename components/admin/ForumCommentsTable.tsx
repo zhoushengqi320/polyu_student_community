@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
+import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import { adminDeleteForumCommentAction } from "@/lib/admin/actions";
-import { ROUTES } from "@/constants/routes";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { formatDateTime } from "@/lib/utils/formatDate";
@@ -48,12 +48,22 @@ export function ForumCommentsTable({ comments }: ForumCommentsTableProps) {
                   <p className="line-clamp-2 max-w-xs">{comment.content}</p>
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={ROUTES.forum.detail(comment.postId)}
-                    className="text-primary hover:underline line-clamp-1 max-w-[180px]"
-                  >
-                    {comment.postTitle}
-                  </Link>
+                  {isDeleted ? (
+                    <span className="text-muted-foreground line-clamp-1 max-w-[180px]">
+                      {comment.postTitle}
+                      <span className="mt-1 block text-xs">已删除（仅日志）</span>
+                    </span>
+                  ) : (
+                    <div className="space-y-1">
+                      <span className="line-clamp-1 max-w-[180px]">
+                        {comment.postTitle}
+                      </span>
+                      <AdminContentPreviewDialog
+                        targetType={TARGET_TYPES.post}
+                        targetId={comment.postId}
+                      />
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {comment.author.displayName ?? comment.author.username}

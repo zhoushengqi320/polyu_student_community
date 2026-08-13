@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getGuideCategoryLabel } from "@/constants/guides";
 import { ROUTES } from "@/constants/routes";
 import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import { type GuideListItem } from "@/types/guide";
@@ -17,25 +16,18 @@ type GuideCardProps = {
 };
 
 export function GuideCard({ guide }: GuideCardProps) {
-  const categoryLabel = getGuideCategoryLabel(
-    guide.meta?.category ?? guide.categoryId,
-  );
-
   return (
     <Link href={ROUTES.guides.detail(guide.id)} className="group block h-full">
       <Card className={interactiveCardClassName("h-full")}>
         <CardHeader className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 font-medium text-secondary-foreground">
-              {categoryLabel}
-            </span>
-            {guide.isFavorited ? (
+          {guide.isFavorited ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1 text-primary">
                 <Bookmark className="h-3.5 w-3.5" aria-hidden="true" />
                 已收藏
               </span>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
           <div className="space-y-2">
             <CardTitle className="line-clamp-2 text-lg transition-colors group-hover:text-primary">
               {guide.title}

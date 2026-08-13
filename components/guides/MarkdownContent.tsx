@@ -133,7 +133,7 @@ export function MarkdownContent({
                 src={src}
                 alt={alt ?? ""}
                 loading="lazy"
-                className="my-3 h-auto max-h-[28rem] w-full max-w-full rounded-lg border border-border object-contain"
+                className="content-image my-3 h-auto max-w-full cursor-zoom-in border border-border"
               />
             );
           },

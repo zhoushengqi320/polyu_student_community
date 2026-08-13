@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
+import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import {
   deleteContentArticleAction,
   hideContentArticleAction,
   publishContentArticleAction,
 } from "@/lib/content/cmsActions";
 import { CONTENT_STATUS, CONTENT_STATUS_LABELS } from "@/constants/contentStatus";
-import { ROUTES } from "@/constants/routes";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils/formatDate";
@@ -48,8 +48,6 @@ export function ContentArticleTable({
   onCreate,
   onEdit,
 }: ContentArticleTableProps) {
-  const detailHref =
-    module === "study" ? ROUTES.study.detail : ROUTES.life.detail;
   const moduleLabel = module === "study" ? "学习指南" : "生活指南";
 
   return (
@@ -114,16 +112,10 @@ export function ContentArticleTable({
                     <td className="px-3 py-2">
                       <div className="flex flex-nowrap items-center justify-end gap-1.5">
                         {canView ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            asChild
-                          >
-                            <Link href={detailHref(article.id)} target="_blank">
-                              查看
-                            </Link>
-                          </Button>
+                          <AdminContentPreviewDialog
+                            targetType={TARGET_TYPES.post}
+                            targetId={article.id}
+                          />
                         ) : null}
                         {!isDeleted ? (
                           <Button
