@@ -20,25 +20,25 @@ USER_PROMPT_TEMPLATE = """从下列课程 PDF 文本中抽取字段。
 
 请输出 JSON，字段如下：
 {{
-  "code": "课程代码，大写，合讲课用冒号连接如 ABCT1D01:ABCT1301",
-  "name": "课程英文/官方标题",
-  "level": "如 1 / 2 / 3 / 4 / UG / PG，原文没有则 null",
-  "credits": 数字或 null,
-  "description": "课程简介 Subject Synopsis / Description 全文，保留要点",
-  "objectives": "学习目标 Objectives，不要重复标题词 Objectives",
-  "prerequisites": "Pre-requisite / Co-requisite / Exclusion 相关原文摘要",
-  "teaching_pattern": "Teaching/Learning Approach 或教学安排摘要",
-  "semester_offered": "开课学期，没有则 null",
-  "assessment_items": [{{"label": "考核项名称", "value": "如 40%"}}],
-  "assessment_original_text": "Assessment 段落原文摘要",
-  "notes": "抽取不确定时的简短说明，可 null"
+  "code": "Subject code, uppercase; combined subjects joined with colon e.g. ABCT1D01:ABCT1301",
+  "name": "Official English course title",
+  "level": "e.g. 1 / 2 / 3 / 4 / UG / PG, or null if missing",
+  "credits": number or null,
+  "description": "Subject Synopsis / Description in English, keep key points",
+  "objectives": "Intended Learning Outcomes / Objectives in English; do not repeat the word Objectives",
+  "prerequisites": "Pre-requisite / Co-requisite / Exclusion summary in English",
+  "teaching_pattern": "Teaching/Learning Approach summary in English",
+  "semester_offered": "Semester offered, or null",
+  "assessment_items": [{{"label": "English assessment name e.g. Assignment / Final Examination", "value": "e.g. 40%"}}],
+  "assessment_original_text": "Assessment section summary in English",
+  "notes": "Brief note if uncertain, or null"
 }}
 
 规则：
 1. code 优先用 PDF 内 Subject Code；若缺失再用文件名。
-2. assessment_items 尽量覆盖全部评分项，排除 Total。
+2. assessment_items 尽量覆盖全部评分项，排除 Total；label 必须用英文（如 Assignment、Quiz、Final Examination），不要用中文。
 3. value 保留百分比字符串，如 "40%"。
-4. 正文保持英文原文风格，不要强行翻译成中文；专有名词按原文保留。
+4. name / description / objectives / prerequisites / teaching_pattern / assessment 等正文与标签一律保持英文原文，不要翻译成中文；专有名词按原文保留。
 5. 不要把「科目編號 / Subject Code / Indicative Syllabus」等表头写进 name/description。
 6. 只输出 JSON。
 

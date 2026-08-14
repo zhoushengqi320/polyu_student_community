@@ -53,7 +53,7 @@ export function CourseDetailView({
             </span>
             <span>{getDepartmentCode(course.department)}</span>
             {course.faculty ? <span>{course.faculty}</span> : null}
-            {course.credits ? <span>{course.credits} credits</span> : null}
+            {course.credits ? <span>{course.credits} 学分</span> : null}
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
