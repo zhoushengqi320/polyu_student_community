@@ -7,6 +7,7 @@ import {
   UnsavedChangesDialog,
   useUnsavedChangesGuard,
 } from "@/components/common/UnsavedChangesGuard";
+import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -114,6 +115,7 @@ export function CommentForm({
           ) : null}
         </div>
       </form>
+      <PendingOverlay active={pending} label="发送中…" />
       <UnsavedChangesDialog {...dialogProps} />
     </>
   );

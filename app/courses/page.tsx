@@ -36,6 +36,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
     <ModulePageShell
       title={MODULE_REGISTRY.courses.label}
       description={MODULE_REGISTRY.courses.description}
+      back={{ href: "/", label: "首页" }}
     >
       <CourseList
         result={result}

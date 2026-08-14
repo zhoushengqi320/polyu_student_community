@@ -24,7 +24,6 @@ const articleSchema = z.object({
   title: z.string().trim().min(2, "标题至少 2 个字").max(200),
   excerpt: z.string().trim().max(300).optional().nullable(),
   content: z.string().trim().min(10, "正文至少 10 个字").max(100000),
-  category: z.string().trim().min(1, "请填写分类").max(80),
 });
 
 const updateArticleSchema = articleSchema.extend({
@@ -64,7 +63,6 @@ export async function createContentArticleAction(
     title: formData.get("title"),
     excerpt: formData.get("excerpt") || null,
     content: formData.get("content"),
-    category: formData.get("category"),
   });
 
   if (!parsed.success) {
@@ -82,7 +80,7 @@ export async function createContentArticleAction(
         title: parsed.data.title,
         excerpt: parsed.data.excerpt ?? null,
         content: parsed.data.content,
-        category: parsed.data.category,
+        category: null, // 新建不再使用分类；历史字段保留为 null
       },
       admin.id,
     );
@@ -106,7 +104,6 @@ export async function updateContentArticleAction(
     title: formData.get("title"),
     excerpt: formData.get("excerpt") || null,
     content: formData.get("content"),
-    category: formData.get("category"),
   });
 
   if (!parsed.success) {
@@ -125,7 +122,6 @@ export async function updateContentArticleAction(
         title: parsed.data.title,
         excerpt: parsed.data.excerpt ?? null,
         content: parsed.data.content,
-        category: parsed.data.category,
       },
       admin.id,
     );

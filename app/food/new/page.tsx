@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FoodSubmitForm } from "@/components/food/FoodSubmitForm";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
 import { can } from "@/lib/utils/permissions";
@@ -19,11 +17,7 @@ export default async function NewFoodPlacePage() {
       <ModulePageShell
         title="提交新地点"
         description="吃喝玩乐"
-        actions={
-          <Button variant="outline" asChild>
-            <Link href={ROUTES.food.list}>返回列表</Link>
-          </Button>
-        }
+        back={{ href: ROUTES.food.list, label: "吃喝玩乐" }}
       >
         <p className="text-sm text-muted-foreground">当前账号无法提交地点。</p>
       </ModulePageShell>
@@ -34,11 +28,7 @@ export default async function NewFoodPlacePage() {
     <ModulePageShell
       title="提交新地点"
       description="吃喝玩乐 · 分享校园及附近好去处"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.food.list}>返回列表</Link>
-        </Button>
-      }
+      back={{ href: ROUTES.food.list, label: "吃喝玩乐" }}
     >
       <FoodSubmitForm />
     </ModulePageShell>

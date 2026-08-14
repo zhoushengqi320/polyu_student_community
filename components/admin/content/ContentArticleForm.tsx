@@ -3,13 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useActionState } from "react";
 import {
-  LIFE_GUIDE_TOPICS,
-  STUDY_GUIDE_TOPICS,
-} from "@/constants/categories";
-import {
   UnsavedChangesDialog,
   useUnsavedChangesGuard,
 } from "@/components/common/UnsavedChangesGuard";
+import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { RichTextEditor } from "@/components/admin/content/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,9 +37,6 @@ const initialState: ContentArticleFormState = {};
 const textareaClassName =
   "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-const selectClassName =
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 export function ContentArticleForm({
   module,
   mode,
@@ -61,11 +55,6 @@ export function ContentArticleForm({
   const saveViaShortcutRef = useRef(false);
   const { isDirty, markDirty, markClean, confirmLeave, dialogProps } =
     useUnsavedChangesGuard();
-
-  const categoryOptions =
-    module === "study"
-      ? STUDY_GUIDE_TOPICS.map((item) => item.label)
-      : LIFE_GUIDE_TOPICS.map((item) => item.label);
 
   const handleCtrlSSave = useCallback(() => {
     if (pending) return;
@@ -144,27 +133,6 @@ export function ContentArticleForm({
           ) : null}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="article-category">分类</Label>
-          <Input
-            id="article-category"
-            name="category"
-            list={`category-options-${module}`}
-            defaultValue={initialValues?.categoryId ?? ""}
-            placeholder="可从建议中选择，也可自定义"
-            required
-            className={selectClassName}
-          />
-          <datalist id={`category-options-${module}`}>
-            {categoryOptions.map((label) => (
-              <option key={label} value={label} />
-            ))}
-          </datalist>
-          {state.fieldErrors?.category ? (
-            <p className="text-sm text-destructive">{state.fieldErrors.category}</p>
-          ) : null}
-        </div>
-
         <RichTextEditor
           key={initialValues?.id ?? `create-${module}`}
           name="content"
@@ -204,6 +172,7 @@ export function ContentArticleForm({
           </span>
         </div>
       </form>
+      <PendingOverlay active={pending} label="保存中…" />
       <UnsavedChangesDialog {...dialogProps} />
     </>
   );

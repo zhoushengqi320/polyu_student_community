@@ -22,6 +22,7 @@ type ForumPostDetailViewProps = {
   canInteract: boolean;
   canManage: boolean;
   isLoggedIn: boolean;
+  currentUserId?: string | null;
 };
 
 function getAuthorName(post: ForumPostDetail): string {
@@ -39,6 +40,7 @@ export function ForumPostDetailView({
   canInteract,
   canManage,
   isLoggedIn,
+  currentUserId,
 }: ForumPostDetailViewProps) {
   return (
     <Card>
@@ -84,6 +86,7 @@ export function ForumPostDetailView({
             isLiked={isLiked}
             isFavorited={isFavorited}
             canInteract={canInteract}
+            isLoggedIn={isLoggedIn}
             revalidatePath={ROUTES.forum.detail(post.id)}
           />
           <div className="flex flex-wrap gap-2">
@@ -104,6 +107,8 @@ export function ForumPostDetailView({
               targetType={FORUM_REPORT_TARGET_TYPES.post}
               targetId={post.id}
               isLoggedIn={isLoggedIn}
+              ownerId={post.userId}
+              currentUserId={currentUserId}
               revalidatePath={ROUTES.forum.detail(post.id)}
               triggerLabel="举报帖子"
               triggerVariant="outline"

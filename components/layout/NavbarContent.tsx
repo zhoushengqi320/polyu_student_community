@@ -38,7 +38,7 @@ export function NavbarContent({
                 key={item.key}
                 href={item.route}
                 prefetch={false}
-                className="rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground xl:px-3"
+                className="rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:font-semibold hover:text-accent-foreground hover:underline hover:underline-offset-4 xl:px-3"
               >
                 {item.label}
               </Link>

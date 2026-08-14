@@ -4,13 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { adminDeleteForumComment } from "@/lib/db/admin";
 import { softDeleteComment } from "@/lib/db/comments";
-import {
-  toggleGuestReaction,
-  toggleReaction,
-  type ReactionType,
-} from "@/lib/db/reactions";
+import { toggleReaction, type ReactionType } from "@/lib/db/reactions";
+import { getContentOwnerId } from "@/lib/db/moderation";
 import { createReport } from "@/lib/db/reports";
-import { getVisitorId } from "@/lib/guest/visitorId";
 import { reportSchema } from "@/lib/validations/reportSchema";
 import { assertCan, isAdmin, isBanned } from "@/lib/utils/permissions";
 import { type TargetType, type ReportReasonId } from "@/constants/reportReasons";
@@ -39,52 +35,26 @@ export async function toggleReactionAction(
   }
 
   const user = await getSessionUser();
-
-  if (user) {
-    if (isBanned(user)) {
-      return { error: "当前账号无法执行此操作" };
-    }
-
-    try {
-      assertCan(user, "interaction:like");
-    } catch {
-      return { error: "当前账号无法执行此操作" };
-    }
-
-    try {
-      const result = await toggleReaction({
-        userId: user.id,
-        targetType,
-        targetId,
-        type,
-      });
-
-      revalidatePath(revalidatePathValue);
-      return {
-        success: result === "added" ? "已添加" : "已取消",
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : "操作失败，请稍后重试",
-      };
-    }
+  if (!user) {
+    return { error: "请先登录后再点赞" };
   }
 
-  // 访客：仅允许对评论点赞；用 cookie visitor_id 去重
-  if (type !== "like" || targetType !== "comment") {
-    return { error: "请先登录" };
-  }
-
-  const visitorId = await getVisitorId();
-  if (!visitorId) {
-    return { error: "无法识别访客身份，请刷新页面后重试" };
+  if (isBanned(user)) {
+    return { error: "当前账号无法执行此操作" };
   }
 
   try {
-    const result = await toggleGuestReaction({
-      visitorId,
+    assertCan(user, "interaction:like");
+  } catch {
+    return { error: "当前账号无法执行此操作" };
+  }
+
+  try {
+    const result = await toggleReaction({
+      userId: user.id,
       targetType,
       targetId,
+      type,
     });
 
     revalidatePath(revalidatePathValue);
@@ -129,6 +99,14 @@ export async function createReportAction(
   }
 
   try {
+    const ownerId = await getContentOwnerId(
+      parsed.data.targetType as TargetType,
+      parsed.data.targetId,
+    );
+    if (ownerId && ownerId === user.id) {
+      return { error: "不能举报自己的内容" };
+    }
+
     const result = await createReport({
       reporterId: user.id,
       targetType: parsed.data.targetType as TargetType,

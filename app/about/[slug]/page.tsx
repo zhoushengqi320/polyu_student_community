@@ -45,7 +45,11 @@ export default async function LegalDocumentPage({ params }: LegalPageProps) {
   }
 
   return (
-    <ModulePageShell title={document.title} description={document.description}>
+    <ModulePageShell
+      title={document.title}
+      description={document.description}
+      back={{ href: "/", label: "首页" }}
+    >
       {document.slug === "community-rules" ? (
         <CommunityRulesView content={document.body} />
       ) : (

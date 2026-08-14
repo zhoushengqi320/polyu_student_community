@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { Bookmark, ThumbsUp } from "lucide-react";
 import { toggleReactionAction, type InteractionActionState } from "@/lib/interaction/actions";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 type ForumReactionButtonsProps = {
@@ -12,6 +14,7 @@ type ForumReactionButtonsProps = {
   isLiked: boolean;
   isFavorited: boolean;
   canInteract: boolean;
+  isLoggedIn?: boolean;
   revalidatePath: string;
 };
 
@@ -23,6 +26,7 @@ export function ForumReactionButtons({
   isLiked,
   isFavorited,
   canInteract,
+  isLoggedIn = false,
   revalidatePath,
 }: ForumReactionButtonsProps) {
   const [state, formAction, pending] = useActionState(toggleReactionAction, initialState);
@@ -30,10 +34,19 @@ export function ForumReactionButtons({
   if (!canInteract) {
     return (
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <ThumbsUp className="h-4 w-4" aria-hidden="true" />
-          {likeCount} 赞
-        </span>
+        {isLoggedIn ? (
+          <span className="inline-flex items-center gap-1">
+            <ThumbsUp className="h-4 w-4" aria-hidden="true" />
+            {likeCount} 赞
+          </span>
+        ) : (
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" asChild>
+            <Link href={ROUTES.login}>
+              <ThumbsUp className="h-4 w-4" aria-hidden="true" />
+              {likeCount} 赞
+            </Link>
+          </Button>
+        )}
       </div>
     );
   }

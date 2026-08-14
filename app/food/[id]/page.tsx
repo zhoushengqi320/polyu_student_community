@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FoodDetailView } from "@/components/food/FoodDetailView";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { Button } from "@/components/ui/button";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
@@ -43,11 +41,7 @@ export default async function FoodDetailPage({ params }: FoodDetailPageProps) {
     <ModulePageShell
       title={place.name}
       description="吃喝玩乐 · 地点详情"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.food.list}>返回列表</Link>
-        </Button>
-      }
+      back={{ href: ROUTES.food.list, label: "吃喝玩乐" }}
     >
       <FoodDetailView
         place={place}

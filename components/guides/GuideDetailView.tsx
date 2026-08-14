@@ -86,6 +86,8 @@ export function GuideDetailView({
               targetType={TARGET_TYPES.post}
               targetId={guide.id}
               isLoggedIn={isLoggedIn}
+              ownerId={guide.userId}
+              currentUserId={currentUserId}
               revalidatePath={revalidatePath}
               triggerLabel="举报攻略"
               triggerVariant="outline"

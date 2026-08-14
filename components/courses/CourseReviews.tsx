@@ -41,6 +41,7 @@ export function CourseReviews({
                 Boolean(currentUserId && currentUserId === review.userId) ||
                 isAdminUser
               }
+              currentUserId={currentUserId}
             />
           ))}
         </div>

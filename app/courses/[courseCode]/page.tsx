@@ -36,6 +36,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
     <ModulePageShell
       title={course.name}
       description={`${MODULE_REGISTRY.courses.label} · 课程详情`}
+      back={{ href: "/courses", label: MODULE_REGISTRY.courses.label }}
     >
       <CourseDetailView
         course={course}

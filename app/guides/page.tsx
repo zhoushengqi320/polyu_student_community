@@ -28,6 +28,7 @@ export default async function GuidesPage({ searchParams }: GuidesPageProps) {
     <ModulePageShell
       title={MODULE_REGISTRY.guides.label}
       description={MODULE_REGISTRY.guides.description}
+      back={{ href: "/", label: "首页" }}
     >
       <p className="mb-6 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-muted-foreground">
         本入口为开学季临时专题，非常驻模块；非开学季可在功能开关中关闭。

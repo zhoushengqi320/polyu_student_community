@@ -51,6 +51,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     <ModulePageShell
       title={profile.displayName ?? "PolyU 同学"}
       description="个人主页"
+      back={{ href: "/", label: "首页" }}
       actions={
         isOwnProfile && !profile.isFirstSetupCompleted ? (
           <Button variant="outline" asChild>

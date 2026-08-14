@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { FeedbackAdminReplyForm } from "@/components/feedback/FeedbackAdminReplyForm";
@@ -10,7 +9,6 @@ import { listCommentsByTarget } from "@/lib/db/comments";
 import { getFeedbackPostById } from "@/lib/db/feedback";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { isAdmin } from "@/lib/utils/permissions";
-import { Button } from "@/components/ui/button";
 
 type FeedbackDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -38,11 +36,7 @@ export default async function FeedbackDetailPage({
     <ModulePageShell
       title="反馈详情"
       description="用户反馈与管理员回复"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.feedback.list}>返回列表</Link>
-        </Button>
-      }
+      back={{ href: ROUTES.feedback.list, label: "问题反馈" }}
     >
       <div className="mx-auto max-w-3xl space-y-6">
         <FeedbackDetailView post={post} replies={adminReplies} />

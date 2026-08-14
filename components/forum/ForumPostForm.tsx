@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
-import {
-  FORUM_MAX_TOPICS,
-} from "@/constants/forum";
+import { FORUM_MAX_TOPICS } from "@/constants/forum";
 import { ROUTES } from "@/constants/routes";
 import {
   UnsavedChangesDialog,
   useUnsavedChangesGuard,
 } from "@/components/common/UnsavedChangesGuard";
+import { PendingOverlay } from "@/components/common/PendingOverlay";
 import {
   createForumPostAction,
   updateForumPostAction,
@@ -31,6 +30,7 @@ import { useCtrlSSave } from "@/hooks/useCtrlSSave";
 import { showSaveSuccessToast } from "@/lib/utils/saveSuccessToast";
 
 const initialState: ForumPostFormState = {};
+const DRAFT_STORAGE_KEY = "polyuhub:forum-post-draft:v1";
 
 type ForumPostFormProps = {
   mode?: "create" | "edit";
@@ -43,6 +43,37 @@ type ForumPostFormProps = {
     isAnonymous: boolean;
   };
 };
+
+type DraftPayload = {
+  title: string;
+  content: string;
+  topics: string[];
+  isAnonymous: boolean;
+};
+
+function readCreateDraft(): DraftPayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DraftPayload;
+    if (
+      typeof parsed?.title !== "string" ||
+      typeof parsed?.content !== "string" ||
+      !Array.isArray(parsed?.topics)
+    ) {
+      return null;
+    }
+    return {
+      title: parsed.title,
+      content: parsed.content,
+      topics: parsed.topics.filter((item): item is string => typeof item === "string"),
+      isAnonymous: Boolean(parsed.isAnonymous),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export function ForumPostForm({
   mode = "create",
@@ -60,10 +91,14 @@ export function ForumPostForm({
   const [content, setContent] = useState(initialValues?.content ?? "");
   const [topics, setTopics] = useState<string[]>(initialValues?.topics ?? []);
   const [topicInput, setTopicInput] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(initialValues?.isAnonymous ?? false);
+  const [isAnonymous, setIsAnonymous] = useState(
+    initialValues?.isAnonymous ?? false,
+  );
   const { markDirty, markClean, confirmLeave, dialogProps } = useUnsavedChangesGuard();
   const formRef = useRef<HTMLFormElement>(null);
   const canShowSaveToastRef = useRef(false);
+  const draftHydratedRef = useRef(false);
+  const [draftReady, setDraftReady] = useState(mode !== "create");
 
   const handleCtrlSSave = useCallback(() => {
     if (pending) return;
@@ -77,10 +112,49 @@ export function ForumPostForm({
   });
 
   useEffect(() => {
-    if (state.pendingReview) {
-      router.push(ROUTES.forum.list);
+    if (mode !== "create" || draftHydratedRef.current) return;
+    draftHydratedRef.current = true;
+    const draft = readCreateDraft();
+    if (draft) {
+      setTitle(draft.title);
+      setContent(draft.content);
+      setTopics(draft.topics);
+      setIsAnonymous(draft.isAnonymous);
     }
-  }, [state.pendingReview, router]);
+    setDraftReady(true);
+  }, [mode]);
+
+  useEffect(() => {
+    if (mode !== "create" || !draftReady) return;
+    // 提交中先清草稿：成功 redirect 后不会再写回；失败时下面的 state 仍在，会重新落盘
+    if (pending) {
+      try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+    const payload: DraftPayload = { title, content, topics, isAnonymous };
+    try {
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore quota / private mode
+    }
+  }, [mode, draftReady, pending, title, content, topics, isAnonymous]);
+
+  useEffect(() => {
+    if (state.pendingReview || (state.success && mode === "create")) {
+      try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      if (state.pendingReview) {
+        router.push(ROUTES.forum.list);
+      }
+    }
+  }, [state.pendingReview, state.success, mode, router]);
 
   useEffect(() => {
     if (pending) {
@@ -305,6 +379,10 @@ export function ForumPostForm({
           </form>
         </CardContent>
       </Card>
+      <PendingOverlay
+        active={pending}
+        label={mode === "edit" ? "保存中…" : "发布中…"}
+      />
       <UnsavedChangesDialog {...dialogProps} />
     </>
   );

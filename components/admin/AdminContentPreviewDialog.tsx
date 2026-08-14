@@ -88,6 +88,17 @@ export function AdminContentPreviewDialog({
                 <span className="text-destructive">已删除</span>
               ) : null}
             </div>
+            {preview.authorName || preview.ownerId ? (
+              <p className="text-sm">
+                <span className="text-muted-foreground">作者：</span>
+                {preview.authorName ?? "未知用户"}
+                {preview.ownerId ? (
+                  <span className="ml-2 font-mono text-xs text-muted-foreground">
+                    ({preview.ownerId.slice(0, 8)}…)
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
             {preview.title ? (
               <h3 className="text-base font-semibold">{preview.title}</h3>
             ) : null}

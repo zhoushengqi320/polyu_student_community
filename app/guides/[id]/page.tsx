@@ -13,7 +13,7 @@ import {
 import { getGuideById } from "@/lib/db/guides";
 import { countReactions, getReactionSummariesForTargets } from "@/lib/db/reactions";
 import { getVisitorId } from "@/lib/guest/visitorId";
-import { can, isAdmin, isBanned } from "@/lib/utils/permissions";
+import { can, isAdmin } from "@/lib/utils/permissions";
 
 type GuideDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -42,7 +42,7 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
   const totalCommentCount = countCommentsInThread(commentThread);
   const canComment = can(user, "interaction:comment");
   const canFavorite = can(user, "interaction:like");
-  const canLikeComments = !isBanned(user);
+  const canLikeComments = can(user, "interaction:like");
   const commentIds = collectCommentIdsFromThread(commentThread);
   const visitorId = user ? null : await getVisitorId();
   const commentReactionMap = Object.fromEntries(
@@ -61,6 +61,7 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
     <ModulePageShell
       title={guide.title}
       description={`${MODULE_REGISTRY.guides.label} · 详情页`}
+      back={{ href: ROUTES.guides.list, label: "入学攻略" }}
     >
       <GuideDetailView
         guide={guide}

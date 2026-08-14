@@ -60,6 +60,8 @@ export type AdminContentPreview = {
   module: string | null;
   deletedAt: string | null;
   status: string | null;
+  ownerId: string | null;
+  authorName: string | null;
 };
 
 export async function getAdminContentPreviewAction(input: {
@@ -82,16 +84,51 @@ export async function getAdminContentPreviewAction(input: {
       return { error: "内容不存在或无法预览" };
     }
 
+    let authorName: string | null = null;
+    if (snapshot.ownerId) {
+      try {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const admin = createAdminClient();
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("username, display_name, approved_nickname, nickname")
+          .eq("id", snapshot.ownerId)
+          .maybeSingle();
+        if (profile) {
+          authorName =
+            (profile.approved_nickname as string | null) ||
+            (profile.display_name as string | null) ||
+            (profile.nickname as string | null) ||
+            (profile.username as string | null) ||
+            null;
+        }
+      } catch {
+        authorName = null;
+      }
+    }
+
+    const title =
+      snapshot.title ??
+      (parsed.data.targetType === "comment"
+        ? `评论：${snapshot.excerpt ?? "（无摘要）"}`
+        : parsed.data.targetType === "course_review"
+          ? `课程评价：${snapshot.excerpt ?? "（无摘要）"}`
+          : parsed.data.targetType === "food_recommendation"
+            ? `美食推荐：${snapshot.excerpt ?? "（无摘要）"}`
+            : null);
+
     return {
       data: {
         targetType: parsed.data.targetType,
         targetId: parsed.data.targetId,
-        title: snapshot.title,
+        title,
         body: snapshot.body,
         excerpt: snapshot.excerpt,
         module: snapshot.module,
         deletedAt: snapshot.deletedAt,
         status: snapshot.status,
+        ownerId: snapshot.ownerId,
+        authorName,
       },
     };
   } catch (error) {

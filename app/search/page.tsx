@@ -31,6 +31,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <ModulePageShell
       title="全站搜索"
       description="搜索课程、学习指南、生活指南、讨论帖、吃喝玩乐与入学攻略"
+      back={{ href: "/", label: "首页" }}
     >
       <SearchPageClient result={result} />
     </ModulePageShell>

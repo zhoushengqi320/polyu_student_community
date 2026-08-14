@@ -42,6 +42,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
     <ModulePageShell
       title="自由讨论区"
       description={FORUM_DESCRIPTION}
+      back={{ href: ROUTES.home, label: "首页" }}
       actions={
         canCreate ? (
           <Button asChild>

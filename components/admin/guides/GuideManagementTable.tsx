@@ -14,7 +14,6 @@ import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils/formatDate";
-import { getGuideCategoryLabel } from "@/constants/guides";
 import { type AdminGuideDetail } from "@/types/guide";
 
 type GuideManagementTableProps = {
@@ -78,11 +77,10 @@ export function GuideManagementTable({
       </div>
 
       <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full min-w-[1180px] text-left text-xs">
+        <table className="w-full min-w-[1080px] text-left text-xs">
           <thead className="border-b bg-muted/40">
             <tr className="whitespace-nowrap">
               <th className="px-3 py-2.5 font-medium">标题</th>
-              <th className="px-3 py-2.5 font-medium">分类</th>
               <th className="px-3 py-2.5 font-medium">状态</th>
               <th className="px-3 py-2.5 font-medium">作者</th>
               <th className="px-3 py-2.5 font-medium">创建时间</th>
@@ -113,9 +111,6 @@ export function GuideManagementTable({
                     >
                       {guide.title}
                     </button>
-                  </td>
-                  <td className="max-w-[110px] truncate px-3 py-2 text-muted-foreground">
-                    {getGuideCategoryLabel(guide.meta?.category ?? guide.categoryId)}
                   </td>
                   <td className="px-3 py-2">
                     <TagBadge

@@ -106,6 +106,8 @@ function CommentItem({
             targetType={FORUM_REPORT_TARGET_TYPES.comment}
             targetId={comment.id}
             isLoggedIn={isLoggedIn}
+            ownerId={comment.userId}
+            currentUserId={currentUserId}
             revalidatePath={revalidatePath}
             triggerLabel="举报"
             triggerVariant="ghost"
@@ -122,6 +124,7 @@ function CommentItem({
           likeCount={reaction.count}
           isLiked={reaction.isLiked}
           canInteract={canLike}
+          isLoggedIn={isLoggedIn}
           revalidatePath={revalidatePath}
         />
         <CommentReplyTrigger

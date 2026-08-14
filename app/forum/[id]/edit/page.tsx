@@ -1,12 +1,11 @@
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { ForumPostForm } from "@/components/forum/ForumPostForm";
+import { notFound } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { Button } from "@/components/ui/button";
+import { ForumPostForm } from "@/components/forum/ForumPostForm";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
 import { getForumPostById, getForumTopics } from "@/lib/db/forum";
 import { canManageOwnContent } from "@/lib/utils/permissions";
+import { redirect } from "next/navigation";
 
 type ForumPostEditPageProps = {
   params: Promise<{ id: string }>;
@@ -38,11 +37,7 @@ export default async function ForumPostEditPage({
     <ModulePageShell
       title="编辑帖子"
       description="自由讨论区 · 修改帖子内容"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.forum.detail(id)}>返回帖子</Link>
-        </Button>
-      }
+      back={{ href: ROUTES.forum.detail(id), label: "帖子详情" }}
     >
       <ForumPostForm
         mode="edit"

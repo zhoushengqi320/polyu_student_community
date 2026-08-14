@@ -140,6 +140,8 @@ export function FoodDetailView({
                       targetType={TARGET_TYPES.food_recommendation}
                       targetId={item.id}
                       isLoggedIn={isLoggedIn}
+                      ownerId={item.userId}
+                      currentUserId={currentUserId}
                       revalidatePath={detailPath}
                       triggerSize="sm"
                     />

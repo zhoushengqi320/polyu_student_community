@@ -37,6 +37,7 @@ export default async function FoodPage({ searchParams }: FoodPageProps) {
     <ModulePageShell
       title={MODULE_REGISTRY.food.label}
       description={MODULE_REGISTRY.food.description}
+      back={{ href: "/", label: "首页" }}
       actions={
         <Button asChild variant="outline">
           <Link href={canSubmit ? ROUTES.food.new : ROUTES.login}>

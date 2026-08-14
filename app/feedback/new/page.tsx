@@ -1,11 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { FeedbackPostForm } from "@/components/feedback/FeedbackPostForm";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
 import { canCreateInModule } from "@/lib/utils/permissions";
-import { Button } from "@/components/ui/button";
 
 export default async function NewFeedbackPage() {
   const user = await getSessionUser();
@@ -19,11 +17,7 @@ export default async function NewFeedbackPage() {
       <ModulePageShell
         title="提交反馈"
         description="当前账号无法提交反馈"
-        actions={
-          <Button variant="outline" asChild>
-            <Link href={ROUTES.feedback.list}>返回列表</Link>
-          </Button>
-        }
+        back={{ href: ROUTES.feedback.list, label: "问题反馈" }}
       >
         <p className="text-sm text-muted-foreground">
           账号可能已被限制，请联系管理员。
@@ -33,7 +27,11 @@ export default async function NewFeedbackPage() {
   }
 
   return (
-    <ModulePageShell title="提交反馈" description="描述你遇到的问题或建议">
+    <ModulePageShell
+      title="提交反馈"
+      description="描述你遇到的问题或建议"
+      back={{ href: ROUTES.feedback.list, label: "问题反馈" }}
+    >
       <FeedbackPostForm />
     </ModulePageShell>
   );

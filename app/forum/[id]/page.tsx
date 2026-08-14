@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ForumPostCard } from "@/components/forum/ForumPostCard";
 import { ForumPostDetailView } from "@/components/forum/ForumPostDetailView";
@@ -19,9 +18,8 @@ import {
 import { getReactionSummariesForTargets, hasReaction } from "@/lib/db/reactions";
 import { ROUTES } from "@/constants/routes";
 import { TARGET_TYPES } from "@/constants/reportReasons";
-import { can, canManageOwnContent, isAdmin, isBanned } from "@/lib/utils/permissions";
+import { can, canManageOwnContent, isAdmin } from "@/lib/utils/permissions";
 import { getVisitorId } from "@/lib/guest/visitorId";
-import { Button } from "@/components/ui/button";
 
 type ForumDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -42,8 +40,7 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
 
   const canComment = can(user, "interaction:comment");
   const canInteract = can(user, "interaction:like");
-  // 访客也可点赞评论；封禁用户不可点赞
-  const canLikeComments = !isBanned(user);
+  const canLikeComments = canInteract;
 
   const [isLiked, isFavorited, relatedPosts, visitorId] = await Promise.all([
     user
@@ -85,11 +82,7 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
     <ModulePageShell
       title={post.title}
       description="自由讨论区 · 帖子详情"
-      actions={
-        <Button variant="outline" asChild>
-          <Link href={ROUTES.forum.list}>返回讨论区</Link>
-        </Button>
-      }
+      back={{ href: ROUTES.forum.list, label: "自由讨论区" }}
     >
       <div className="mx-auto max-w-3xl space-y-8">
         <ForumPostViewTracker postId={post.id} />
@@ -101,6 +94,7 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
           canInteract={canInteract}
           canManage={canManageOwnContent(user, post.userId)}
           isLoggedIn={Boolean(user)}
+          currentUserId={user?.id ?? null}
         />
 
         {filteredRelated.length > 0 ? (

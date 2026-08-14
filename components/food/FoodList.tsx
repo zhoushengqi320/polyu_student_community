@@ -60,11 +60,6 @@ export function FoodList({
             筛选
           </Button>
         </form>
-        <Button asChild>
-          <Link href={canSubmit ? ROUTES.food.new : ROUTES.login}>
-            {canSubmit ? "提交新地点" : "登录后提交"}
-          </Link>
-        </Button>
       </div>
 
       <div className="flex flex-wrap gap-2">

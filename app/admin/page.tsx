@@ -151,6 +151,7 @@ export default async function AdminPage({
     <ModulePageShell
       title="管理后台"
       description="举报处理、内容管理与用户管理（仅管理员可见）"
+      back={{ href: "/", label: "首页" }}
     >
       {!isDatabaseConfigured ? (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Flag } from "lucide-react";
 import {
@@ -20,6 +21,7 @@ import {
   type TargetType,
 } from "@/constants/reportReasons";
 import { CommunityRulesDialog } from "@/components/legal/CommunityRulesDialog";
+import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { ROUTES } from "@/constants/routes";
 import {
   createReportAction,
@@ -30,6 +32,9 @@ type ReportDialogProps = {
   targetType: TargetType;
   targetId: string;
   isLoggedIn: boolean;
+  /** 内容作者 id：与当前用户相同时隐藏举报 */
+  ownerId?: string | null;
+  currentUserId?: string | null;
   revalidatePath?: string;
   triggerLabel?: string;
   triggerVariant?: "default" | "outline" | "ghost" | "destructive";
@@ -42,13 +47,20 @@ export function ReportDialog({
   targetType,
   targetId,
   isLoggedIn,
+  ownerId,
+  currentUserId,
   revalidatePath,
   triggerLabel = "举报",
   triggerVariant = "ghost",
   triggerSize = "sm",
 }: ReportDialogProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [state, formAction, pending] = useActionState(createReportAction, initialState);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (state.success) {
@@ -56,6 +68,10 @@ export function ReportDialog({
       return () => clearTimeout(timer);
     }
   }, [state.success]);
+
+  if (ownerId && currentUserId && ownerId === currentUserId) {
+    return null;
+  }
 
   const targetLabelMap: Record<TargetType, string> = {
     [TARGET_TYPES.post]: "帖子",
@@ -160,6 +176,9 @@ export function ReportDialog({
           </form>
         )}
       </DialogContent>
+      {mounted && pending
+        ? createPortal(<PendingOverlay active label="提交中…" />, document.body)
+        : null}
     </Dialog>
   );
 }

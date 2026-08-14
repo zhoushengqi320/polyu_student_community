@@ -13,6 +13,7 @@ type CommentLikeButtonProps = {
   likeCount: number;
   isLiked: boolean;
   canInteract: boolean;
+  isLoggedIn?: boolean;
   revalidatePath: string;
 };
 
@@ -23,6 +24,7 @@ export function CommentLikeButton({
   likeCount,
   isLiked,
   canInteract,
+  isLoggedIn = false,
   revalidatePath,
 }: CommentLikeButtonProps) {
   const [state, formAction, pending] = useActionState(
@@ -31,6 +33,16 @@ export function CommentLikeButton({
   );
 
   if (!canInteract) {
+    if (!isLoggedIn) {
+      return (
+        <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs" asChild>
+          <Link href={ROUTES.login}>
+            <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />
+            {likeCount > 0 ? likeCount : "赞"}
+          </Link>
+        </Button>
+      );
+    }
     return (
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <ThumbsUp className="h-3.5 w-3.5" aria-hidden="true" />

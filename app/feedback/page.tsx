@@ -25,6 +25,7 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
     <ModulePageShell
       title="问题反馈"
       description={FEEDBACK_DESCRIPTION}
+      back={{ href: ROUTES.home, label: "首页" }}
       actions={
         canCreate ? (
           <Button asChild>

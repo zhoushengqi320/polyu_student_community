@@ -27,6 +27,7 @@ type CourseReviewCardProps = {
   courseCode: string;
   isLoggedIn: boolean;
   canManage?: boolean;
+  currentUserId?: string | null;
 };
 
 function labelFromOptions(
@@ -42,6 +43,7 @@ export function CourseReviewCard({
   courseCode,
   isLoggedIn,
   canManage = false,
+  currentUserId,
 }: CourseReviewCardProps) {
   const authorName = review.author.displayName ?? review.author.username;
   const examTypeLabels = labelsFromMultiOptions(review.examType, COURSE_EXAM_TYPES);
@@ -76,6 +78,7 @@ export function CourseReviewCard({
               usefulCount={review.usefulCount}
               isMarkedUseful={review.isMarkedUseful}
               revalidatePath={ROUTES.courses.detail(courseCode)}
+              isLoggedIn={isLoggedIn}
             />
             {canManage ? (
               <DeleteContentButton
@@ -92,6 +95,8 @@ export function CourseReviewCard({
               targetType={TARGET_TYPES.course_review}
               targetId={review.id}
               isLoggedIn={isLoggedIn}
+              ownerId={review.userId}
+              currentUserId={currentUserId}
               revalidatePath={ROUTES.courses.detail(courseCode)}
               triggerSize="sm"
             />

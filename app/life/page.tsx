@@ -11,6 +11,7 @@ export default async function LifePage() {
     <ModulePageShell
       title={MODULE_REGISTRY.life.label}
       description={MODULE_REGISTRY.life.description}
+      back={{ href: "/", label: "首页" }}
     >
       <ContentGuideList
         items={result.data}

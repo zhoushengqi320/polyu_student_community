@@ -77,6 +77,7 @@ export function CourseDetailView({
                 courseId={course.id}
                 isFavorited={isFavorited}
                 revalidatePath={ROUTES.courses.detail(course.code)}
+                isLoggedIn={isLoggedIn}
               />
               <Button asChild>
                 <Link

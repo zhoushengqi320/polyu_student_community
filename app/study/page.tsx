@@ -11,6 +11,7 @@ export default async function StudyPage() {
     <ModulePageShell
       title={MODULE_REGISTRY.study.label}
       description={MODULE_REGISTRY.study.description}
+      back={{ href: "/", label: "首页" }}
     >
       <ContentGuideList
         items={result.data}

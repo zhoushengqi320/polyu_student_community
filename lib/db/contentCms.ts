@@ -30,7 +30,7 @@ type ContentArticleInput = {
   title: string;
   excerpt?: string | null;
   content: string;
-  category: string;
+  category?: string | null;
 };
 
 type PostRow = {
@@ -107,7 +107,7 @@ export async function createContentArticle(
     .from("posts")
     .insert({
       module,
-      category_id: input.category,
+      category_id: input.category?.trim() || null,
       user_id: input.userId,
       title: input.title,
       content: input.content,
@@ -129,7 +129,7 @@ export async function createContentArticle(
     action: "create_content_article",
     targetType: TARGET_TYPES.post,
     targetId: postId,
-    metadata: { module, title: input.title, category: input.category },
+    metadata: { module, title: input.title },
   });
 
   return postId;
@@ -166,7 +166,7 @@ export async function updateContentArticle(
       title: input.title,
       content: input.content,
       excerpt: input.excerpt?.trim() || null,
-      category_id: input.category,
+      // 分类已从前台/后台表单移除：更新时不改动既有 category_id
     })
     .eq("id", input.id)
     .eq("module", module);
@@ -180,7 +180,7 @@ export async function updateContentArticle(
     action: "update_content_article",
     targetType: TARGET_TYPES.post,
     targetId: input.id,
-    metadata: { module, title: input.title, category: input.category },
+    metadata: { module, title: input.title },
   });
 }
 

@@ -18,6 +18,7 @@ import {
   UnsavedChangesDialog,
   useUnsavedChangesGuard,
 } from "@/components/common/UnsavedChangesGuard";
+import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { StarRatingInput } from "@/components/courses/StarRatingInput";
 import {
   createCourseReviewAction,
@@ -590,6 +591,7 @@ export function CourseReviewForm({
           </form>
         </CardContent>
       </Card>
+      <PendingOverlay active={pending} label="发布中…" />
       <UnsavedChangesDialog {...dialogProps} />
     </>
   );

@@ -1,9 +1,7 @@
 import { MODULE_REGISTRY } from "@/constants/modules";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CourseReviewForm } from "@/components/courses/CourseReviewForm";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
 import { getCourseByCode } from "@/lib/db/courses";
@@ -33,11 +31,7 @@ export default async function CourseReviewPage({ params }: CourseReviewPageProps
       <ModulePageShell
         title="撰写课程评价"
         description={`${course.code} · ${MODULE_REGISTRY.courses.label}`}
-        actions={
-          <Button variant="outline" asChild>
-            <Link href={ROUTES.courses.detail(course.code)}>返回课程详情</Link>
-          </Button>
-        }
+        back={{ href: ROUTES.courses.detail(courseCode), label: "课程详情" }}
       >
         <div className="mx-auto max-w-md rounded-lg border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
           当前账号无法发布课程评价。请使用理大邮箱登录，并确保账号未被限制。
@@ -50,6 +44,7 @@ export default async function CourseReviewPage({ params }: CourseReviewPageProps
     <ModulePageShell
       title="撰写课程评价"
       description={`为 ${course.code.toUpperCase()} 撰写评价 · ${MODULE_REGISTRY.courses.label}`}
+      back={{ href: ROUTES.courses.detail(courseCode), label: "课程详情" }}
     >
       <CourseReviewForm courseCode={course.code} courseName={course.name} />
     </ModulePageShell>

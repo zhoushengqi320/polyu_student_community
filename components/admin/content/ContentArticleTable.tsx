@@ -66,11 +66,10 @@ export function ContentArticleTable({
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[1100px] text-left text-xs">
+          <table className="w-full min-w-[980px] text-left text-xs">
             <thead className="border-b bg-muted/40">
               <tr className="whitespace-nowrap">
                 <th className="px-3 py-2.5 font-medium">标题</th>
-                <th className="px-3 py-2.5 font-medium">分类</th>
                 <th className="px-3 py-2.5 font-medium">状态</th>
                 <th className="px-3 py-2.5 font-medium">作者</th>
                 <th className="px-3 py-2.5 font-medium">更新时间</th>
@@ -92,9 +91,6 @@ export function ContentArticleTable({
                   >
                     <td className="max-w-[220px] truncate px-3 py-2 font-medium">
                       {article.title}
-                    </td>
-                    <td className="max-w-[120px] truncate px-3 py-2 text-muted-foreground">
-                      {article.categoryId ?? "—"}
                     </td>
                     <td className="px-3 py-2">
                       <span
