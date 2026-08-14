@@ -53,7 +53,7 @@ export function CourseDetailView({
             </span>
             <span>{getDepartmentCode(course.department)}</span>
             {course.faculty ? <span>{course.faculty}</span> : null}
-            {course.credits ? <span>{course.credits} credits</span> : null}
+            {course.credits ? <span>{course.credits} 学分</span> : null}
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
@@ -97,17 +97,17 @@ export function CourseDetailView({
         tabs={[
           {
             id: "overview",
-            label: "Overview",
+            label: "课程概览",
             content: <CourseOverview course={course} />,
           },
           {
             id: "assessment",
-            label: "Assessment",
+            label: "考核方式",
             content: <CourseAssessment course={course} />,
           },
           {
             id: "reviews",
-            label: "Reviews",
+            label: "学生评价",
             content: (
               <CourseReviews
                 course={course}
@@ -119,7 +119,7 @@ export function CourseDetailView({
           },
           {
             id: "pdf",
-            label: "PDF",
+            label: "官方 PDF",
             content: <CoursePdfPanel course={course} />,
           },
         ]}

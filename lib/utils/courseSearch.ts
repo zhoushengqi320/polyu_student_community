@@ -130,6 +130,11 @@ export function buildCourseSearchOrFilter(query: string): string {
 
   const prefix = `${q}*`;
   const contains = `*${q}*`;
+  // 短课程代码类关键词跳过 description 全文扫描（否则会极慢）
+  if (/^[A-Z0-9]+$/i.test(q) && q.length <= 10) {
+    return `code.ilike.${prefix},name.ilike.${contains}`;
+  }
+
   return `code.ilike.${prefix},name.ilike.${contains},description.ilike.${contains}`;
 }
 

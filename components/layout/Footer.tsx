@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import { HOME_DISCLAIMER } from "@/constants/home";
 import { LEGAL_NAV_ITEMS } from "@/constants/legal";
 import { ROUTES } from "@/constants/routes";
+import { SITE_BYLINE } from "@/constants/site";
 
 const FOOTER_LINKS = [
-  { label: "PolyUHub", href: ROUTES.home },
   { label: "课程", href: ROUTES.courses.list },
   { label: "学习", href: ROUTES.study.list },
   { label: "生活", href: ROUTES.life.list },
@@ -17,6 +18,12 @@ export function Footer() {
     <footer className="site-footer border-t bg-muted/30">
       <div className="container flex flex-col gap-6 py-8">
         <div>
+          <div className="mb-3 flex flex-col gap-1">
+            <SiteLogo className="h-12 sm:h-14" />
+            <p className="text-xs tracking-[0.08em] text-muted-foreground">
+              {SITE_BYLINE}
+            </p>
+          </div>
           <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm text-muted-foreground">
             {FOOTER_LINKS.map((item, index) => (
               <span key={item.href} className="inline-flex items-center">

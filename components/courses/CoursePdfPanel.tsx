@@ -26,7 +26,7 @@ export function CoursePdfPanel({ course }: CoursePdfPanelProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>PDF</CardTitle>
+        <CardTitle>官方 PDF</CardTitle>
         <CardDescription>保留官方原始课程资料入口，便于核对信息来源</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

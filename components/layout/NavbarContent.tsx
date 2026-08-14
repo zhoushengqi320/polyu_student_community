@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { AuthButtons, UserMenu } from "@/components/auth/UserMenu";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { isFeatureEnabled } from "@/constants/features";
 import { AUTH_NAV_ITEMS, NAV_ITEMS, ROUTES } from "@/constants/routes";
-import { SITE_LOGO, SITE_NAME } from "@/constants/site";
-import { can } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
+import { can } from "@/lib/utils/permissions";
 import { type SessionUser } from "@/types/user";
 
 type NavbarContentProps = {
@@ -22,15 +22,10 @@ export function NavbarContent({
   unreadNotificationCount = 0,
 }: NavbarContentProps) {
   return (
-    <header className="site-header sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="site-header-inner flex h-16 items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4 lg:gap-6">
-          <Link href={ROUTES.home} className="flex shrink-0 items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-              {SITE_LOGO}
-            </span>
-            <span className="hidden font-semibold sm:inline">{SITE_NAME}</span>
-          </Link>
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="container flex h-16 items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
+          <SiteLogo priority />
 
           <nav className="hidden items-center gap-0.5 lg:flex">
             {NAV_ITEMS.map((item) => (
@@ -46,7 +41,7 @@ export function NavbarContent({
           </nav>
         </div>
 
-        {/* 从右至左：反馈 → 头像 → 通知 → 管理后台（admin） */}
+        {/* 桌面：管理后台 → 通知 → 头像；移动：通知 → 菜单 */}
         <div className="flex h-full shrink-0 items-center gap-2">
           <div className="hidden h-full items-center gap-2 lg:flex">
             {user ? (
@@ -107,7 +102,20 @@ export function MobileNavLinks({ user }: { user: SessionUser | null }) {
       ))}
       <div className="my-2 border-t" />
       {user ? (
-        <UserMenu user={user} variant="mobile" />
+        <>
+          {can(user, "admin:access") ? (
+            <Button variant="ghost" className="justify-start" asChild>
+              <Link
+                href={ROUTES.admin}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                管理后台
+              </Link>
+            </Button>
+          ) : null}
+          <UserMenu user={user} variant="mobile" />
+        </>
       ) : (
         AUTH_NAV_ITEMS.map((item) => (
           <Button key={item.href} variant="ghost" className="justify-start" asChild>

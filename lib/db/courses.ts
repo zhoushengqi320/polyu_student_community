@@ -24,8 +24,20 @@ import {
 } from "@/lib/utils/courseSearch";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { normalizeCourseCodeParam } from "@/lib/courses/courseCode";
 
+/** 相关度排序最多扫这么多条轻量行（仅 id/code/name） */
 const COURSE_SEARCH_FETCH_CAP = 5000;
+
+/** 列表卡片所需字段，避免 select * 拉回大段 PDF/考核正文 */
+const COURSE_LIST_COLUMNS =
+  "id, code, name, department, faculty, level, credits, description, school_id, created_at, updated_at, review_count, overall_rating, difficulty_rating, top_tags";
+
+type CourseSearchRankRow = {
+  id: string;
+  code: string;
+  name: string;
+};
 
 export async function listCourses(
   filters: CourseFilters = {},
@@ -46,9 +58,82 @@ export async function listCourses(
   }
 
   const supabase = await createClient();
+
+  if (searchTerm) {
+    let rankQuery = supabase
+      .from("courses")
+      .select("id, code, name", { count: "exact" })
+      .eq("school_id", DEFAULT_SCHOOL_ID);
+
+    if (department) {
+      rankQuery = rankQuery.eq("department", department);
+    }
+    if (faculty) {
+      rankQuery = rankQuery.eq("faculty", faculty);
+    }
+
+    const orFilter = buildCourseSearchOrFilter(searchTerm);
+    if (orFilter) {
+      rankQuery = rankQuery.or(orFilter);
+    }
+
+    const { data: rankRows, error: rankError, count } = await rankQuery.limit(
+      COURSE_SEARCH_FETCH_CAP,
+    );
+
+    if (rankError) {
+      console.error("Failed to list courses:", rankError);
+      return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+    }
+
+    const ranked = sortCoursesBySearchRelevance(
+      (rankRows ?? []) as CourseSearchRankRow[],
+      searchTerm,
+    );
+    const total = Math.min(count ?? ranked.length, COURSE_SEARCH_FETCH_CAP);
+    const pageSlice = ranked.slice(pagination.from, pagination.to + 1);
+    const pageIds = pageSlice.map((row) => row.id);
+
+    if (pageIds.length === 0) {
+      return toPaginatedResult(
+        [],
+        total,
+        pagination.page,
+        pagination.pageSize,
+      );
+    }
+
+    const { data, error } = await supabase
+      .from("courses")
+      .select(COURSE_LIST_COLUMNS)
+      .in("id", pageIds);
+
+    if (error) {
+      console.error("Failed to list courses:", error);
+      return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
+    }
+
+    const byId = new Map(
+      ((data ?? []) as CourseWithStatsRow[]).map((row) => [
+        row.id,
+        mapCourseWithStats(row),
+      ]),
+    );
+    const paginated = pageIds
+      .map((id) => byId.get(id))
+      .filter((course): course is CourseWithStats => Boolean(course));
+
+    return toPaginatedResult(
+      paginated,
+      total,
+      pagination.page,
+      pagination.pageSize,
+    );
+  }
+
   let query = supabase
     .from("courses")
-    .select("*", { count: "exact" })
+    .select(COURSE_LIST_COLUMNS, { count: "exact" })
     .eq("school_id", DEFAULT_SCHOOL_ID);
 
   if (department) {
@@ -57,35 +142,6 @@ export async function listCourses(
 
   if (faculty) {
     query = query.eq("faculty", faculty);
-  }
-
-  if (searchTerm) {
-    const orFilter = buildCourseSearchOrFilter(searchTerm);
-    if (orFilter) {
-      query = query.or(orFilter);
-    }
-
-    query = query.limit(COURSE_SEARCH_FETCH_CAP);
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error("Failed to list courses:", error);
-      return toPaginatedResult([], 0, pagination.page, pagination.pageSize);
-    }
-
-    const ranked = sortCoursesBySearchRelevance(
-      ((data ?? []) as CourseWithStatsRow[]).map(mapCourseWithStats),
-      searchTerm,
-    );
-    const total = Math.min(count ?? ranked.length, COURSE_SEARCH_FETCH_CAP);
-    const paginated = ranked.slice(pagination.from, pagination.to + 1);
-
-    return toPaginatedResult(
-      paginated,
-      total,
-      pagination.page,
-      pagination.pageSize,
-    );
   }
 
   switch (sort) {
@@ -134,12 +190,17 @@ export async function getCourseByCode(courseCode: string) {
     return null;
   }
 
+  const normalized = normalizeCourseCodeParam(courseCode);
+  if (!normalized) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
     .select("*")
     .eq("school_id", DEFAULT_SCHOOL_ID)
-    .ilike("code", courseCode.trim())
+    .eq("code", normalized)
     .maybeSingle();
 
   if (error || !data) {
@@ -157,12 +218,17 @@ export async function getCourseDetailByCode(
     return null;
   }
 
+  const normalized = normalizeCourseCodeParam(courseCode);
+  if (!normalized) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
     .select("*")
     .eq("school_id", DEFAULT_SCHOOL_ID)
-    .ilike("code", courseCode.trim())
+    .eq("code", normalized)
     .maybeSingle();
 
   if (error || !data) {
