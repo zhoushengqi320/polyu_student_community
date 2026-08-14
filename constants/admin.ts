@@ -3,11 +3,10 @@ import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 export const ADMIN_TABS = [
   { id: "overview", label: "概览" },
   { id: "reports", label: "举报中心" },
+  { id: "archives", label: "封存申诉" },
   { id: "profile-reviews", label: "资料审核" },
-  { id: "forum-posts", label: "帖子管理" },
-  { id: "forum-comments", label: "评论管理" },
+  { id: "content", label: "社区内容" },
   { id: "courses", label: "课程目录" },
-  { id: "course-reviews", label: "课程评价" },
   { id: "guides", label: "内容管理" },
   { id: "users", label: "用户管理" },
   { id: "actions", label: "操作记录" },
@@ -15,7 +14,30 @@ export const ADMIN_TABS = [
 
 export type AdminTabId = (typeof ADMIN_TABS)[number]["id"];
 
-export const ADMIN_TAB_IDS = new Set<string>(ADMIN_TABS.map((tab) => tab.id));
+/** 旧 tab 查询参数兼容映射 */
+export const LEGACY_ADMIN_TAB_MAP: Record<string, AdminTabId> = {
+  "forum-posts": "content",
+  "forum-comments": "content",
+  "course-reviews": "content",
+};
+
+export const ADMIN_TAB_IDS = new Set<string>([
+  ...ADMIN_TABS.map((tab) => tab.id),
+  ...Object.keys(LEGACY_ADMIN_TAB_MAP),
+]);
+
+export function resolveAdminTab(tab?: string | null): AdminTabId | undefined {
+  if (!tab) {
+    return undefined;
+  }
+  if (tab in LEGACY_ADMIN_TAB_MAP) {
+    return LEGACY_ADMIN_TAB_MAP[tab];
+  }
+  if (ADMIN_TABS.some((item) => item.id === tab)) {
+    return tab as AdminTabId;
+  }
+  return undefined;
+}
 
 export const REPORT_STATUS_LABELS: Record<
   (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS],
@@ -74,6 +96,13 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   update_report_status_reviewed: "标记举报已审核",
   resolve_report: "处理举报",
   dismiss_report: "驳回举报",
+  confirm_report_violation: "确认违规",
+  auto_hide_content_reports: "多举报自动隐藏",
+  archive_appeal_restore: "封存申诉恢复",
+  archive_appeal_submitted: "作者提交封存申诉",
+  archive_appeal_approved: "通过封存申诉",
+  archive_appeal_rejected: "驳回封存申诉",
+  archive_expired_permanent: "封存逾期永久删除",
 };
 
 export function getAdminActionLabel(action: string): string {

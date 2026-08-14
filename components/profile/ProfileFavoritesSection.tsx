@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { Bookmark } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { getDepartmentCode } from "@/constants/courseOptions";
 import { FOOD_AREAS } from "@/constants/categories";
 import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
@@ -30,7 +38,9 @@ function FavoriteCourseRow({ item }: { item: FavoriteCourseItem }) {
           <p className="font-medium">
             {item.course.code} · {item.course.name}
           </p>
-          <p className="text-xs text-muted-foreground">{item.course.department}</p>
+          <p className="text-xs text-muted-foreground">
+            {getDepartmentCode(item.course.department)}
+          </p>
         </div>
         <p className="text-xs text-muted-foreground">
           {formatRelativeTime(item.favoritedAt)}
@@ -104,92 +114,93 @@ export function ProfileFavoritesSection({
     favorites.forumPosts.length === 0;
 
   return (
-    <section id="favorites" className="max-w-2xl space-y-4 scroll-mt-24">
-      <div>
-        <h2 className="text-lg font-semibold">我的收藏</h2>
-        <p className="text-sm text-muted-foreground">
+    <Card id="favorites" className="scroll-mt-24">
+      <CardHeader>
+        <CardTitle>我的收藏</CardTitle>
+        <CardDescription>
           仅自己可见。可从自由讨论区、课程评价、吃喝玩乐页面添加收藏。
-        </p>
-      </div>
-
-      {isEmpty ? (
-        <EmptyState
-          icon={Bookmark}
-          title="还没有收藏"
-          description="去自由讨论区、课程评价或吃喝玩乐逛逛，点收藏后会显示在这里。"
-          action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <Link
-                href={ROUTES.forum.list}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                自由讨论区
-              </Link>
-              <span className="text-sm text-muted-foreground">·</span>
-              <Link
-                href={ROUTES.courses.list}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                浏览课程
-              </Link>
-              <span className="text-sm text-muted-foreground">·</span>
-              <Link
-                href={ROUTES.food.list}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                吃喝玩乐
-              </Link>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isEmpty ? (
+          <EmptyState
+            icon={Bookmark}
+            title="还没有收藏"
+            description="去自由讨论区、课程评价或吃喝玩乐逛逛，点收藏后会显示在这里。"
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link
+                  href={ROUTES.forum.list}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  自由讨论区
+                </Link>
+                <span className="text-sm text-muted-foreground">·</span>
+                <Link
+                  href={ROUTES.courses.list}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  浏览课程
+                </Link>
+                <span className="text-sm text-muted-foreground">·</span>
+                <Link
+                  href={ROUTES.food.list}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  吃喝玩乐
+                </Link>
+              </div>
+            }
+          />
+        ) : (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                自由讨论区（{favorites.forumPosts.length}）
+              </h3>
+              {favorites.forumPosts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无收藏帖子</p>
+              ) : (
+                <div className="space-y-2">
+                  {favorites.forumPosts.map((item) => (
+                    <FavoriteForumPostRow key={item.post.id} item={item} />
+                  ))}
+                </div>
+              )}
             </div>
-          }
-        />
-      ) : (
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              自由讨论区（{favorites.forumPosts.length}）
-            </h3>
-            {favorites.forumPosts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无收藏帖子</p>
-            ) : (
-              <div className="space-y-2">
-                {favorites.forumPosts.map((item) => (
-                  <FavoriteForumPostRow key={item.post.id} item={item} />
-                ))}
-              </div>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              课程（{favorites.courses.length}）
-            </h3>
-            {favorites.courses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无收藏课程</p>
-            ) : (
-              <div className="space-y-2">
-                {favorites.courses.map((item) => (
-                  <FavoriteCourseRow key={item.course.id} item={item} />
-                ))}
-              </div>
-            )}
-          </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                课程（{favorites.courses.length}）
+              </h3>
+              {favorites.courses.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无收藏课程</p>
+              ) : (
+                <div className="space-y-2">
+                  {favorites.courses.map((item) => (
+                    <FavoriteCourseRow key={item.course.id} item={item} />
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              吃喝玩乐（{favorites.foodPlaces.length}）
-            </h3>
-            {favorites.foodPlaces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无收藏地点</p>
-            ) : (
-              <div className="space-y-2">
-                {favorites.foodPlaces.map((item) => (
-                  <FavoriteFoodRow key={item.place.id} item={item} />
-                ))}
-              </div>
-            )}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                吃喝玩乐（{favorites.foodPlaces.length}）
+              </h3>
+              {favorites.foodPlaces.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无收藏地点</p>
+              ) : (
+                <div className="space-y-2">
+                  {favorites.foodPlaces.map((item) => (
+                    <FavoriteFoodRow key={item.place.id} item={item} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </section>
+        )}
+      </CardContent>
+    </Card>
   );
 }

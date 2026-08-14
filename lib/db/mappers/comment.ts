@@ -2,13 +2,13 @@ import { type ContentStatus } from "@/constants/contentStatus";
 import { type Comment, type CommentWithAuthor } from "@/types/post";
 import { type Database } from "@/types/database";
 import {
-  mapProfileListItem,
+  mapProfileListItemOrFallback,
   type ProfileRow,
 } from "@/lib/db/mappers/profile";
 
 export type CommentRow = Database["public"]["Tables"]["comments"]["Row"];
 export type CommentWithProfileRow = CommentRow & {
-  profiles: ProfileRow;
+  profiles: ProfileRow | null;
 };
 
 export function mapComment(row: CommentRow): Comment {
@@ -29,6 +29,10 @@ export function mapComment(row: CommentRow): Comment {
 export function mapCommentWithAuthor(row: CommentWithProfileRow): CommentWithAuthor {
   return {
     ...mapComment(row),
-    author: mapProfileListItem(row.profiles),
+    author: mapProfileListItemOrFallback(
+      row.profiles,
+      row.user_id,
+      "已删除用户",
+    ),
   };
 }

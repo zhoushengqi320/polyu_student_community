@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
+import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import {
   deleteGuideAction,
   hideGuideAction,
   publishGuideAction,
 } from "@/lib/guides/actions";
 import { CONTENT_STATUS, CONTENT_STATUS_LABELS } from "@/constants/contentStatus";
-import { ROUTES } from "@/constants/routes";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -135,16 +135,10 @@ export function GuideManagementTable({
                   <td className="px-3 py-2">
                     <div className="flex flex-nowrap items-center justify-end gap-1.5">
                       {canView ? (
-                        <Button
-                          asChild
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2 text-xs"
-                        >
-                          <Link href={ROUTES.guides.detail(guide.id)} target="_blank">
-                            查看
-                          </Link>
-                        </Button>
+                        <AdminContentPreviewDialog
+                          targetType={TARGET_TYPES.post}
+                          targetId={guide.id}
+                        />
                       ) : (
                         <Button
                           size="sm"

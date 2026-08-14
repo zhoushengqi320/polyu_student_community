@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Suspense } from "react";
 import { ADMIN_TABS, type AdminTabId } from "@/constants/admin";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { AdminActionsTable } from "@/components/admin/AdminActionsTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { ProfileReviewTable } from "@/components/admin/ProfileReviewTable";
 import { ReportTable } from "@/components/admin/ReportTable";
-import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
-import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
-import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
+import { ContentArchivePanel } from "@/components/admin/ContentArchivePanel";
+import { CommunityContentTabs } from "@/components/admin/CommunityContentTabs";
 import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel";
 import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
 import { type AdminDashboardData } from "@/types/admin";
@@ -27,6 +27,7 @@ export function AdminDashboard({
   initialEditCourseId = null,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<AdminTabId>(initialTab);
+  const pendingAppeals = data.pendingArchiveAppeals ?? [];
 
   return (
     <div className="space-y-6">
@@ -55,6 +56,11 @@ export function AdminDashboard({
                 {data.stats.pendingReportCount}
               </span>
             ) : null}
+            {tab.id === "archives" && pendingAppeals.length > 0 ? (
+              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                {pendingAppeals.length}
+              </span>
+            ) : null}
             {tab.id === "profile-reviews" &&
             data.stats.pendingProfileReviewCount > 0 ? (
               <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
@@ -72,11 +78,17 @@ export function AdminDashboard({
             <h2 className="text-lg font-semibold">快捷说明</h2>
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>在「资料审核」中优先处理高风险待审与中风险复核；低风险昵称/头像会自动公开。</li>
-              <li>在「举报中心」可审核用户举报，删除违规内容或更新举报状态。</li>
-              <li>在「帖子管理」「评论管理」中可查看含已删除内容在内的全部讨论区数据。</li>
+              <li>
+                在「举报中心」：首次举报仅标注待审；第二名举报人触发自动隐藏并复制封存；确认违规会隐藏并封存（作者可申诉）；驳回会警告/失信标记，再次驳回则封禁 30 天。
+              </li>
+              <li>
+                在「封存申诉」审核作者申诉（通过则恢复并删除封存；驳回则通知作者）。打开本页会自动处理逾期封存。
+              </li>
+              <li>在「社区内容」中可统一查看帖子、评论与课程评价（含已删除日志项）。</li>
               <li>在「课程目录」中可新增或编辑课程基础信息。</li>
               <li>在「内容管理」中可维护入学攻略、学习指南、生活指南（支持 Markdown 预览与图片上传）。</li>
-              <li>所有管理操作会写入操作记录，便于后续审计。</li>
+              <li>在「用户管理」可添加非理大邮箱白名单：对方注册跳过验证码，成功后名额作废但保留记录；白名单用户仅密码登录。</li>
+              <li>所有管理操作会写入操作记录；逾期永久删除的完整备份在操作记录 metadata 中可查看。</li>
             </ul>
           </section>
         </div>
@@ -86,24 +98,28 @@ export function AdminDashboard({
         <ReportTable reports={data.reports} />
       ) : null}
 
+      {activeTab === "archives" ? (
+        <ContentArchivePanel
+          archives={data.contentArchives ?? []}
+          pendingAppeals={pendingAppeals}
+          expiredCount={data.expiredArchiveCount ?? 0}
+        />
+      ) : null}
+
       {activeTab === "profile-reviews" ? (
         <ProfileReviewTable items={data.profileReviews} />
       ) : null}
 
-      {activeTab === "forum-posts" ? (
-        <ForumPostsTable posts={data.forumPosts} />
-      ) : null}
-
-      {activeTab === "forum-comments" ? (
-        <ForumCommentsTable comments={data.forumComments} />
+      {activeTab === "content" ? (
+        <CommunityContentTabs
+          forumPosts={data.forumPosts}
+          forumComments={data.forumComments}
+          courseReviews={data.courseReviews}
+        />
       ) : null}
 
       {activeTab === "courses" ? (
         <CoursesAdminPanel initialEditCourseId={initialEditCourseId} />
-      ) : null}
-
-      {activeTab === "course-reviews" ? (
-        <CourseReviewsTable reviews={data.courseReviews} />
       ) : null}
 
       {activeTab === "guides" ? (
@@ -115,11 +131,26 @@ export function AdminDashboard({
       ) : null}
 
       {activeTab === "users" ? (
-        <UserManagementTable users={data.users} />
+        <UserManagementTable
+          users={data.users}
+          whitelistEntries={data.emailWhitelist ?? []}
+        />
       ) : null}
 
       {activeTab === "actions" ? (
-        <AdminActionsTable actions={data.adminActions} />
+        <Suspense
+          fallback={
+            <p className="text-sm text-muted-foreground">加载操作记录…</p>
+          }
+        >
+          <AdminActionsTable
+            actions={data.adminActions}
+            page={data.adminActionsPage ?? 1}
+            pageSize={data.adminActionsPageSize ?? 20}
+            total={data.adminActionsTotal ?? data.adminActions.length}
+            query={data.adminActionsQuery ?? ""}
+          />
+        </Suspense>
       ) : null}
     </div>
   );

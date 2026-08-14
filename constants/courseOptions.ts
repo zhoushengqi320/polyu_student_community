@@ -131,6 +131,30 @@ export const COURSE_DEPARTMENTS = [
 
 export type CourseDepartmentId = (typeof COURSE_DEPARTMENTS)[number]["id"];
 
+export function getDepartmentLabel(departmentId: string): string {
+  const found = COURSE_DEPARTMENTS.find((item) => item.id === departmentId);
+  if (found) {
+    return found.label;
+  }
+  return departmentId.trim().toUpperCase();
+}
+
+/** 课程列表/卡片上展示的院系代码（大写） */
+export function getDepartmentCode(departmentId: string): string {
+  const id = departmentId.trim();
+  if (!id) {
+    return "";
+  }
+  const found = COURSE_DEPARTMENTS.find((item) => item.id === id.toLowerCase());
+  if (found && found.id !== "other" && found.id !== "bba") {
+    return found.id.toUpperCase();
+  }
+  if (found?.id === "bba") {
+    return "BBA";
+  }
+  return id.toUpperCase();
+}
+
 export const COURSE_SORT_OPTIONS = [
   { id: "code", label: "课程代码" },
   { id: "rating", label: "综合评分" },

@@ -15,7 +15,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t bg-muted/30">
+    <footer className="site-footer border-t bg-muted/30">
       <div className="container flex flex-col gap-6 py-8">
         <div>
           <div className="mb-3 flex flex-col gap-1">

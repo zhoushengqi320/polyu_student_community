@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Newspaper } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
+import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import { adminDeleteForumPostAction } from "@/lib/admin/actions";
-import { ROUTES } from "@/constants/routes";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { formatDateTime } from "@/lib/utils/formatDate";
@@ -44,12 +44,20 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
             return (
               <tr key={post.id} className="border-b last:border-0">
                 <td className="px-4 py-3">
-                  <Link
-                    href={ROUTES.forum.detail(post.id)}
-                    className="font-medium hover:text-primary line-clamp-2"
-                  >
-                    {post.title}
-                  </Link>
+                  {isDeleted ? (
+                    <span className="font-medium text-muted-foreground line-clamp-2">
+                      {post.title}
+                      <span className="mt-1 block text-xs">已删除（仅日志）</span>
+                    </span>
+                  ) : (
+                    <div className="space-y-1">
+                      <span className="font-medium line-clamp-2">{post.title}</span>
+                      <AdminContentPreviewDialog
+                        targetType={TARGET_TYPES.post}
+                        targetId={post.id}
+                      />
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {post.author.displayName ?? post.author.username}

@@ -27,6 +27,9 @@ export type ForumSortId = (typeof FORUM_SORT_OPTIONS)[number]["id"];
 export const FORUM_PAGE_SIZE = 20;
 export const FORUM_MAX_TOPICS = 5;
 export const FORUM_MAX_TOPIC_LENGTH = 30;
+export const FORUM_POPULAR_TOPICS_LIMIT = 10;
+/** 模糊搜索时最多拉取帖子数（内存排序后再分页） */
+export const FORUM_SEARCH_FETCH_LIMIT = 500;
 
 export const FORUM_DESCRIPTION =
   "课程求助、考试复习、实习 RA、租房二手、找搭子、校园生活都可以在这里讨论。找学习搭子、约饭、组队或室友，请带上「找搭子」话题。";

@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getDepartmentCode } from "@/constants/courseOptions";
 import {
   normalizeDisplayCode,
   normalizeDisplayLevel,

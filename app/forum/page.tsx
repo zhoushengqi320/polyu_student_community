@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { FORUM_DESCRIPTION, normalizeForumSort } from "@/constants/forum";
+import { FORUM_DESCRIPTION, FORUM_POPULAR_TOPICS_LIMIT, normalizeForumSort } from "@/constants/forum";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
@@ -33,7 +33,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
     getSessionUser(),
     getForumPosts({ query, topic, sort, page }),
     getMostViewedForumPosts(5),
-    getForumTopics(12),
+    getForumTopics(FORUM_POPULAR_TOPICS_LIMIT),
   ]);
 
   const canCreate = canCreateInModule(user, "forum");

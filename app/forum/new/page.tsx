@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumPostForm } from "@/components/forum/ForumPostForm";
 import { getSessionUser } from "@/lib/auth/session";
+import { getForumTopics } from "@/lib/db/forum";
 import { ROUTES } from "@/constants/routes";
 import { canCreateInModule } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
@@ -32,12 +33,14 @@ export default async function NewForumPostPage() {
     );
   }
 
+  const popularTopics = await getForumTopics(5);
+
   return (
     <ModulePageShell
       title="发布帖子"
       description="自由讨论区 · 分享经验、提问，或发布找搭子信息"
     >
-      <ForumPostForm />
+      <ForumPostForm popularTopics={popularTopics} />
     </ModulePageShell>
   );
 }

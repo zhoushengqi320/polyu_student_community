@@ -5,7 +5,7 @@ import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
-import { getForumPostById } from "@/lib/db/forum";
+import { getForumPostById, getForumTopics } from "@/lib/db/forum";
 import { canManageOwnContent } from "@/lib/utils/permissions";
 
 type ForumPostEditPageProps = {
@@ -22,7 +22,10 @@ export default async function ForumPostEditPage({
     redirect(`${ROUTES.login}?next=${encodeURIComponent(ROUTES.forum.edit(id))}`);
   }
 
-  const post = await getForumPostById(id);
+  const [post, popularTopics] = await Promise.all([
+    getForumPostById(id),
+    getForumTopics(5),
+  ]);
   if (!post) {
     notFound();
   }
@@ -44,6 +47,7 @@ export default async function ForumPostEditPage({
       <ForumPostForm
         mode="edit"
         postId={id}
+        popularTopics={popularTopics}
         initialValues={{
           title: post.title,
           content: post.content,

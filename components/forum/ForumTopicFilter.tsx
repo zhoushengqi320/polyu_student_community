@@ -1,9 +1,5 @@
 import Link from "next/link";
-import {
-  FORUM_TOPIC_SUGGESTIONS,
-  buildForumUrl,
-  type ForumSortId,
-} from "@/constants/forum";
+import { buildForumUrl, type ForumSortId } from "@/constants/forum";
 import { TopicBadge } from "@/components/forum/TopicBadge";
 
 type ForumTopicFilterProps = {
@@ -25,20 +21,18 @@ export function ForumTopicFilter({
     <div>
       <h3 className="mb-2 text-sm font-medium text-muted-foreground">热门话题</h3>
       <div className="flex flex-wrap gap-2">
-        {[...new Set([...popularTopics, ...FORUM_TOPIC_SUGGESTIONS])]
-          .slice(0, 16)
-          .map((topic) => (
-            <TopicBadge
-              key={topic}
-              topic={topic}
-              href={buildForumUrl({ ...filterBase, topic })}
-              className={
-                activeTopic === topic
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
-                  : undefined
-              }
-            />
-          ))}
+        {popularTopics.map((topic) => (
+          <TopicBadge
+            key={topic}
+            topic={topic}
+            href={buildForumUrl({ ...filterBase, topic })}
+            className={
+              activeTopic === topic
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                : undefined
+            }
+          />
+        ))}
         {activeTopic ? (
           <Link
             href={buildForumUrl(filterBase)}

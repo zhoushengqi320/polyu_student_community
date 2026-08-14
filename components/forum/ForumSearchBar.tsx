@@ -33,7 +33,7 @@ export function ForumSearchBar() {
         <Input
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="搜索帖子标题或内容..."
+          placeholder="搜索帖子标题、内容或话题（支持中英文）..."
           className="pl-9"
           name="q"
         />

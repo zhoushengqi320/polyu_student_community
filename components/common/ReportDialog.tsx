@@ -19,6 +19,7 @@ import {
   TARGET_TYPES,
   type TargetType,
 } from "@/constants/reportReasons";
+import { CommunityRulesDialog } from "@/components/legal/CommunityRulesDialog";
 import { ROUTES } from "@/constants/routes";
 import {
   createReportAction,
@@ -81,13 +82,10 @@ export function ReportDialog({
           <DialogTitle>举报{targetLabel}</DialogTitle>
           <DialogDescription>
             请选择举报原因。管理员会尽快审核处理，恶意举报可能导致账号受限。处理依据见
-            <Link
-              href={ROUTES.about.communityRules}
-              className="mx-1 underline underline-offset-2 hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
-              社区规则
-            </Link>
+            <CommunityRulesDialog
+              triggerLabel="社区规则"
+              triggerClassName="mx-1"
+            />
             。
           </DialogDescription>
         </DialogHeader>

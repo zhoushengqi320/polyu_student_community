@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SaveSuccessToastHost } from "@/components/common/SaveSuccessToastHost";
-import { APP_LOCALE, SITE_DESCRIPTION, SITE_NAME } from "@/constants/site";
+import { APP_LOCALE, SITE_DESCRIPTION } from "@/constants/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: SITE_NAME,
-    template: `%s | ${SITE_NAME}`,
+    default: "Polyuhub｜香港理工大学学生社区 | 课程资料与校园论坛",
+    template: `%s | Polyuhub`,
   },
   description: SITE_DESCRIPTION,
   icons: {

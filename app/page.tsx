@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { CoreModuleGrid } from "@/components/home/CoreModuleGrid";
 import { LatestForumPostsSection } from "@/components/home/LatestForumPostsSection";
 import { HomeValueSection } from "@/components/home/HomeValueSection";
+import { HomeScrollReveal } from "@/components/home/HomeScrollReveal";
 
 export default async function HomePage() {
   const data = await getHomePageData();
@@ -11,16 +12,29 @@ export default async function HomePage() {
     <div>
       <HeroSection />
 
-      <div className="container space-y-12 py-12 md:space-y-16 md:py-16">
+      <div
+        id="home-content"
+        className="container space-y-16 py-16 md:space-y-20 md:py-20"
+      >
         {!data.isDatabaseConfigured ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            数据库尚未配置，动态内容区块将显示为空。请在 `.env.local` 中配置 Supabase 后刷新页面。
-          </div>
+          <HomeScrollReveal>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              数据库尚未配置，动态内容区块将显示为空。请在 `.env.local` 中配置 Supabase 后刷新页面。
+            </div>
+          </HomeScrollReveal>
         ) : null}
 
-        <HomeValueSection />
-        <CoreModuleGrid />
-        <LatestForumPostsSection result={data.latestPosts} />
+        <HomeScrollReveal>
+          <HomeValueSection />
+        </HomeScrollReveal>
+
+        <HomeScrollReveal delay={80}>
+          <CoreModuleGrid />
+        </HomeScrollReveal>
+
+        <HomeScrollReveal delay={120}>
+          <LatestForumPostsSection result={data.latestPosts} />
+        </HomeScrollReveal>
       </div>
     </div>
   );

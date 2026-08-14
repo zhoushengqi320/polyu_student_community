@@ -1,4 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
+import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { MarkdownContent } from "@/components/guides/MarkdownContent";
 import {
   looksLikeHtml,
@@ -20,11 +21,13 @@ export function RichContent({ content, stripTitle, className }: RichContentProps
 
   if (!looksLikeHtml(content)) {
     return (
-      <MarkdownContent
-        content={content}
-        stripTitle={stripTitle}
-        className={className}
-      />
+      <ImageLightbox>
+        <MarkdownContent
+          content={content}
+          stripTitle={stripTitle}
+          className={className}
+        />
+      </ImageLightbox>
     );
   }
 
@@ -33,12 +36,16 @@ export function RichContent({ content, stripTitle, className }: RichContentProps
     html = stripLeadingTitleHtml(html, stripTitle);
   }
 
-  const safe = DOMPurify.sanitize(html);
+  const safe = DOMPurify.sanitize(html, {
+    ADD_ATTR: ["width", "height", "style"],
+  });
 
   return (
-    <div
-      className={cn("prose-editor rich-content text-sm md:text-base", className)}
-      dangerouslySetInnerHTML={{ __html: safe }}
-    />
+    <ImageLightbox>
+      <div
+        className={cn("prose-editor rich-content text-sm md:text-base", className)}
+        dangerouslySetInnerHTML={{ __html: safe }}
+      />
+    </ImageLightbox>
   );
 }

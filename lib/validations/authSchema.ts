@@ -22,8 +22,13 @@ export const polyuEmailSchema = z.object({
 
 export type PolyuEmailFormValues = z.infer<typeof polyuEmailSchema>;
 
+/** 注册入口：格式校验；是否理大/白名单由服务端再判 */
+export const registerEmailSchema = z.object({
+  email: z.string().email("请输入有效的邮箱地址"),
+});
+
 export const otpCodeSchema = z.object({
-  email: polyuEmailSchema.shape.email,
+  email: z.string().email("请输入有效的邮箱地址"),
   otp: z
     .string()
     .trim()
@@ -96,7 +101,7 @@ export const changePasswordSchema = z
   });
 
 export const loginPasswordSchema = z.object({
-  email: polyuEmailSchema.shape.email,
+  email: z.string().email("请输入有效的邮箱地址"),
   password: z.string().min(1, "请输入密码"),
 });
 

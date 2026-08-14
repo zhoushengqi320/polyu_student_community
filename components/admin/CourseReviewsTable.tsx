@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { Star } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
+import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import { EmptyState } from "@/components/common/EmptyState";
 import { RatingDisplay } from "@/components/common/RatingDisplay";
 import { TagBadge } from "@/components/common/TagBadge";
 import { adminDeleteCourseReviewAction } from "@/lib/admin/actions";
+import { TARGET_TYPES } from "@/constants/reportReasons";
 import { formatDateTime } from "@/lib/utils/formatDate";
-import { ROUTES } from "@/constants/routes";
 import { type AdminCourseReviewListItem } from "@/types/admin";
 
 type CourseReviewsTableProps = {
@@ -51,15 +51,30 @@ export function CourseReviewsTable({ reviews }: CourseReviewsTableProps) {
             return (
               <tr key={review.id} className="border-b last:border-0">
                 <td className="px-4 py-3">
-                  <Link
-                    href={ROUTES.courses.detail(review.courseCode)}
-                    className="font-medium hover:text-primary"
-                  >
-                    {review.courseCode}
-                  </Link>
-                  <p className="line-clamp-1 max-w-[180px] text-xs text-muted-foreground">
-                    {review.courseName}
-                  </p>
+                  {isDeleted ? (
+                    <>
+                      <span className="font-medium text-muted-foreground">
+                        {review.courseCode}
+                      </span>
+                      <p className="line-clamp-1 max-w-[180px] text-xs text-muted-foreground">
+                        {review.courseName}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        已删除（仅日志）
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium">{review.courseCode}</span>
+                      <p className="line-clamp-1 max-w-[180px] text-xs text-muted-foreground">
+                        {review.courseName}
+                      </p>
+                      <AdminContentPreviewDialog
+                        targetType={TARGET_TYPES.course_review}
+                        targetId={review.id}
+                      />
+                    </>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <p className="line-clamp-2 max-w-xs">{review.reviewText}</p>

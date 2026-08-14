@@ -1,8 +1,8 @@
 export function HomePageSkeleton() {
   return (
     <div className="animate-pulse">
-      <section className="border-b bg-muted/20">
-        <div className="container space-y-6 py-14 md:py-20">
+      <section className="flex min-h-[calc(100dvh-4rem)] flex-col justify-center border-b bg-muted/20">
+        <div className="container space-y-6 py-10 md:py-12">
           <div className="h-4 w-40 rounded bg-muted" />
           <div className="h-12 w-72 max-w-full rounded bg-muted" />
           <div className="h-6 w-96 max-w-full rounded bg-muted" />
@@ -14,7 +14,7 @@ export function HomePageSkeleton() {
         </div>
       </section>
 
-      <div className="container space-y-12 py-12 md:py-16">
+      <div className="container space-y-16 py-16 md:space-y-20 md:py-20">
         {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="space-y-4">
             <div className="h-8 w-48 rounded bg-muted" />

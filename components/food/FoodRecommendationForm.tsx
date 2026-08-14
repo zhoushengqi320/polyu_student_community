@@ -23,7 +23,6 @@ export function FoodRecommendationForm({ placeId }: FoodRecommendationFormProps)
   return (
     <form action={formAction} className="space-y-3 rounded-lg border p-4">
       <input type="hidden" name="placeId" value={placeId} />
-      <h3 className="font-medium">写一条推荐</h3>
       <div className="space-y-2">
         <Label htmlFor="rating">评分</Label>
         <select
