@@ -10,7 +10,7 @@ export const APP_LOCALE = "zh-CN";
 export const SITE_SLOGAN = "选课前，先查 PolyUHub";
 
 export const SITE_DESCRIPTION =
-  "PolyU 学生自己的校园信息社区 — 课程评价、吃喝玩乐、学习指南、生活指南、自由讨论区";
+  "Polyuhub 香港理工大学学生互助社区，提供课程PDF资料下载、校园论坛交流，理大学生交流平台。";
 
 export const SITE_TAGLINE = SITE_SLOGAN;
 
