@@ -1,6 +1,8 @@
 /** 站点对外展示文案（全站中文） */
 export const SITE_NAME = "PolyUHub";
 export const SITE_LOGO = "PolyUHub";
+/** 品牌 Logo 图片（含图标 + 站名） */
+export const SITE_LOGO_SRC = "/brand/polyuhub-logo.jpg";
 export const SCHOOL_NAME = "香港理工大学";
 export const SCHOOL_SHORT = "理大";
 
@@ -8,6 +10,9 @@ export const SCHOOL_SHORT = "理大";
 export const APP_LOCALE = "zh-CN";
 
 export const SITE_SLOGAN = "选课前，先查 PolyUHub";
+
+/** Hero 下方一行英文小字（不抢主 slogan） */
+export const SITE_BYLINE = "For and By Polyuer";
 
 export const SITE_DESCRIPTION =
   "PolyU 学生自己的校园信息社区 — 课程评价、吃喝玩乐、学习指南、生活指南、自由讨论区";

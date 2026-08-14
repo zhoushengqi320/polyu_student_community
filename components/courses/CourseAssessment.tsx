@@ -38,13 +38,13 @@ export function CourseAssessment({ course }: CourseAssessmentProps) {
     course.assessment.items && course.assessment.items.length > 0
       ? course.assessment.items
       : [
-          { label: "Assignment", value: course.assessment.assignment },
-          { label: "Quiz", value: course.assessment.quiz },
-          { label: "Midterm", value: course.assessment.midterm },
-          { label: "Final Exam", value: course.assessment.finalExam },
-          { label: "Project", value: course.assessment.project },
-          { label: "Presentation", value: course.assessment.presentation },
-          { label: "Other", value: course.assessment.other },
+          { label: "作业", value: course.assessment.assignment },
+          { label: "测验", value: course.assessment.quiz },
+          { label: "期中考试", value: course.assessment.midterm },
+          { label: "期末考试", value: course.assessment.finalExam },
+          { label: "项目", value: course.assessment.project },
+          { label: "汇报", value: course.assessment.presentation },
+          { label: "其他", value: course.assessment.other },
         ].filter((item): item is { label: string; value: string } =>
           Boolean(item.value),
         );
@@ -52,7 +52,7 @@ export function CourseAssessment({ course }: CourseAssessmentProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Assessment</CardTitle>
+        <CardTitle>考核方式</CardTitle>
         <CardDescription>
           课程考核方式，按官方 PDF 中的原始分类和百分比展示
         </CardDescription>

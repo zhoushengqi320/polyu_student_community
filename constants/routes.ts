@@ -37,8 +37,10 @@ export const ROUTES = {
   },
   courses: {
     list: MODULE_REGISTRY.courses.route,
-    detail: (courseCode: string) => `/courses/${courseCode}`,
-    review: (courseCode: string) => `/courses/${courseCode}/review`,
+    detail: (courseCode: string) =>
+      `/courses/${encodeURIComponent(courseCode)}`,
+    review: (courseCode: string) =>
+      `/courses/${encodeURIComponent(courseCode)}/review`,
   },
   food: {
     list: MODULE_REGISTRY.food.route,

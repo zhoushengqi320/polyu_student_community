@@ -24,6 +24,7 @@ import {
 } from "@/lib/utils/courseSearch";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { normalizeCourseCodeParam } from "@/lib/courses/courseCode";
 
 const COURSE_SEARCH_FETCH_CAP = 5000;
 
@@ -134,12 +135,17 @@ export async function getCourseByCode(courseCode: string) {
     return null;
   }
 
+  const normalized = normalizeCourseCodeParam(courseCode);
+  if (!normalized) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
     .select("*")
     .eq("school_id", DEFAULT_SCHOOL_ID)
-    .ilike("code", courseCode.trim())
+    .eq("code", normalized)
     .maybeSingle();
 
   if (error || !data) {
@@ -157,12 +163,17 @@ export async function getCourseDetailByCode(
     return null;
   }
 
+  const normalized = normalizeCourseCodeParam(courseCode);
+  if (!normalized) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("courses")
     .select("*")
     .eq("school_id", DEFAULT_SCHOOL_ID)
-    .ilike("code", courseCode.trim())
+    .eq("code", normalized)
     .maybeSingle();
 
   if (error || !data) {

@@ -11,6 +11,10 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  icons: {
+    icon: "/brand/polyuhub-logo.jpg",
+    apple: "/brand/polyuhub-logo.jpg",
+  },
 };
 
 export default function RootLayout({
