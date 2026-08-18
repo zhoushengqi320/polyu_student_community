@@ -48,19 +48,19 @@ export async function uploadUserImageAction(
   }
 
   const moduleRaw = String(formData.get("module") ?? "");
-  const module =
+  const uploadModule: UserUploadModule | null =
     moduleRaw === "feedback" || moduleRaw === "forum" || moduleRaw === "food"
       ? moduleRaw
       : null;
 
-  if (!module) {
+  if (!uploadModule) {
     return { error: "无效的上传模块" };
   }
 
   try {
-    if (module === "feedback") {
+    if (uploadModule === "feedback") {
       assertCan(user, "content:create:feedback");
-    } else if (module === "forum") {
+    } else if (uploadModule === "forum") {
       assertCan(user, "content:create:forum");
     } else {
       assertCan(user, "content:create:food");
@@ -76,7 +76,7 @@ export async function uploadUserImageAction(
 
   const altText = String(formData.get("alt") ?? "").trim() || "截图";
 
-  const stored = await uploadUserImageToStorage(user.id, file, module);
+  const stored = await uploadUserImageToStorage(user.id, file, uploadModule);
   if (!stored.ok) {
     return { error: stored.error };
   }
@@ -89,7 +89,7 @@ export async function uploadUserImageAction(
       publicUrl: stored.publicUrl,
       mimeType: stored.mimeType,
       byteSize: stored.byteSize,
-      module,
+      module: uploadModule,
       altText,
     });
 
