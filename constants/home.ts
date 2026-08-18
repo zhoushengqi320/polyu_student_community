@@ -6,7 +6,6 @@ export const HOME_LIMITS = {
 
 export const HOME_HERO = {
   title: "PolyUHub",
-  subtitle: "PolyU 学生自己的校园信息社区",
   description:
     "查课程评价、看学习与生活指南、在讨论区找搭子与交流。选课前，先查 PolyUHub。",
   primaryCta: {

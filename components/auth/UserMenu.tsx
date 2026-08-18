@@ -87,12 +87,12 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
 
   // 桌面：头像 + 反馈（通知与管理后台在 Navbar 外侧，保证从右至左顺序）
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5">
       <Link
         href={profileHref}
         title={displayName}
         aria-label={`${displayName} 的个人主页`}
-        className="inline-flex items-center rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="inline-flex shrink-0 items-center rounded-full outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <UserAvatar src={avatarUrl} name={displayName} size="nav" />
       </Link>

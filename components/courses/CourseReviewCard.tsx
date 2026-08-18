@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/card";
 import {
   COURSE_ASSIGNMENT_TYPES,
-  COURSE_ATTENDANCE_OPTIONS,
   COURSE_EXAM_TYPES,
   formatCourseSemesterLabel,
+  getAttendanceLabel,
   labelsFromMultiOptions,
 } from "@/constants/courseOptions";
 import { TARGET_TYPES } from "@/constants/reportReasons";
@@ -51,10 +51,7 @@ export function CourseReviewCard({
     review.assignmentType,
     COURSE_ASSIGNMENT_TYPES,
   );
-  const attendanceLabel = labelFromOptions(
-    review.attendanceRequired,
-    COURSE_ATTENDANCE_OPTIONS,
-  );
+  const attendanceLabel = getAttendanceLabel(review.attendanceRequired);
 
   const metaParts = [
     formatCourseSemesterLabel(review.semester),

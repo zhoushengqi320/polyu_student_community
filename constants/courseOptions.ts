@@ -193,14 +193,31 @@ export type CourseAssignmentTypeId =
   (typeof COURSE_ASSIGNMENT_TYPES)[number]["id"];
 
 export const COURSE_ATTENDANCE_OPTIONS = [
-  { id: "required", label: "强制出勤" },
-  { id: "recommended", label: "建议出勤" },
-  { id: "not_required", label: "不强制" },
-  { id: "unknown", label: "不确定" },
+  { id: "every_class", label: "每节课记考勤" },
+  { id: "spot_check", label: "偶尔抽查记考勤" },
+  { id: "none", label: "不记考勤" },
+  { id: "eighty_percent", label: "需要80%考勤" },
 ] as const;
 
 export type CourseAttendanceId =
   (typeof COURSE_ATTENDANCE_OPTIONS)[number]["id"];
+
+/** 历史评价可能仍存旧 id，展示时兼容 */
+const LEGACY_ATTENDANCE_LABELS: Record<string, string> = {
+  required: "强制出勤",
+  recommended: "建议出勤",
+  not_required: "不强制",
+  unknown: "不确定",
+};
+
+export function getAttendanceLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const found = COURSE_ATTENDANCE_OPTIONS.find((item) => item.id === value);
+  if (found) return found.label;
+  return LEGACY_ATTENDANCE_LABELS[value] ?? value;
+}
 
 export const COURSE_REVIEW_TAGS = [
   "给分好",

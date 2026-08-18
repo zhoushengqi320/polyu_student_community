@@ -244,6 +244,7 @@ export function SignupWizard({
               <p className="text-muted-foreground">验证码已发送至</p>
               <p className="break-all font-medium">{email || "当前邮箱"}</p>
             </div>
+            <p className="text-xs text-muted-foreground">{OTP_SPAM_HINT}</p>
             <div className="space-y-2">
               <Label htmlFor="signup-otp">邮箱验证码</Label>
               <Input

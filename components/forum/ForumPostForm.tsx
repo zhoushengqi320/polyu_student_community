@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { Plus } from "lucide-react";
 import { FORUM_MAX_TOPICS } from "@/constants/forum";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -91,6 +92,7 @@ export function ForumPostForm({
   const [content, setContent] = useState(initialValues?.content ?? "");
   const [topics, setTopics] = useState<string[]>(initialValues?.topics ?? []);
   const [topicInput, setTopicInput] = useState("");
+  const [showTopicInput, setShowTopicInput] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(
     initialValues?.isAnonymous ?? false,
   );
@@ -172,7 +174,7 @@ export function ForumPostForm({
   }, [pending, state.success, markClean]);
 
   function addTopic(raw: string) {
-    const value = raw.trim();
+    const value = raw.trim().replace(/^#+/, "");
     if (!value) {
       return;
     }
@@ -181,6 +183,7 @@ export function ForumPostForm({
     }
     if (topics.includes(value)) {
       setTopicInput("");
+      setShowTopicInput(false);
       return;
     }
     if (topics.length >= FORUM_MAX_TOPICS) {
@@ -189,6 +192,14 @@ export function ForumPostForm({
     markDirty();
     setTopics((current) => [...current, value]);
     setTopicInput("");
+    setShowTopicInput(false);
+  }
+
+  function openTopicInput() {
+    if (topics.length >= FORUM_MAX_TOPICS) {
+      return;
+    }
+    setShowTopicInput(true);
   }
 
   function removeTopic(topic: string) {
@@ -247,33 +258,10 @@ export function ForumPostForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="topicInput">
+              <Label>
                 话题（最多 {FORUM_MAX_TOPICS} 个，每个最多 30 字）
               </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="topicInput"
-                  value={topicInput}
-                  onChange={(event) => setTopicInput(event.target.value)}
-                  placeholder="输入话题后按添加"
-                  maxLength={30}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addTopic(topicInput);
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => addTopic(topicInput)}
-                  disabled={topics.length >= FORUM_MAX_TOPICS}
-                >
-                  添加
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {(popularTopics.length > 0 ? popularTopics : []).slice(0, 5).map((suggestion) => (
                   <button
                     key={suggestion}
@@ -287,12 +275,63 @@ export function ForumPostForm({
                     #{suggestion}
                   </button>
                 ))}
-                {popularTopics.length === 0 ? (
+                {topics.length < FORUM_MAX_TOPICS ? (
+                  <button
+                    type="button"
+                    onClick={openTopicInput}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                    aria-label="添加自定义话题"
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                ) : null}
+                {popularTopics.length === 0 && !showTopicInput ? (
                   <p className="text-xs text-muted-foreground">
-                    暂无热门话题，可在上方自行添加（最多 5 个）
+                    点击 + 添加话题（最多 {FORUM_MAX_TOPICS} 个）
                   </p>
                 ) : null}
               </div>
+              {showTopicInput ? (
+                <div className="flex gap-2">
+                  <Input
+                    id="topicInput"
+                    value={topicInput}
+                    onChange={(event) => setTopicInput(event.target.value)}
+                    placeholder="输入 #话题 后按添加"
+                    maxLength={30}
+                    autoFocus
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addTopic(topicInput);
+                      }
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        setShowTopicInput(false);
+                        setTopicInput("");
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => addTopic(topicInput)}
+                    disabled={topics.length >= FORUM_MAX_TOPICS}
+                  >
+                    添加
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowTopicInput(false);
+                      setTopicInput("");
+                    }}
+                  >
+                    取消
+                  </Button>
+                </div>
+              ) : null}
               {topics.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {topics.map((topic) => (

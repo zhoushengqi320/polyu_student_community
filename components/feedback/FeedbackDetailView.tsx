@@ -1,4 +1,5 @@
 import { formatDateTime } from "@/lib/utils/formatDate";
+import { RichContent } from "@/components/common/RichContent";
 import { UserIdentity } from "@/components/common/UserIdentity";
 import { type ForumPostDetail } from "@/types/forum";
 import { type CommentWithAuthor } from "@/types/post";
@@ -22,9 +23,7 @@ export function FeedbackDetailView({ post, replies }: FeedbackDetailViewProps) {
           />
           <span>{formatDateTime(post.createdAt)}</span>
         </div>
-        <div className="whitespace-pre-wrap text-sm leading-relaxed">
-          {post.content}
-        </div>
+        <RichContent content={post.content} className="text-sm" />
       </div>
 
       <section className="space-y-4">

@@ -5,6 +5,10 @@ import {
   createFeedbackPostAction,
   type FeedbackFormState,
 } from "@/lib/feedback/actions";
+import {
+  FormImageAttachments,
+  type FormImageUploadItem,
+} from "@/components/common/FormImageAttachments";
 import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +30,7 @@ export function FeedbackPostForm() {
   );
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [uploads, setUploads] = useState<FormImageUploadItem[]>([]);
 
   return (
     <>
@@ -72,6 +77,12 @@ export function FeedbackPostForm() {
                 </p>
               ) : null}
             </div>
+            <FormImageAttachments
+              module="feedback"
+              uploads={uploads}
+              onChange={setUploads}
+              disabled={pending}
+            />
             {state.error ? (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {state.error}

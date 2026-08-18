@@ -44,20 +44,9 @@ export function FoodList({
             placeholder="搜索店名或地址"
             className="h-10 min-w-[180px] flex-1 rounded-md border border-input bg-background px-3 text-sm"
           />
-          <select
-            name="area"
-            defaultValue={area ?? ""}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="">全部地区</option>
-            {FOOD_AREAS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+          {area ? <input type="hidden" name="area" value={area} /> : null}
           <Button type="submit" variant="secondary">
-            筛选
+            查询
           </Button>
         </form>
       </div>

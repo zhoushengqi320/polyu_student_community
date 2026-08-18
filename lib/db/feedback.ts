@@ -110,3 +110,28 @@ export async function createFeedbackPost(input: {
 
   return mapForumPostDetail(data as ForumPostWithProfileRow);
 }
+
+export async function updateFeedbackPostContent(
+  postId: string,
+  content: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const excerpt = buildPostExcerpt(content);
+
+  const { error } = await supabase
+    .from("posts")
+    .update({
+      content,
+      excerpt,
+    })
+    .eq("id", postId)
+    .eq("module", FEEDBACK_MODULE);
+
+  if (error) {
+    throw new DbError(error.message, "VALIDATION");
+  }
+}

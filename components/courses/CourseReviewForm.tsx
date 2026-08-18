@@ -427,24 +427,39 @@ export function CourseReviewForm({
                 ) : null}
               </div>
 
-              <div className="space-y-2 md:max-w-sm">
-                <Label htmlFor="attendanceRequired">出勤要求</Label>
-                <select
-                  id="attendanceRequired"
-                  name="attendanceRequired"
-                  value={attendanceRequired}
-                  onChange={(event) =>
-                    updateField(setAttendanceRequired, event.target.value)
-                  }
-                  className={cn(fieldClassName(), "h-10")}
-                >
-                  <option value="">不填</option>
-                  {COURSE_ATTENDANCE_OPTIONS.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-2">
+                <Label>出勤要求（可选）</Label>
+                <div className="flex flex-wrap gap-2">
+                  {COURSE_ATTENDANCE_OPTIONS.map((item) => {
+                    const checked = attendanceRequired === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() =>
+                          updateField(
+                            setAttendanceRequired,
+                            checked ? "" : item.id,
+                          )
+                        }
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                          checked
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-input bg-background hover:bg-muted",
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input type="hidden" name="attendanceRequired" value={attendanceRequired} />
+                {state.fieldErrors?.attendanceRequired ? (
+                  <p className="text-sm text-destructive">
+                    {state.fieldErrors.attendanceRequired}
+                  </p>
+                ) : null}
               </div>
             </section>
 
