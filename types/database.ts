@@ -244,6 +244,7 @@ export type Database = {
           area: string;
           address: string | null;
           tags: Json;
+          category: string;
           status: "draft" | "published" | "hidden" | "removed";
           school_id: string;
           created_at: string;
@@ -255,6 +256,7 @@ export type Database = {
           area: string;
           address?: string | null;
           tags?: Json;
+          category?: string;
           status?: "draft" | "published" | "hidden" | "removed";
           school_id?: string;
           created_at?: string;
@@ -266,6 +268,7 @@ export type Database = {
           area?: string;
           address?: string | null;
           tags?: Json;
+          category?: string;
           status?: "draft" | "published" | "hidden" | "removed";
           school_id?: string;
           created_at?: string;

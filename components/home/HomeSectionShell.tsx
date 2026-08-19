@@ -14,7 +14,7 @@ type HomeSectionShellProps = {
 
 export function HomeSectionShell({
   title,
-  description,
+  description: _description,
   href,
   linkLabel = "查看更多",
   children,
@@ -25,9 +25,6 @@ export function HomeSectionShell({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
         </div>
         {href ? (
           <Button variant="ghost" size="sm" asChild className="gap-1">

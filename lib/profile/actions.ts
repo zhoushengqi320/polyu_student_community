@@ -33,6 +33,7 @@ const gradeIds = STUDENT_GRADES.map((item) => item.id) as [string, ...string[]];
 export type OnboardingFormState = {
   error?: string;
   success?: string;
+  unchanged?: boolean;
   fieldErrors?: Partial<
     Record<"nickname" | "grade" | "major" | "avatarUrl" | "displayName" | "username", string>
   >;
@@ -175,7 +176,7 @@ export async function updateOwnProfileAction(
     parsed.data.major.trim() !== (user.profile?.major ?? "").trim();
 
   if (!nicknameChanged && !hasAvatarUpload && !gradeChanged && !majorChanged) {
-    return { error: "请先修改昵称、头像或其他资料" };
+    return { success: "未修改任何内容", unchanged: true };
   }
 
   try {
@@ -188,11 +189,7 @@ export async function updateOwnProfileAction(
     revalidatePath(ROUTES.profile(user.id));
     revalidatePath("/", "layout");
     return {
-      success:
-        result.riskMessage ??
-        (nicknameChanged || hasAvatarUpload
-          ? "资料已更新"
-          : "资料已更新"),
+      success: "资料已更新",
     };
   } catch (error) {
     const message =

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 import { ADMIN_TABS, type AdminTabId } from "@/constants/admin";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { AdminActionsTable } from "@/components/admin/AdminActionsTable";
@@ -13,6 +15,7 @@ import { CommunityContentTabs } from "@/components/admin/CommunityContentTabs";
 import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel";
 import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
 import { type AdminDashboardData } from "@/types/admin";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
 type AdminDashboardProps = {
@@ -26,8 +29,16 @@ export function AdminDashboard({
   initialTab = "reports",
   initialEditCourseId = null,
 }: AdminDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTabId>(initialTab);
+  const [isRefreshing, startRefresh] = useTransition();
   const pendingAppeals = data.pendingArchiveAppeals ?? [];
+
+  function handleRefresh() {
+    startRefresh(() => {
+      router.refresh();
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -37,7 +48,8 @@ export function AdminDashboard({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 border-b pb-1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2 border-b pb-1">
         {ADMIN_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -69,6 +81,18 @@ export function AdminDashboard({
             ) : null}
           </button>
         ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isRefreshing}
+          onClick={handleRefresh}
+          className="gap-1.5"
+        >
+          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          {isRefreshing ? "刷新中…" : "刷新数据"}
+        </Button>
       </div>
 
       {activeTab === "overview" ? (
@@ -77,15 +101,15 @@ export function AdminDashboard({
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">快捷说明</h2>
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
-              <li>在「资料审核」中优先处理高风险待审与中风险复核；低风险昵称/头像会自动公开。</li>
+              <li>在「资料审核」中按用户复核昵称与头像；前台已即时展示，驳回时将重置并通知用户。</li>
               <li>
                 在「举报中心」：首次举报仅标注待审；第二名举报人触发自动隐藏并复制封存；确认违规会隐藏并封存（作者可申诉）；驳回会警告/失信标记，再次驳回则封禁 30 天。
               </li>
               <li>
                 在「封存申诉」审核作者申诉（通过则恢复并删除封存；驳回则通知作者）。打开本页会自动处理逾期封存。
               </li>
-              <li>在「社区内容」中可统一查看帖子、评论与课程评价（含已删除日志项）。</li>
-              <li>在「课程目录」中可新增或编辑课程基础信息。</li>
+              <li>在「社区内容」中可统一查看帖子与评论（含已删除日志项）。</li>
+              <li>在「课程目录」中可维护课程信息，并切换查看课程评价。</li>
               <li>在「内容管理」中可维护入学攻略、学习指南、生活指南（支持 Markdown 预览与图片上传）。</li>
               <li>在「用户管理」可添加非理大邮箱白名单：对方注册跳过验证码，成功后名额作废但保留记录；白名单用户仅密码登录。</li>
               <li>所有管理操作会写入操作记录；逾期永久删除的完整备份在操作记录 metadata 中可查看。</li>
@@ -114,12 +138,14 @@ export function AdminDashboard({
         <CommunityContentTabs
           forumPosts={data.forumPosts}
           forumComments={data.forumComments}
-          courseReviews={data.courseReviews}
         />
       ) : null}
 
       {activeTab === "courses" ? (
-        <CoursesAdminPanel initialEditCourseId={initialEditCourseId} />
+        <CoursesAdminPanel
+          initialEditCourseId={initialEditCourseId}
+          courseReviews={data.courseReviews}
+        />
       ) : null}
 
       {activeTab === "guides" ? (

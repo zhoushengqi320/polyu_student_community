@@ -30,6 +30,11 @@ export const NOTIFICATION_TYPES = {
   archiveAppealPending: "archive_appeal_pending",
   archiveAppealApproved: "archive_appeal_approved",
   archiveAppealRejected: "archive_appeal_rejected",
+  contentLiked: "content_liked",
+  contentFavorited: "content_favorited",
+  contentCommented: "content_commented",
+  contentReplied: "content_replied",
+  profileRejected: "profile_rejected",
 } as const;
 
 export type NotificationType =

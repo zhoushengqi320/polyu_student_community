@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
-import { notFound, redirect } from "next/navigation";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
+import { AvatarLightbox } from "@/components/common/AvatarLightbox";
 import { TagBadge } from "@/components/common/TagBadge";
 import { ProfileFavoritesSection } from "@/components/profile/ProfileFavoritesSection";
 import { ProfileWorksSection } from "@/components/profile/ProfileWorksSection";
@@ -13,7 +12,6 @@ import { getProfileById } from "@/lib/db/profiles";
 import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
 import { getStudentGradeLabel } from "@/constants/profileOptions";
-import { PROFILE_REVIEW_STATUS_LABELS } from "@/constants/profileReview";
 import { formatDate } from "@/lib/utils/formatDate";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { notFound, redirect } from "next/navigation";
 
 type ProfilePageProps = {
   params: Promise<{ id: string }>;
@@ -50,7 +49,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   return (
     <ModulePageShell
       title={profile.displayName ?? "PolyU 同学"}
-      description="个人主页"
       back={{ href: "/", label: "首页" }}
       actions={
         isOwnProfile && !profile.isFirstSetupCompleted ? (
@@ -64,27 +62,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <Card className="max-w-2xl">
           <CardHeader>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative h-14 w-14 overflow-hidden rounded-full bg-muted">
-                {profile.avatarUrl ? (
-                  <Image
-                    src={profile.avatarUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                ) : null}
-              </div>
+              <AvatarLightbox
+                src={profile.avatarUrl}
+                alt={profile.displayName ?? "用户头像"}
+              />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <CardTitle>{profile.displayName}</CardTitle>
                   <TagBadge label={USER_ROLE_LABELS[profile.role]} />
                 </div>
                 {isOwnProfile ? (
-                  <CardDescription>
-                    审核状态：
-                    {PROFILE_REVIEW_STATUS_LABELS[profile.profileReviewStatus]}
-                  </CardDescription>
+                  <CardDescription>点击头像可放大查看</CardDescription>
                 ) : null}
               </div>
             </div>

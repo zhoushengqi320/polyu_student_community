@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { RouteProgressBar } from "@/components/common/RouteProgressBar";
 import { SaveSuccessToastHost } from "@/components/common/SaveSuccessToastHost";
 import { APP_LOCALE, SITE_DESCRIPTION } from "@/constants/site";
 import "./globals.css";
@@ -25,6 +27,9 @@ export default function RootLayout({
   return (
     <html lang={APP_LOCALE}>
       <body className="min-h-screen antialiased">
+        <Suspense fallback={null}>
+          <RouteProgressBar />
+        </Suspense>
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <main className="flex-1">{children}</main>

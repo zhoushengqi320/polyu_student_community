@@ -19,6 +19,7 @@ import {
   type CourseAdminFormState,
 } from "@/lib/course/adminActions";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,10 +30,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { type CourseWithStats } from "@/types/course";
+import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
+import { type AdminCourseReviewListItem } from "@/types/admin";
 
 type CoursesAdminPanelProps = {
   initialEditCourseId?: string | null;
+  courseReviews?: AdminCourseReviewListItem[];
 };
+
+const PANEL_SECTIONS = [
+  { id: "catalog", label: "课程目录" },
+  { id: "reviews", label: "课程评价" },
+] as const;
+
+type PanelSectionId = (typeof PANEL_SECTIONS)[number]["id"];
 
 const PAGE_SIZE = 20;
 const initialState: CourseAdminFormState = {};
@@ -247,7 +258,9 @@ function CourseForm({
 
 export function CoursesAdminPanel({
   initialEditCourseId = null,
+  courseReviews = [],
 }: CoursesAdminPanelProps) {
+  const [panelSection, setPanelSection] = useState<PanelSectionId>("catalog");
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editing, setEditing] = useState<CourseWithStats | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -336,6 +349,28 @@ export function CoursesAdminPanel({
   }
 
   return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 border-b pb-1">
+        {PANEL_SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => setPanelSection(section.id)}
+            className={cn(
+              "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+              panelSection === section.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      {panelSection === "reviews" ? (
+        <CourseReviewsTable reviews={courseReviews} />
+      ) : (
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
@@ -464,5 +499,7 @@ export function CoursesAdminPanel({
         ) : null}
       </CardContent>
     </Card>
+      )}
+    </div>
   );
 }

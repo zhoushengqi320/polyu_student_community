@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils/cn";
 import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -58,9 +57,6 @@ export function ModuleCard({
           <CardTitle className="transition-colors group-hover:text-primary">{label}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <span className="text-sm font-medium text-primary">进入模块</span>
-        </CardContent>
       </Card>
     </Link>
   );

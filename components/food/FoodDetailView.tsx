@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FOOD_AREAS } from "@/constants/categories";
+import { getFoodCategoryLabel } from "@/constants/foodCategories";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { deleteOwnFoodRecommendationAction } from "@/lib/food/actions";
@@ -51,7 +52,7 @@ export function FoodDetailView({
             <div className="space-y-1">
               <CardTitle className="text-2xl">{place.name}</CardTitle>
               <CardDescription>
-                {areaLabel(place.area)}
+                {getFoodCategoryLabel(place.category)} · {areaLabel(place.area)}
                 {place.address ? ` · ${place.address}` : ""}
               </CardDescription>
             </div>

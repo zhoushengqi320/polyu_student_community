@@ -1,11 +1,13 @@
 import { type ContentStatus } from "@/constants/contentStatus";
 import { type FoodAreaId } from "@/constants/categories";
+import { type FoodCategoryId } from "@/constants/foodCategories";
 import { type ProfileListItem } from "@/types/user";
 
 export type FoodPlace = {
   id: string;
   name: string;
   area: FoodAreaId;
+  category: FoodCategoryId;
   address: string | null;
   tags: string[];
   status: ContentStatus;
@@ -48,6 +50,7 @@ export type FoodFilters = {
 export type CreateFoodPlaceInput = {
   name: string;
   area: FoodAreaId;
+  category: FoodCategoryId;
   address?: string | null;
   tags?: string[];
 };

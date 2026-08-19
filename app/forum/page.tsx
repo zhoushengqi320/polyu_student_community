@@ -4,11 +4,7 @@ import { FORUM_DESCRIPTION, FORUM_POPULAR_TOPICS_LIMIT, normalizeForumSort } fro
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
-import {
-  getForumPosts,
-  getForumTopics,
-  getMostViewedForumPosts,
-} from "@/lib/db/forum";
+import { getForumPosts, getForumTopics } from "@/lib/db/forum";
 import { ROUTES } from "@/constants/routes";
 import { canCreateInModule } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
@@ -29,10 +25,9 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
   const sort = normalizeForumSort(params.sort);
   const page = Number(params.page) || 1;
 
-  const [user, result, hotPosts, popularTopics] = await Promise.all([
+  const [user, result, popularTopics] = await Promise.all([
     getSessionUser(),
     getForumPosts({ query, topic, sort, page }),
-    getMostViewedForumPosts(5),
     getForumTopics(FORUM_POPULAR_TOPICS_LIMIT),
   ]);
 
@@ -60,7 +55,6 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
       <Suspense>
         <ForumList
           result={result}
-          hotPosts={hotPosts}
           popularTopics={popularTopics}
           activeQuery={query}
           activeTopic={topic}

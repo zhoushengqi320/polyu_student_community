@@ -32,11 +32,7 @@ export function GuideCard({ guide }: GuideCardProps) {
             <CardTitle className="line-clamp-2 text-lg transition-colors group-hover:text-primary">
               {guide.title}
             </CardTitle>
-            {guide.excerpt ? (
-              <CardDescription className="line-clamp-3">
-                {guide.excerpt}
-              </CardDescription>
-            ) : null}
+            <CardDescription className="line-clamp-3">NA</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">

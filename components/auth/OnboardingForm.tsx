@@ -37,7 +37,7 @@ export function OnboardingForm({ profile }: OnboardingFormProps) {
       <CardHeader>
         <CardTitle>完善个人资料</CardTitle>
         <CardDescription>
-          年级与专业必填；昵称与头像可选。系统自动检测风险：低风险直接公开，中风险公开并标记，高风险需后台审核。
+          年级与专业必填；昵称与头像可选，保存后立即生效。
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FOOD_AREAS, type FoodAreaId } from "@/constants/categories";
+import { getFoodCategoryLabel } from "@/constants/foodCategories";
 import { ROUTES } from "@/constants/routes";
 import { type FoodPlaceWithStats } from "@/types/food";
 import { type PaginatedResult } from "@/types/common";
@@ -97,7 +98,7 @@ export function FoodList({
                 <CardHeader>
                   <CardTitle className="text-lg">{place.name}</CardTitle>
                   <CardDescription>
-                    {areaLabel(place.area)}
+                    {getFoodCategoryLabel(place.category)} · {areaLabel(place.area)}
                     {place.address ? ` · ${place.address}` : ""}
                   </CardDescription>
                 </CardHeader>

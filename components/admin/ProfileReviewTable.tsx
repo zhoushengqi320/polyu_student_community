@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CONTENT_RISK_LABELS } from "@/constants/moderation";
 import { getStudentGradeLabel } from "@/constants/profileOptions";
-import { PROFILE_REVIEW_STATUS_LABELS } from "@/constants/profileReview";
 
 const initialState: AdminActionState = {};
 
@@ -33,11 +32,6 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
     rejectProfileReviewAction,
     initialState,
   );
-
-  const approveLabel =
-    item.riskLevel === "medium" && item.profileReviewStatus === "approved"
-      ? "确认无问题"
-      : "通过并公开";
 
   return (
     <tr className="border-b align-top">
@@ -61,20 +55,14 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
                 label={CONTENT_RISK_LABELS[item.riskLevel]}
                 className={riskBadgeClass(item.riskLevel)}
               />
-              <TagBadge
-                label={PROFILE_REVIEW_STATUS_LABELS[item.profileReviewStatus]}
-              />
             </div>
             <p className="text-xs text-muted-foreground">
               {item.grade ? getStudentGradeLabel(item.grade) : "—"}
               {item.major ? ` · ${item.major}` : ""}
             </p>
-            {item.approvedNickname || item.approvedAvatarUrl ? (
-              <p className="text-xs text-muted-foreground">
-                当前公开：{item.approvedNickname || "默认昵称"}
-                {item.profileReviewStatus === "pending" ? "（待审未公开）" : ""}
-              </p>
-            ) : null}
+            <p className="text-xs text-muted-foreground">
+              最近更新：{new Date(item.updatedAt).toLocaleString("zh-HK")}
+            </p>
             <p className="text-xs text-muted-foreground">ID: {item.id}</p>
           </div>
         </div>
@@ -83,7 +71,7 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
         <form action={approveAction} className="mb-2">
           <input type="hidden" name="userId" value={item.id} />
           <Button type="submit" size="sm" disabled={approvePending}>
-            {approvePending ? "处理中..." : approveLabel}
+            {approvePending ? "处理中..." : "通过审核"}
           </Button>
           {approveState.error ? (
             <p className="mt-1 text-xs text-destructive">{approveState.error}</p>
@@ -96,7 +84,7 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
           <input type="hidden" name="userId" value={item.id} />
           <Input
             name="reason"
-            placeholder="驳回理由（可选）"
+            placeholder="违规说明（可选，将通知用户）"
             className="h-8 text-sm"
           />
           <Button
@@ -105,7 +93,7 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
             variant="outline"
             disabled={rejectPending}
           >
-            {rejectPending ? "处理中..." : "驳回"}
+            {rejectPending ? "处理中..." : "驳回并重置"}
           </Button>
           {rejectState.error ? (
             <p className="text-xs text-destructive">{rejectState.error}</p>
@@ -142,7 +130,7 @@ function ReviewSection({
         <table className="min-w-full text-left">
           <thead className="bg-muted/50 text-sm">
             <tr>
-              <th className="px-3 py-2 font-medium">资料</th>
+              <th className="px-3 py-2 font-medium">当前昵称与头像</th>
               <th className="px-3 py-2 font-medium">操作</th>
             </tr>
           </thead>
@@ -166,7 +154,7 @@ export function ProfileReviewTable({
     return (
       <EmptyState
         title="暂无待审核资料"
-        description="高风险待审与中风险标记会显示在这里，高风险置顶。"
+        description="用户更新昵称或头像后会进入此队列；一次审核同时覆盖头像与昵称。"
       />
     );
   }
@@ -180,18 +168,18 @@ export function ProfileReviewTable({
   return (
     <div className="space-y-8">
       <ReviewSection
-        title="高风险待审核"
-        description="未公开展示，需管理员通过后才会生效。"
+        title="高风险"
+        description="优先处理；前台已展示最新资料，请确认无问题或驳回重置。"
         items={highItems}
       />
       <ReviewSection
-        title="中风险待复核"
-        description="已公开展示，请管理员确认无问题或驳回撤销。"
+        title="中风险"
+        description="已公开展示，请确认无问题或驳回重置。"
         items={mediumItems}
       />
       <ReviewSection
-        title="其他待处理"
-        description="其余进入资料审核队列的记录。"
+        title="其他"
+        description="其余待复核记录。"
         items={otherItems}
       />
     </div>

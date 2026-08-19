@@ -4,6 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { decideProfileSubmissionRisk } from "@/lib/profile/profileRiskDecision";
+import { assessMajorRisk } from "@/lib/moderation/profileRisk";
+import { CONTENT_RISK_LEVELS } from "@/constants/moderation";
+import { NOTIFICATION_TYPES } from "@/constants/moderation";
+import { createNotification } from "@/lib/db/notifications";
+import { USER_STATUS } from "@/constants/userRoles";
+import { ROUTES } from "@/constants/routes";
 import { type FirstSetupFormValues } from "@/lib/validations/authSchema";
 import { type Profile } from "@/types/user";
 
@@ -143,6 +149,31 @@ export async function completeFirstSetup(
   return mapProfile(data);
 }
 
+async function banUserForForbiddenMajor(
+  userId: string,
+  reason: string,
+): Promise<void> {
+  const admin = createAdminClient();
+  await admin
+    .from("profiles")
+    .update({
+      status: USER_STATUS.banned,
+      major: null,
+      profile_risk_attention: false,
+      review_reason: reason,
+    })
+    .eq("id", userId)
+    .neq("role", "admin");
+
+  await createNotification({
+    userId,
+    type: NOTIFICATION_TYPES.profileRejected,
+    title: "账号已被限制",
+    body: reason,
+    link: ROUTES.profile(userId),
+  });
+}
+
 export async function submitProfileForReview(
   userId: string,
   input: {
@@ -158,8 +189,10 @@ export async function submitProfileForReview(
 
   const nicknameProvided = input.nickname !== undefined;
   const avatarProvided = input.avatarUrl !== undefined;
+  const majorProvided = input.major !== undefined;
   const nickname = nicknameProvided ? input.nickname?.trim() || "" : undefined;
   const avatarUrl = avatarProvided ? input.avatarUrl?.trim() || "" : undefined;
+  const major = majorProvided ? input.major?.trim() || "" : undefined;
 
   if (nickname) {
     const available = await isNicknameAvailable(nickname, userId);
@@ -168,10 +201,21 @@ export async function submitProfileForReview(
     }
   }
 
+  if (majorProvided && major) {
+    const majorRisk = assessMajorRisk(major);
+    if (majorRisk.level === CONTENT_RISK_LEVELS.high) {
+      await banUserForForbiddenMajor(
+        userId,
+        "专业信息含有禁止内容，账号已被限制。如有疑问请联系管理员。",
+      );
+      throw new DbError("专业信息不符合规范，账号已被限制");
+    }
+  }
+
   const supabase = await createClient();
   const { data: current, error: currentError } = await supabase
     .from("profiles")
-    .select("nickname, avatar_url, approved_nickname, approved_avatar_url")
+    .select("nickname, avatar_url, approved_nickname, approved_avatar_url, major")
     .eq("id", userId)
     .single();
 
@@ -184,13 +228,11 @@ export async function submitProfileForReview(
   if (input.grade) {
     payload.grade = input.grade;
   }
-  if (input.major !== undefined) {
-    payload.major = input.major.trim();
-  }
 
   const hasReviewSubmission =
     (nicknameProvided && Boolean(nickname)) ||
-    (avatarProvided && Boolean(avatarUrl));
+    (avatarProvided && Boolean(avatarUrl)) ||
+    (majorProvided && Boolean(major));
 
   let riskMessage: string | undefined;
 
@@ -201,10 +243,14 @@ export async function submitProfileForReview(
     const nextAvatar = avatarProvided
       ? avatarUrl || null
       : (current.avatar_url as string | null);
+    const nextMajor = majorProvided
+      ? major || null
+      : (current.major as string | null);
 
     const decision = decideProfileSubmissionRisk({
       nickname: nextNickname,
       avatarUrl: nextAvatar,
+      major: nextMajor,
     });
 
     if (nicknameProvided) {
@@ -212,6 +258,9 @@ export async function submitProfileForReview(
     }
     if (avatarProvided) {
       payload.avatar_url = avatarUrl || null;
+    }
+    if (majorProvided) {
+      payload.major = major || null;
     }
 
     payload.profile_review_status = decision.reviewStatus;
@@ -228,20 +277,20 @@ export async function submitProfileForReview(
       if (avatarProvided) {
         payload.approved_avatar_url = avatarUrl || null;
       }
-    } else {
-      // 高风险：保留已通过的旧公开资料，待审字段写入 nickname/avatar_url
-      if (nicknameProvided) {
-        payload.display_name = current.approved_nickname;
-      }
     }
 
     const { profileRiskUserMessage } = await import(
       "@/lib/profile/profileRiskDecision"
     );
-    riskMessage = profileRiskUserMessage(decision);
-  } else if (nicknameProvided) {
-    payload.nickname = nickname || null;
-    payload.display_name = nickname || null;
+    riskMessage = profileRiskUserMessage();
+  } else {
+    if (nicknameProvided) {
+      payload.nickname = nickname || null;
+      payload.display_name = nickname || null;
+    }
+    if (majorProvided) {
+      payload.major = major || null;
+    }
   }
 
   if (Object.keys(payload).length === 0) {

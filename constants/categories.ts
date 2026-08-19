@@ -1,8 +1,13 @@
 export const FOOD_AREAS = [
   { id: "campus", label: "校内" },
-  { id: "hung_hom", label: "红磡" },
-  { id: "tst", label: "尖沙咀" },
-  { id: "mong_kok", label: "旺角" },
+  { id: "hung_hom", label: "红磡 / 何文田 / 土瓜湾" },
+  { id: "tst", label: "尖沙咀 / 佐敦 / 油麻地 / 旺角" },
+  { id: "kowloon_west", label: "九龙西" },
+  { id: "kowloon_east", label: "九龙东" },
+  { id: "hong_kong_island", label: "港岛" },
+  { id: "new_territories_east", label: "新界东" },
+  { id: "new_territories_west", label: "新界西" },
+  { id: "outlying_islands", label: "离岛" },
   { id: "other", label: "其他" },
 ] as const;
 

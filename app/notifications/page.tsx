@@ -22,7 +22,7 @@ export default async function NotificationsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">通知</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          举报处理、内容审核与账号相关消息
+          互动消息（点赞、评论、回复、收藏）与系统处理结果
         </p>
       </div>
       <NotificationList notifications={notifications} />

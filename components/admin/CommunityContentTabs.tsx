@@ -3,20 +3,17 @@
 import { useState } from "react";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
-import { CourseReviewsTable } from "@/components/admin/CourseReviewsTable";
 import { cn } from "@/lib/utils/cn";
-import { type AdminForumCommentListItem, type AdminForumPostListItem, type AdminCourseReviewListItem } from "@/types/admin";
+import { type AdminForumCommentListItem, type AdminForumPostListItem } from "@/types/admin";
 
 type CommunityContentTabsProps = {
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
-  courseReviews: AdminCourseReviewListItem[];
 };
 
 const SECTIONS = [
   { id: "posts", label: "帖子" },
   { id: "comments", label: "评论" },
-  { id: "reviews", label: "课程评价" },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -24,7 +21,6 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 export function CommunityContentTabs({
   forumPosts,
   forumComments,
-  courseReviews,
 }: CommunityContentTabsProps) {
   const [active, setActive] = useState<SectionId>("posts");
 
@@ -51,9 +47,6 @@ export function CommunityContentTabs({
       {active === "posts" ? <ForumPostsTable posts={forumPosts} /> : null}
       {active === "comments" ? (
         <ForumCommentsTable comments={forumComments} />
-      ) : null}
-      {active === "reviews" ? (
-        <CourseReviewsTable reviews={courseReviews} />
       ) : null}
     </div>
   );

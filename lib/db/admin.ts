@@ -4,6 +4,9 @@ import { USER_STATUS } from "@/constants/userRoles";
 import { mapAdminUserListItem } from "@/lib/db/mappers/admin";
 import { mapProfileListItemOrFallback, type ProfileRow } from "@/lib/db/mappers/profile";
 import { createAdminAction, logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
+import { createNotification } from "@/lib/db/notifications";
+import { NOTIFICATION_TYPES } from "@/constants/moderation";
+import { ROUTES } from "@/constants/routes";
 import { DbError, getPagination } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -49,7 +52,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .or("profile_review_status.eq.pending,profile_risk_attention.eq.true"),
+      .eq("profile_risk_attention", true),
     supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
@@ -246,7 +249,7 @@ export async function listPendingProfileReviews(
     .select(
       "id, nickname, avatar_url, approved_nickname, approved_avatar_url, profile_review_status, review_reason, grade, major, updated_at, profile_risk_level, profile_risk_flags, profile_risk_attention",
     )
-    .or("profile_review_status.eq.pending,profile_risk_attention.eq.true")
+    .eq("profile_risk_attention", true)
     .order("updated_at", { ascending: false })
     .limit(pageSize);
 
@@ -370,20 +373,17 @@ export async function rejectProfileReview(
   }
 
   const payload: Record<string, unknown> = {
-    profile_review_status: "rejected",
-    review_reason: reason.trim() || "资料未通过审核，请修改后重新提交",
+    nickname: null,
+    avatar_url: null,
+    approved_nickname: null,
+    approved_avatar_url: null,
+    display_name: null,
+    profile_review_status: "approved",
+    review_reason: reason.trim() || "头像或昵称不符合社区规范，已重置",
     profile_risk_attention: false,
+    profile_risk_level: "low",
+    profile_risk_flags: [],
   };
-
-  // 中风险已放行：驳回时撤销公开展示，回到默认
-  if (
-    profile.profile_review_status === "approved" ||
-    profile.profile_risk_level === "medium"
-  ) {
-    payload.approved_nickname = null;
-    payload.approved_avatar_url = null;
-    payload.display_name = null;
-  }
 
   const { error } = await supabase
     .from("profiles")
@@ -393,6 +393,16 @@ export async function rejectProfileReview(
   if (error) {
     throw new DbError(error.message);
   }
+
+  await createNotification({
+    userId,
+    type: NOTIFICATION_TYPES.profileRejected,
+    title: "头像或昵称已重置",
+    body:
+      reason.trim() ||
+      "你的头像或昵称不符合社区规范，已被重置为默认。请修改后重新保存。",
+    link: ROUTES.profile(userId),
+  });
 
   await logAdminAction({
     adminId,

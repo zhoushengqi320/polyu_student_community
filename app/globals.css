@@ -102,16 +102,23 @@ body.admin-shell-active .site-footer {
 
 /* TipTap / 前台富文本正文 */
 .prose-editor {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   line-height: 1.75;
   color: var(--color-foreground);
+}
+
+@media (min-width: 768px) {
+  .prose-editor {
+    font-size: 1rem;
+  }
 }
 
 .prose-editor h1 {
   margin: 0.75rem 0 0.5rem;
   font-size: 1.5rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
 }
 
 .prose-editor h2 {
@@ -219,6 +226,15 @@ body.admin-shell-active .site-footer {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes route-progress {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(320%);
   }
 }
 

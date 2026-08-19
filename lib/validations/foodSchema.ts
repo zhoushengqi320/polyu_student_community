@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { FOOD_AREAS } from "@/constants/categories";
+import { FOOD_CATEGORIES } from "@/constants/foodCategories";
 
 const foodAreaIds = FOOD_AREAS.map((item) => item.id) as [string, ...string[]];
+const foodCategoryIds = FOOD_CATEGORIES.map((item) => item.id) as [
+  string,
+  ...string[],
+];
 
 const ratingSchema = z.preprocess((value) => {
   if (typeof value === "string" && value.trim()) {
@@ -23,6 +28,7 @@ export const foodRecommendationSchema = z.object({
 export const foodPlaceSubmitSchema = z.object({
   name: z.string().trim().min(2, "店名至少 2 个字").max(100),
   area: z.enum(foodAreaIds, { message: "请选择地区" }),
+  category: z.enum(foodCategoryIds, { message: "请选择分类" }),
   address: z.preprocess((value) => {
     if (typeof value !== "string") return null;
     const trimmed = value.trim();

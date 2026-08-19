@@ -1,10 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { StarRatingInput } from "@/components/courses/StarRatingInput";
 import {
   createFoodRecommendationAction,
   type FoodFormState,
 } from "@/lib/food/actions";
+import {
+  FormImageAttachments,
+  type FormImageUploadItem,
+} from "@/components/common/FormImageAttachments";
 import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,36 +25,22 @@ export function FoodRecommendationForm({ placeId }: FoodRecommendationFormProps)
     createFoodRecommendationAction,
     initialState,
   );
-  const [rating, setRating] = useState("");
+  const [rating, setRating] = useState(0);
   const [content, setContent] = useState("");
+  const [uploads, setUploads] = useState<FormImageUploadItem[]>([]);
 
   return (
     <>
       <form action={formAction} className="space-y-3 rounded-lg border p-4">
         <input type="hidden" name="placeId" value={placeId} />
-        <div className="space-y-2">
-          <Label htmlFor="rating">评分</Label>
-          <select
-            id="rating"
-            name="rating"
-            required
-            value={rating}
-            onChange={(event) => setRating(event.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="" disabled>
-              请选择
-            </option>
-            {[1, 2, 3, 4, 5].map((score) => (
-              <option key={score} value={score}>
-                {score} 分
-              </option>
-            ))}
-          </select>
-          {state.fieldErrors?.rating ? (
-            <p className="text-sm text-destructive">{state.fieldErrors.rating}</p>
-          ) : null}
-        </div>
+        <StarRatingInput
+          id="rating"
+          name="rating"
+          label="评分"
+          value={rating}
+          onChange={setRating}
+          error={state.fieldErrors?.rating}
+        />
         <div className="space-y-2">
           <Label htmlFor="content">推荐内容</Label>
           <textarea
@@ -66,6 +57,13 @@ export function FoodRecommendationForm({ placeId }: FoodRecommendationFormProps)
             <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
           ) : null}
         </div>
+        <FormImageAttachments
+          module="food"
+          uploads={uploads}
+          onChange={setUploads}
+          disabled={pending}
+          hint="可上传最多 3 张图片，单张不超过 5MB。选择后立即上传，发布推荐时自动附在正文末尾。"
+        />
         {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         {state.success ? (
           <p className="text-sm text-green-600">{state.success}</p>

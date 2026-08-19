@@ -9,22 +9,30 @@ type SiteLogoProps = {
   /** 导航栏高度内展示；默认带首页链接 */
   href?: string | null;
   priority?: boolean;
+  variant?: "default" | "footer";
 };
 
 export function SiteLogo({
   className,
   href = ROUTES.home,
   priority = false,
+  variant = "default",
 }: SiteLogoProps) {
   const image = (
-    <Image
-      src={SITE_LOGO_SRC}
-      alt={SITE_NAME}
-      width={160}
-      height={160}
-      priority={priority}
-      className={cn("h-10 w-auto object-contain sm:h-11", className)}
-    />
+    <span className="inline-flex">
+      <Image
+        src={SITE_LOGO_SRC}
+        alt={SITE_NAME}
+        width={160}
+        height={160}
+        priority={priority}
+        className={cn(
+          "h-10 w-auto object-contain sm:h-11",
+          variant === "footer" && "h-11 sm:h-12",
+          className,
+        )}
+      />
+    </span>
   );
 
   if (href === null) {

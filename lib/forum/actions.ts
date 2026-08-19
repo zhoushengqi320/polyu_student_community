@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
-import { createComment } from "@/lib/db/comments";
+import { createComment, getCommentById } from "@/lib/db/comments";
+import { getContentOwnerId } from "@/lib/db/moderation";
+import { notifyContentInteraction } from "@/lib/notifications/interactionNotifications";
 import {
   createForumPost,
   deleteForumPost,
@@ -271,6 +273,29 @@ export async function createCommentAction(
       parentId: parsed.data.parentId ?? null,
       riskLevel: risk.level,
     });
+
+    if (risk.level !== CONTENT_RISK_LEVELS.high) {
+      const parentId = parsed.data.parentId ?? null;
+      if (parentId) {
+        const parent = await getCommentById(parentId);
+        await notifyContentInteraction({
+          actorUserId: user.id,
+          ownerUserId: parent?.userId ?? null,
+          targetType: "comment",
+          targetId: parentId,
+          kind: "reply",
+        });
+      } else {
+        const ownerId = await getContentOwnerId("post", postId);
+        await notifyContentInteraction({
+          actorUserId: user.id,
+          ownerUserId: ownerId,
+          targetType: "post",
+          targetId: postId,
+          kind: "comment",
+        });
+      }
+    }
 
     if (risk.level === CONTENT_RISK_LEVELS.high) {
       await createNotification({

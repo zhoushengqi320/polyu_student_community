@@ -6,6 +6,7 @@ import { adminDeleteForumComment } from "@/lib/db/admin";
 import { softDeleteComment } from "@/lib/db/comments";
 import { toggleReaction, type ReactionType } from "@/lib/db/reactions";
 import { getContentOwnerId } from "@/lib/db/moderation";
+import { notifyContentInteraction } from "@/lib/notifications/interactionNotifications";
 import { createReport } from "@/lib/db/reports";
 import { reportSchema } from "@/lib/validations/reportSchema";
 import { assertCan, isAdmin, isBanned } from "@/lib/utils/permissions";
@@ -56,6 +57,17 @@ export async function toggleReactionAction(
       targetId,
       type,
     });
+
+    if (result === "added") {
+      const ownerId = await getContentOwnerId(targetType, targetId);
+      await notifyContentInteraction({
+        actorUserId: user.id,
+        ownerUserId: ownerId,
+        targetType,
+        targetId,
+        kind: type === "favorite" ? "favorite" : "like",
+      });
+    }
 
     revalidatePath(revalidatePathValue);
     return {

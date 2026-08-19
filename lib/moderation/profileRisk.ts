@@ -100,9 +100,18 @@ export function assessAvatarRisk(avatarUrl: string): ContentRiskResult {
   return { level: CONTENT_RISK_LEVELS.medium, flags };
 }
 
+export function assessMajorRisk(major: string): ContentRiskResult {
+  const normalized = major.trim();
+  if (!normalized) {
+    return { level: CONTENT_RISK_LEVELS.low, flags: [] };
+  }
+  return assessContentRisk(normalized);
+}
+
 export function assessProfileSubmissionRisk(input: {
   nickname?: string | null;
   avatarUrl?: string | null;
+  major?: string | null;
 }): ContentRiskResult {
   const nicknameRisk = input.nickname
     ? assessNicknameRisk(input.nickname)
@@ -110,9 +119,15 @@ export function assessProfileSubmissionRisk(input: {
   const avatarRisk = input.avatarUrl
     ? assessAvatarRisk(input.avatarUrl)
     : { level: CONTENT_RISK_LEVELS.low as ContentRiskLevel, flags: [] };
+  const majorRisk = input.major
+    ? assessMajorRisk(input.major)
+    : { level: CONTENT_RISK_LEVELS.low as ContentRiskLevel, flags: [] };
+
+  let level = maxRisk(nicknameRisk.level, avatarRisk.level);
+  level = maxRisk(level, majorRisk.level);
 
   return {
-    level: maxRisk(nicknameRisk.level, avatarRisk.level),
-    flags: [...nicknameRisk.flags, ...avatarRisk.flags],
+    level,
+    flags: [...nicknameRisk.flags, ...avatarRisk.flags, ...majorRisk.flags],
   };
 }

@@ -13,6 +13,10 @@ type UserIdentityProps = {
   size?: UserAvatarSize;
   className?: string;
   nameClassName?: string;
+  /**
+   * 当外层已经用 Link 整卡可点击时，避免渲染嵌套 <a>（导致 hydration error）。
+   */
+  disableLink?: boolean;
 };
 
 export function UserIdentity({
@@ -22,6 +26,7 @@ export function UserIdentity({
   size = "sm",
   className,
   nameClassName,
+  disableLink = false,
 }: UserIdentityProps) {
   const identity = (
     <>
@@ -32,7 +37,7 @@ export function UserIdentity({
 
   const baseClass = cn("inline-flex min-w-0 max-w-full items-center gap-2", className);
 
-  if (userId) {
+  if (userId && !disableLink) {
     return (
       <Link
         href={ROUTES.profile(userId)}

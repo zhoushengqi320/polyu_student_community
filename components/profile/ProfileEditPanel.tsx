@@ -35,7 +35,7 @@ export function ProfileEditPanel({ profile, email }: ProfileEditPanelProps) {
 
       {editing ? (
         <div className="space-y-6">
-          <ProfileEditForm profile={profile} />
+          <ProfileEditForm profile={profile} onClose={() => setEditing(false)} />
           {email ? <ProfileChangePasswordForm email={email} /> : null}
         </div>
       ) : null}

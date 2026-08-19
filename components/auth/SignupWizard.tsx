@@ -389,7 +389,7 @@ export function SignupWizard({
               label="头像（可选，圆形裁剪）"
             />
             <p className="text-xs text-muted-foreground">
-              未设置昵称/头像时将展示系统默认资料。低风险直接公开，中风险公开并标记，高风险需后台审核。
+              未设置昵称/头像时将展示系统默认资料。
             </p>
             {profileState.error ? (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">

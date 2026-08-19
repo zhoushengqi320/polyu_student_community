@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import {
   updateOwnProfileAction,
   type OnboardingFormState,
@@ -20,11 +20,26 @@ import {
 
 const initialState: OnboardingFormState = {};
 
-export function ProfileEditForm({ profile }: { profile: Profile }) {
+type ProfileEditFormProps = {
+  profile: Profile;
+  onClose?: () => void;
+};
+
+export function ProfileEditForm({ profile, onClose }: ProfileEditFormProps) {
   const [state, formAction, pending] = useActionState(
     updateOwnProfileAction,
     initialState,
   );
+
+  useEffect(() => {
+    if (state.unchanged) {
+      onClose?.();
+      return;
+    }
+    if (state.success && !state.error) {
+      onClose?.();
+    }
+  }, [state.unchanged, state.success, state.error, onClose]);
 
   const previewAvatar =
     profile.pendingAvatarUrl || profile.approvedAvatarUrl || profile.avatarUrl;
@@ -120,14 +135,21 @@ export function ProfileEditForm({ profile }: { profile: Profile }) {
                 {state.error}
               </p>
             ) : null}
-            {state.success ? (
+            {state.success && !state.unchanged ? (
               <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
                 {state.success}
               </p>
             ) : null}
-            <Button type="submit" disabled={pending}>
-              {pending ? "提交中..." : "保存修改"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={pending}>
+                {pending ? "提交中..." : "保存修改"}
+              </Button>
+              {onClose ? (
+                <Button type="button" variant="outline" onClick={onClose}>
+                  取消
+                </Button>
+              ) : null}
+            </div>
           </div>
         </form>
       </CardContent>

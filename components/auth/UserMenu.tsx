@@ -12,7 +12,7 @@ import { type SessionUser } from "@/types/user";
 
 type UserMenuProps = {
   user: SessionUser;
-  variant?: "desktop" | "mobile";
+  variant?: "desktop" | "mobile" | "header";
 };
 
 function getDisplayName(user: SessionUser): string {
@@ -85,9 +85,11 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
     );
   }
 
-  // 桌面：头像 + 反馈（通知与管理后台在 Navbar 外侧，保证从右至左顺序）
+  // 桌面 / 顶栏：头像 + 反馈
+  const isHeader = variant === "header";
+
   return (
-    <div className="flex items-center gap-2.5">
+    <div className={`flex items-center ${isHeader ? "gap-3" : "gap-2.5"}`}>
       <Link
         href={profileHref}
         title={displayName}
@@ -96,7 +98,16 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
       >
         <UserAvatar src={avatarUrl} name={displayName} size="nav" />
       </Link>
-      <Button variant="outline" size="sm" asChild>
+      <Button
+        variant="outline"
+        size="sm"
+        className={
+          isHeader
+            ? "border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
+            : undefined
+        }
+        asChild
+      >
         <Link href={ROUTES.feedback.list} title="问题反馈">
           <CircleHelp className="mr-1.5 h-4 w-4" />
           反馈
@@ -107,18 +118,31 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
 }
 
 type AuthButtonsProps = {
-  variant?: "desktop" | "mobile";
+  variant?: "desktop" | "mobile" | "header";
 };
 
 export function AuthButtons({ variant = "desktop" }: AuthButtonsProps) {
   const buttonClass = variant === "mobile" ? "w-full justify-start" : "";
+  const isHeader = variant === "header";
+  const ghostClass = isHeader
+    ? "text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+    : "";
+  const primaryClass = isHeader
+    ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+    : "";
 
   return (
-    <div className={variant === "mobile" ? "space-y-1" : "flex items-center gap-2"}>
-      <Button variant="ghost" size="sm" className={buttonClass} asChild>
+    <div
+      className={
+        variant === "mobile"
+          ? "space-y-1"
+          : `flex items-center ${isHeader ? "gap-3" : "gap-2"}`
+      }
+    >
+      <Button variant="ghost" size="sm" className={`${buttonClass} ${ghostClass}`} asChild>
         <Link href={ROUTES.login}>登录</Link>
       </Button>
-      <Button variant="default" size="sm" className={buttonClass} asChild>
+      <Button variant="default" size="sm" className={`${buttonClass} ${primaryClass}`} asChild>
         <Link href={ROUTES.signup}>注册</Link>
       </Button>
     </div>

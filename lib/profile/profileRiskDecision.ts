@@ -15,8 +15,11 @@ export type ProfileRiskDecision = {
 export function decideProfileSubmissionRisk(input: {
   nickname?: string | null;
   avatarUrl?: string | null;
+  major?: string | null;
 }): ProfileRiskDecision {
-  const hasContent = Boolean(input.nickname?.trim() || input.avatarUrl?.trim());
+  const hasContent = Boolean(
+    input.nickname?.trim() || input.avatarUrl?.trim() || input.major?.trim(),
+  );
   if (!hasContent) {
     return {
       level: CONTENT_RISK_LEVELS.low,
@@ -29,41 +32,17 @@ export function decideProfileSubmissionRisk(input: {
 
   const risk = assessProfileSubmissionRisk(input);
 
-  if (risk.level === CONTENT_RISK_LEVELS.high) {
-    return {
-      level: risk.level,
-      flags: risk.flags,
-      autoApprove: false,
-      needsAttention: true,
-      reviewStatus: PROFILE_REVIEW_STATUS.pending,
-    };
-  }
-
-  if (risk.level === CONTENT_RISK_LEVELS.medium) {
-    return {
-      level: risk.level,
-      flags: risk.flags,
-      autoApprove: true,
-      needsAttention: true,
-      reviewStatus: PROFILE_REVIEW_STATUS.approved,
-    };
-  }
-
+  // 前台立即公开展示；中高风险仅进入后台复核队列，不阻断用户
   return {
-    level: CONTENT_RISK_LEVELS.low,
+    level: risk.level,
     flags: risk.flags,
     autoApprove: true,
-    needsAttention: false,
+    needsAttention: risk.level !== CONTENT_RISK_LEVELS.low,
     reviewStatus: PROFILE_REVIEW_STATUS.approved,
   };
 }
 
-export function profileRiskUserMessage(decision: ProfileRiskDecision): string {
-  if (decision.level === CONTENT_RISK_LEVELS.high) {
-    return "资料已提交，因触发安全检测需管理员审核通过后才会公开展示。";
-  }
-  if (decision.level === CONTENT_RISK_LEVELS.medium) {
-    return "资料已更新并公开展示，系统已标记为中风险供管理员复核。";
-  }
-  return "资料已更新并公开展示。";
+/** @deprecated 前台不再展示审核相关提示 */
+export function profileRiskUserMessage(): string {
+  return "资料已更新";
 }

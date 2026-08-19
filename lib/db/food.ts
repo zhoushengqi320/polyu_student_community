@@ -175,6 +175,7 @@ export async function getFoodPlaceById(
 export async function createFoodPlace(input: {
   name: string;
   area: string;
+  category?: string;
   address?: string | null;
   tags?: string[];
 }): Promise<FoodPlace> {
@@ -188,6 +189,7 @@ export async function createFoodPlace(input: {
     .insert({
       name: input.name,
       area: input.area,
+      category: input.category ?? "restaurant",
       address: input.address ?? null,
       tags: input.tags ?? [],
       status: CONTENT_STATUS.published,
@@ -233,6 +235,25 @@ export async function createFoodRecommendation(input: {
   return mapFoodRecommendationWithAuthor(
     data as FoodRecommendationWithProfileRow,
   );
+}
+
+export async function updateFoodRecommendationContent(
+  recommendationId: string,
+  content: string,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new DbError("数据库未配置");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("food_recommendations")
+    .update({ content })
+    .eq("id", recommendationId);
+
+  if (error) {
+    throw new DbError(error.message, "VALIDATION");
+  }
 }
 
 export async function softDeleteFoodRecommendation(

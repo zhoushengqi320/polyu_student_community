@@ -1,5 +1,6 @@
 import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { type FoodAreaId } from "@/constants/categories";
+import { type FoodCategoryId } from "@/constants/foodCategories";
 import { mapProfileListItem, type ProfileRow } from "@/lib/db/mappers/profile";
 import { type Database, type Json } from "@/types/database";
 import {
@@ -27,6 +28,7 @@ export function mapFoodPlace(row: FoodPlaceRow): FoodPlace {
     id: row.id,
     name: row.name,
     area: row.area as FoodAreaId,
+    category: (row.category ?? "restaurant") as FoodCategoryId,
     address: row.address,
     tags: readTags(row.tags),
     status: row.status,

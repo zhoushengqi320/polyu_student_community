@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Bell } from "lucide-react";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/lib/notifications/actions";
@@ -30,6 +31,14 @@ const INLINE_DETAIL_TYPES = new Set<string>([
   NOTIFICATION_TYPES.archiveAppealPending,
   NOTIFICATION_TYPES.archiveAppealApproved,
   NOTIFICATION_TYPES.archiveAppealRejected,
+  NOTIFICATION_TYPES.profileRejected,
+]);
+
+const INTERACTION_TYPES = new Set<string>([
+  NOTIFICATION_TYPES.contentLiked,
+  NOTIFICATION_TYPES.contentFavorited,
+  NOTIFICATION_TYPES.contentCommented,
+  NOTIFICATION_TYPES.contentReplied,
 ]);
 
 const APPEAL_CTA_TYPES = new Set<string>([
@@ -55,7 +64,6 @@ function appealHref(item: Notification): string | null {
     return item.link;
   }
   const meta = item.metadata;
-  // 兼容旧通知：尽量落到通知页说明
   if (meta && typeof meta === "object" && meta.canAppeal) {
     return item.link;
   }
@@ -63,6 +71,7 @@ function appealHref(item: Notification): string | null {
 }
 
 export function NotificationList({ notifications }: NotificationListProps) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const unreadCount = notifications.filter((item) => !item.readAt).length;
@@ -70,6 +79,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
   function handleMarkAllRead() {
     startTransition(async () => {
       await markAllNotificationsReadAction();
+      router.refresh();
     });
   }
 
@@ -81,12 +91,16 @@ export function NotificationList({ notifications }: NotificationListProps) {
 
       if (INLINE_DETAIL_TYPES.has(item.type)) {
         setExpandedId((current) => (current === item.id ? null : item.id));
+        router.refresh();
         return;
       }
 
       if (shouldNavigate(item.link) && item.link) {
-        window.location.href = item.link;
+        router.push(item.link);
+        return;
       }
+
+      router.refresh();
     });
   }
 
@@ -95,7 +109,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
       <EmptyState
         icon={Bell}
         title="暂无通知"
-        description="举报处理、内容审核等系统消息会显示在这里。"
+        description="互动消息（点赞、评论、回复、收藏）与系统处理结果会显示在这里。"
       />
     );
   }
@@ -119,6 +133,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
       <ul className="divide-y rounded-xl border">
         {notifications.map((item) => {
           const isInlineDetail = INLINE_DETAIL_TYPES.has(item.type);
+          const isInteraction = INTERACTION_TYPES.has(item.type);
           const expanded = expandedId === item.id;
           const showAppealCta = APPEAL_CTA_TYPES.has(item.type);
           const worksLink = appealHref(item);
@@ -130,6 +145,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
                 className={cn(
                   "block w-full px-4 py-4 text-left transition-colors hover:bg-muted/40",
                   !item.readAt && "bg-primary/5",
+                  isInteraction && !item.readAt && "border-l-2 border-l-primary",
                 )}
                 onClick={() => handleItemClick(item)}
               >

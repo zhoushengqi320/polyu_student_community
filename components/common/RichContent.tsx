@@ -43,7 +43,10 @@ export function RichContent({ content, stripTitle, className }: RichContentProps
   return (
     <ImageLightbox>
       <div
-        className={cn("prose-editor rich-content text-sm md:text-base", className)}
+        className={cn(
+          "markdown-body article-body prose-editor rich-content space-y-4 text-sm leading-7 md:text-base",
+          className,
+        )}
         dangerouslySetInnerHTML={{ __html: safe }}
       />
     </ImageLightbox>

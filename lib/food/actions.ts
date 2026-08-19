@@ -9,8 +9,12 @@ import {
   createFoodPlace,
   createFoodRecommendation,
   softDeleteFoodRecommendation,
+  updateFoodRecommendationContent,
 } from "@/lib/db/food";
 import { DbError } from "@/lib/db/shared";
+import { buildContentWithUploads } from "@/lib/content/buildContentWithUploads";
+import { attachUserUploads } from "@/lib/db/userUploads";
+import { validatePendingUploadIds } from "@/lib/content/userUploadActions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { assertCan } from "@/lib/utils/permissions";
 import {
@@ -40,6 +44,11 @@ export async function createFoodRecommendationAction(
   }
   if (!user) return { error: "请先登录" };
 
+  const uploadIds = formData
+    .getAll("uploadIds")
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+
   const parsed = foodRecommendationSchema.safeParse({
     placeId: formData.get("placeId"),
     rating: formData.get("rating"),
@@ -55,13 +64,35 @@ export async function createFoodRecommendationAction(
     return { fieldErrors, error: "请检查推荐内容" };
   }
 
+  const uploadCheck = await validatePendingUploadIds(
+    user.id,
+    uploadIds,
+    "food",
+  );
+  if (!uploadCheck.ok) {
+    return { error: uploadCheck.error };
+  }
+
   try {
-    await createFoodRecommendation({
+    const recommendation = await createFoodRecommendation({
       placeId: parsed.data.placeId,
       userId: user.id,
       rating: parsed.data.rating,
       content: parsed.data.content,
     });
+
+    if (uploadIds.length > 0) {
+      const attached = await attachUserUploads({
+        userId: user.id,
+        uploadIds,
+        targetType: "food_recommendation",
+        targetId: recommendation.id,
+        module: "food",
+      });
+      const fullContent = buildContentWithUploads(parsed.data.content, attached);
+      await updateFoodRecommendationContent(recommendation.id, fullContent);
+    }
+
     revalidatePath(ROUTES.food.list);
     revalidatePath(ROUTES.food.detail(parsed.data.placeId));
     return { success: "推荐已发布" };
@@ -88,9 +119,15 @@ export async function submitFoodPlaceAction(
   }
   if (!user) return { error: "请先登录" };
 
+  const uploadIds = formData
+    .getAll("uploadIds")
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+
   const parsed = foodPlaceSubmitSchema.safeParse({
     name: formData.get("name"),
     area: formData.get("area"),
+    category: formData.get("category"),
     address: formData.get("address"),
     tags: formData.get("tags"),
     rating: formData.get("rating"),
@@ -105,19 +142,42 @@ export async function submitFoodPlaceAction(
     return { fieldErrors, error: "请检查提交内容" };
   }
 
+  const uploadCheck = await validatePendingUploadIds(
+    user.id,
+    uploadIds,
+    "food",
+  );
+  if (!uploadCheck.ok) {
+    return { error: uploadCheck.error };
+  }
+
   try {
     const place = await createFoodPlace({
       name: parsed.data.name,
       area: parsed.data.area,
+      category: parsed.data.category,
       address: parsed.data.address,
       tags: parsed.data.tags,
     });
-    await createFoodRecommendation({
+    const recommendation = await createFoodRecommendation({
       placeId: place.id,
       userId: user.id,
       rating: parsed.data.rating,
       content: parsed.data.content,
     });
+
+    if (uploadIds.length > 0) {
+      const attached = await attachUserUploads({
+        userId: user.id,
+        uploadIds,
+        targetType: "food_recommendation",
+        targetId: recommendation.id,
+        module: "food",
+      });
+      const fullContent = buildContentWithUploads(parsed.data.content, attached);
+      await updateFoodRecommendationContent(recommendation.id, fullContent);
+    }
+
     revalidatePath(ROUTES.food.list);
     revalidatePath(ROUTES.food.detail(place.id));
     redirect(ROUTES.food.detail(place.id));

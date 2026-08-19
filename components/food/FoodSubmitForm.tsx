@@ -2,10 +2,16 @@
 
 import { useActionState, useState } from "react";
 import { FOOD_AREAS } from "@/constants/categories";
+import { FOOD_CATEGORIES } from "@/constants/foodCategories";
+import { StarRatingInput } from "@/components/courses/StarRatingInput";
 import {
   submitFoodPlaceAction,
   type FoodFormState,
 } from "@/lib/food/actions";
+import {
+  FormImageAttachments,
+  type FormImageUploadItem,
+} from "@/components/common/FormImageAttachments";
 import { PendingOverlay } from "@/components/common/PendingOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -28,19 +33,18 @@ export function FoodSubmitForm() {
   );
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
-  const [rating, setRating] = useState("");
+  const [category, setCategory] = useState("");
+  const [rating, setRating] = useState(0);
   const [address, setAddress] = useState("");
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
+  const [uploads, setUploads] = useState<FormImageUploadItem[]>([]);
 
   return (
     <>
       <Card className="mx-auto max-w-2xl">
         <CardHeader>
           <CardTitle>提交新地点</CardTitle>
-          <CardDescription>
-            提交校园及附近吃喝玩乐地点，并附上你的第一条推荐
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-4">
@@ -59,6 +63,31 @@ export function FoodSubmitForm() {
               ) : null}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="category">分类</Label>
+                <select
+                  id="category"
+                  name="category"
+                  required
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="" disabled>
+                    请选择
+                  </option>
+                  {FOOD_CATEGORIES.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+                {state.fieldErrors?.category ? (
+                  <p className="text-sm text-destructive">
+                    {state.fieldErrors.category}
+                  </p>
+                ) : null}
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="area">地区</Label>
                 <select
@@ -82,27 +111,16 @@ export function FoodSubmitForm() {
                   <p className="text-sm text-destructive">{state.fieldErrors.area}</p>
                 ) : null}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="rating">你的评分</Label>
-                <select
-                  id="rating"
-                  name="rating"
-                  required
-                  value={rating}
-                  onChange={(event) => setRating(event.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="" disabled>
-                    请选择
-                  </option>
-                  {[1, 2, 3, 4, 5].map((score) => (
-                    <option key={score} value={score}>
-                      {score} 分
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
+            <StarRatingInput
+              id="rating"
+              name="rating"
+              label="你的评分"
+              value={rating}
+              onChange={setRating}
+              error={state.fieldErrors?.rating}
+              className="sm:max-w-sm"
+            />
             <div className="space-y-2">
               <Label htmlFor="address">地址（可选）</Label>
               <Input
@@ -118,7 +136,7 @@ export function FoodSubmitForm() {
               <Input
                 id="tags"
                 name="tags"
-                placeholder="例如：平价, 日料, 适合聚餐"
+                placeholder="例如：平价, 适合聚餐"
                 value={tags}
                 onChange={(event) => setTags(event.target.value)}
               />
@@ -139,6 +157,14 @@ export function FoodSubmitForm() {
                 <p className="text-sm text-destructive">{state.fieldErrors.content}</p>
               ) : null}
             </div>
+            <FormImageAttachments
+              module="food"
+              uploads={uploads}
+              onChange={setUploads}
+              disabled={pending}
+              label="地点照片（可选）"
+              hint="可上传门头、环境、餐牌等，最多 3 张，单张不超过 5MB。"
+            />
             {state.error ? (
               <p className="text-sm text-destructive">{state.error}</p>
             ) : null}

@@ -37,9 +37,7 @@ export function ContentGuideList({
               <CardTitle className="transition-colors group-hover:text-primary">
                 {item.title}
               </CardTitle>
-              {item.excerpt ? (
-                <CardDescription className="line-clamp-3">{item.excerpt}</CardDescription>
-              ) : null}
+              <CardDescription className="line-clamp-3">NA</CardDescription>
             </CardHeader>
           </Card>
         </Link>
