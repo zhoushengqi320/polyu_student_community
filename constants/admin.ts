@@ -80,7 +80,7 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   create_course: "创建课程",
   update_course: "更新课程",
   delete_course: "删除课程",
-  upload_course_pdf: "上传课程 PDF",
+  upload_course_pdf: "上传课程文件（已停用）",
   create_guide: "创建攻略",
   update_guide: "编辑攻略",
   publish_guide: "发布攻略",

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
-type CourseDetailTabId = "overview" | "assessment" | "reviews" | "pdf";
+type CourseDetailTabId = "overview" | "assessment" | "reviews";
 
 type CourseDetailTab = {
   id: CourseDetailTabId;

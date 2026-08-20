@@ -54,7 +54,7 @@ export function CourseAssessment({ course }: CourseAssessmentProps) {
       <CardHeader>
         <CardTitle>考核方式</CardTitle>
         <CardDescription>
-          课程考核方式，按官方 PDF 中的原始分类和百分比展示
+          课程考核方式与占比（如有结构化数据）
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +67,7 @@ export function CourseAssessment({ course }: CourseAssessmentProps) {
         ) : (
           <EmptyState
             title="暂无考核信息"
-            description="导入官方 PDF 后会在这里展示该课程原始考核分类。"
+            description="该课程尚未录入考核结构，可先查看学生评价了解作业与考试体验。"
           />
         )}
       </CardContent>

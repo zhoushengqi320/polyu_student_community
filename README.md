@@ -25,7 +25,7 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 ### 待完善（非上线阻断）
 
 - 生活指南部分栏目仍偏薄；美食冷启动数据不足
-- 课程评价排序、后台评价筛选；课程 PDF 生产环境对象存储方案
+- 课程评价排序、后台评价筛选
 - Study / Life 详情互动（评论 / 举报）与模块内搜索
 - 账号注销流程与法务文案校准；通知 / 申诉入口
 - `resources` 表为遗留数据，站点不暴露「常用网站」模块
@@ -43,13 +43,11 @@ PolyUHub 是一个面向香港理工大学（PolyU）学生的响应式 Web 校�
 - Supabase RLS
 - Server Actions
 - Railway / Node 生产部署
-- `pdf-parse` 用于本地课程 PDF 导入脚本
 
 ## 项目结构
 
 ```text
 app/                         Next.js 路由页面
-  course-pdfs/[...path]/      本地课程 PDF 预览与下载路由
 components/                  UI 组件与业务组件
 constants/                   路由、模块、角色、分类、状态等常量
 hooks/                       前端 hooks
@@ -95,11 +93,11 @@ NEXT_PUBLIC_SUPABASE_URL=你的 Supabase Project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=你的 Supabase Anon Key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# 仅本地导入课程 PDF 脚本使用，不要暴露给前端
+# 仅服务端维护脚本使用，不要暴露给前端
 SUPABASE_SERVICE_ROLE_KEY=你的 Supabase service role key
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` 只用于本地批量导入课程数据，因为脚本需要绕过 RLS 写入 `courses` 表。不要提交到 GitHub。
+`SUPABASE_SERVICE_ROLE_KEY` 只用于本地批量导入等运维脚本（需绕过 RLS），不要提交到 GitHub。
 
 ### 启动开发服务器
 
@@ -122,7 +120,7 @@ npm run start            # 启动生产服务
 npm run lint             # 运行 ESLint
 npm run typecheck        # TypeScript 类型检查
 npm run import:guides    # 从 content/guides|life|study 导入内容到 posts
-npm run import:courses   # 从 学科/ 文件夹导入课程 PDF
+npm run import:courses:jsonl  # 从结构化 JSONL 导入/更新课程元数据（不含文件托管）
 npm run verify:deploy    # 检查部署环境变量（加 --production 校验生产配置）
 ```
 
@@ -279,8 +277,7 @@ npm run verify:deploy -- --production
 
 ### 6. 本阶段暂不强制
 
-- 内容批量导入（`import:guides` / `import:courses`）可在上线后补
-- 课程 PDF 生产对象存储方案可后续再做
+- 内容批量导入（`import:guides` / `import:courses:jsonl`）可在上线后按需补
 
 ---
 
@@ -291,56 +288,15 @@ npm run verify:deploy -- --production
 
 </details>
 
-## 课程 PDF 导入
+## 课程数据说明
 
-课程 PDF 放在：
+本站**不托管、不提供**学校课程 PDF 下载。课程详情页展示的概览、目标、考核等信息来自已导入数据库的结构化字段（如 `description`、`objectives`、`assessment_json`），与本地文件无关。
 
-```text
-学科/
-  AAE/
-    AAE1BN01.pdf
-  ABCT/
-    ABCT4106.pdf
-```
-
-先测试解析，不写数据库：
+如需批量维护课程元数据，可使用结构化 JSONL：
 
 ```bash
-npm run import:courses -- --dry-run
-```
-
-真实导入：
-
-```bash
-npm run import:courses
-```
-
-默认行为：
-
-- 按 `courses.code + school_id` 判断是否已存在
-- 已存在的课程会跳过
-- 只插入新增课程
-- 不会反复添加同一个课程
-- 同一批 PDF 中重复的课程 code 会自动跳过，避免 Supabase `upsert` 冲突
-
-如果想更新已有课程资料：
-
-```bash
-npm run import:courses -- --update-existing
-```
-
-修改 PDF 解析规则后，例如更新 `Objectives`、`Assessment` 或 PDF 路径展示逻辑，需要使用 `--update-existing` 重新写入已有课程。
-
-当前导入结果会包含：
-
-- `objectives`：课程目标正文，不包含重复的 `Objectives` 标题。
-- `assessment_json.items`：按 PDF 原始表格分类保存，例如 `Tests/assignments 40%`、`Examination 60%`。
-- `pdf_storage_path`：本地 PDF 路径，例如 `学科/ABCT/ABCT1001.pdf`。详情页会通过 `/course-pdfs/ABCT/ABCT1001.pdf` 预览或下载。
-
-可以指定其他目录：
-
-```bash
-npm run import:courses -- --dir="/path/to/course-pdfs"
+npm run import:courses:jsonl -- --file="/path/to/courses.jsonl" --dry-run
+npm run import:courses:jsonl -- --file="/path/to/courses.jsonl" --update-existing
 ```
 
 ## 课程评价统计与互动
@@ -464,7 +420,6 @@ supabase gen types typescript --project-id <project-id> --schema public > types/
 
 ## 已知问题
 
-- 课程 PDF 目前依赖本地 `学科/` 路径，生产环境需后续改为对象存储后才可稳定预览。
 - 课程评价后台筛选、评价排序仍可继续增强。
 - 生活指南部分栏目内容偏薄；美食模块缺冷启动地点数据。
 - 找搭子为论坛 topic，不是独立导航模块；`/buddy` 会重定向到论坛。

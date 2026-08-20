@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   useActionState,
   useCallback,
@@ -9,7 +8,6 @@ import {
   useTransition,
 } from "react";
 import { COURSE_DEPARTMENTS, getDepartmentCode } from "@/constants/courseOptions";
-import { ROUTES } from "@/constants/routes";
 import {
   createCourseAdminAction,
   deleteCourseAdminAction,
@@ -100,7 +98,7 @@ function CourseForm({
       <CardHeader>
         <CardTitle>{mode === "create" ? "新增课程" : "编辑课程"}</CardTitle>
         <CardDescription>
-          维护课程代码、名称与官方信息。合并 PDF 拆分后可在描述中注明与哪些课号共用大纲。
+          维护课程代码、名称与官方信息。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -220,7 +218,7 @@ function CourseForm({
               name="description"
               rows={5}
               defaultValue={course?.description ?? ""}
-              placeholder="合并 PDF 拆分时，可在此注明：本课程与 XXX 共用同一份官方大纲。"
+              placeholder="可选：补充课程说明或备注"
               className={TEXTAREA_CLASS}
             />
           </div>
@@ -384,9 +382,6 @@ export function CoursesAdminPanel({
           </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" asChild>
-            <Link href={ROUTES.adminUploadPdf}>上传 PDF</Link>
-          </Button>
           <Button type="button" onClick={() => setView("create")}>
             新增课程
           </Button>

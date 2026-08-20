@@ -29,7 +29,7 @@ import { normalizeCourseCodeParam } from "@/lib/courses/courseCode";
 /** 相关度排序最多扫这么多条轻量行（仅 id/code/name） */
 const COURSE_SEARCH_FETCH_CAP = 5000;
 
-/** 列表卡片所需字段，避免 select * 拉回大段 PDF/考核正文 */
+/** 列表卡片所需字段，避免 select * 拉回大段正文 */
 const COURSE_LIST_COLUMNS =
   "id, code, name, department, faculty, level, credits, description, school_id, created_at, updated_at, review_count, overall_rating, difficulty_rating, top_tags";
 

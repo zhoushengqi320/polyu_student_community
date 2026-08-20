@@ -32,14 +32,10 @@ yarn-error.log*
 .env
 .env*.local
 
-# course PDF pipeline (独立工具运行时数据)
-tools/course-pdf-pipeline/.venv/
-tools/course-pdf-pipeline/venv/
-tools/course-pdf-pipeline/data/uploads/
-tools/course-pdf-pipeline/data/jobs/
-tools/course-pdf-pipeline/data/batches/
-tools/course-pdf-pipeline/data/exports/
-tools/course-pdf-pipeline/.env
+# 本地课程 / 学校 PDF 资料（不入库、不托管）
+/课程/
+/学科/
+*.pdf
 
 # vercel
 .vercel

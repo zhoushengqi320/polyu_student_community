@@ -15,7 +15,7 @@ export const SITE_SLOGAN = "选课前，先查 PolyUHub";
 export const SITE_BYLINE = "For and By Polyuer";
 
 export const SITE_DESCRIPTION =
-  "Polyuhub 香港理工大学学生互助社区，提供课程PDF资料下载、校园论坛交流，理大学生交流平台。";
+  "PolyUHub 香港理工大学学生互助社区，提供课程评价、校园指南与同学讨论，选课前先查 PolyUHub。";
 
 export const SITE_TAGLINE = SITE_SLOGAN;
 

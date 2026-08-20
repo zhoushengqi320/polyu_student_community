@@ -3,7 +3,6 @@ import { CourseAssessment } from "@/components/courses/CourseAssessment";
 import { CourseDetailTabs } from "@/components/courses/CourseDetailTabs";
 import { CourseFavoriteButton } from "@/components/courses/CourseFavoriteButton";
 import { CourseOverview } from "@/components/courses/CourseOverview";
-import { CoursePdfPanel } from "@/components/courses/CoursePdfPanel";
 import { CourseReviews } from "@/components/courses/CourseReviews";
 import { CourseStatsCard } from "@/components/courses/CourseStatsCard";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import {
   normalizeDisplayCode,
   normalizeDisplayName,
 } from "@/lib/courses/normalizeDisplay";
-import { getCoursePdfPublicHref } from "@/lib/courses/pdfPath";
 import { type CourseDetail } from "@/types/course";
 
 type CourseDetailViewProps = {
@@ -41,7 +39,6 @@ export function CourseDetailView({
 }: CourseDetailViewProps) {
   const displayCode = normalizeDisplayCode(course.code);
   const displayName = normalizeDisplayName(course.name, course.code);
-  const pdfHref = getCoursePdfPublicHref(course.pdfStoragePath, course.pdfUrl);
 
   return (
     <div className="space-y-6">
@@ -61,16 +58,6 @@ export function CourseDetailView({
               <CardDescription className="mt-2">
                 官方课程信息 + 学生真实评价
               </CardDescription>
-              {pdfHref ? (
-                <a
-                  href={pdfHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-sm font-medium text-primary underline underline-offset-4"
-                >
-                  下载课程PDF
-                </a>
-              ) : null}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <CourseFavoriteButton
@@ -116,11 +103,6 @@ export function CourseDetailView({
                 isAdminUser={isAdminUser}
               />
             ),
-          },
-          {
-            id: "pdf",
-            label: "官方 PDF",
-            content: <CoursePdfPanel course={course} />,
           },
         ]}
       />
