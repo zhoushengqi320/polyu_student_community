@@ -7,8 +7,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Polyuhub｜香港理工大学学生社区 | 课程资料与校园论坛",
-    template: `%s | Polyuhub`,
+    default: "PolyUHub｜香港理工大学学生社区 | 课程评价与校园指南",
+    template: `%s | PolyUHub`,
   },
   description: SITE_DESCRIPTION,
   icons: {
