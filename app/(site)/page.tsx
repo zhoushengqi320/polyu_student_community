@@ -1,13 +1,17 @@
 import { getHomePageData } from "@/lib/db/home";
+import { getSessionUser } from "@/lib/auth/session";
+import { shouldShowHomeTour } from "@/lib/auth/homeTour";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CoreModuleGrid } from "@/components/home/CoreModuleGrid";
 import { LatestForumPostsSection } from "@/components/home/LatestForumPostsSection";
 import { HomeValueSection } from "@/components/home/HomeValueSection";
+import { HomeProductTour } from "@/components/home/HomeProductTour";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const data = await getHomePageData();
+  const [data, user] = await Promise.all([getHomePageData(), getSessionUser()]);
+  const showHomeTour = shouldShowHomeTour(user?.profile ?? null);
 
   return (
     <div>
@@ -27,6 +31,8 @@ export default async function HomePage() {
         <CoreModuleGrid />
         <LatestForumPostsSection result={data.latestPosts} />
       </div>
+
+      <HomeProductTour enabled={showHomeTour} />
     </div>
   );
 }

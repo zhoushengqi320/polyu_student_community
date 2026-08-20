@@ -15,6 +15,7 @@ export function HomeSearchBox({ className }: HomeSearchBoxProps) {
 
   return (
     <form
+      data-tour="home-search"
       className={className}
       onSubmit={(event) => {
         event.preventDefault();

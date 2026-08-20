@@ -337,3 +337,23 @@ export async function updateProfile(
 
   return mapProfile(data);
 }
+
+export async function markHomeTourCompleted(
+  userId: string,
+): Promise<{ error?: string }> {
+  if (!isSupabaseConfigured()) {
+    return { error: "数据库未配置。" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ home_tour_completed_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return {};
+}

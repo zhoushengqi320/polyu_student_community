@@ -10,6 +10,7 @@ type HomeSectionShellProps = {
   linkLabel?: string;
   children: React.ReactNode;
   className?: string;
+  tourId?: string;
 };
 
 export function HomeSectionShell({
@@ -19,9 +20,10 @@ export function HomeSectionShell({
   linkLabel = "查看更多",
   children,
   className,
+  tourId,
 }: HomeSectionShellProps) {
   return (
-    <section className={cn("space-y-5", className)}>
+    <section data-tour={tourId} className={cn("space-y-5", className)}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-tight">{title}</h2>

@@ -332,6 +332,7 @@ export type Database = {
           major: string | null;
           onboarding_completed: boolean;
           is_first_setup_completed: boolean;
+          home_tour_completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -354,6 +355,7 @@ export type Database = {
           major?: string | null;
           onboarding_completed?: boolean;
           is_first_setup_completed?: boolean;
+          home_tour_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -376,6 +378,7 @@ export type Database = {
           major?: string | null;
           onboarding_completed?: boolean;
           is_first_setup_completed?: boolean;
+          home_tour_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

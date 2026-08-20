@@ -28,6 +28,8 @@ export type Profile = {
   major: string | null;
   onboardingCompleted: boolean;
   isFirstSetupCompleted: boolean;
+  /** 首页新手引导完成时间；null 表示尚未完成 */
+  homeTourCompletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

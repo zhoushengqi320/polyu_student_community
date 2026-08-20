@@ -44,6 +44,7 @@ export function CoreModuleGrid() {
               label={module.label}
               description={module.description}
               icon={module.icon}
+              tourId={`home-module-${module.key}`}
             />
           ))}
         </div>

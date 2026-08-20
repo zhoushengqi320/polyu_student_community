@@ -53,6 +53,9 @@ export function mapProfile(row: ProfileRow): Profile {
     major: row.major ?? null,
     onboardingCompleted: isFirstSetup,
     isFirstSetupCompleted: isFirstSetup,
+    homeTourCompletedAt:
+      (row as ProfileRow & { home_tour_completed_at?: string | null })
+        .home_tour_completed_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

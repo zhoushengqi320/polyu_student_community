@@ -36,6 +36,8 @@ type ModuleCardProps = {
   description: string;
   icon: ModuleIconName;
   className?: string;
+  /** 首页新手引导定位用 */
+  tourId?: string;
 };
 
 export function ModuleCard({
@@ -44,11 +46,16 @@ export function ModuleCard({
   description,
   icon,
   className,
+  tourId,
 }: ModuleCardProps) {
   const Icon = MODULE_ICONS[icon];
 
   return (
-    <Link href={route} className={cn("group block h-full", className)}>
+    <Link
+      href={route}
+      data-tour={tourId}
+      className={cn("group block h-full", className)}
+    >
       <Card className={interactiveCardClassName("h-full")}>
         <CardHeader>
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">

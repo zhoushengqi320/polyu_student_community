@@ -15,6 +15,7 @@ export function LatestForumPostsSection({ result }: LatestForumPostsSectionProps
       title="最新讨论"
       description="自由讨论区里刚刚发生的新鲜事。"
       href={ROUTES.forum.list}
+      tourId="home-latest-forum"
     >
       {result.error ? (
         <HomeEmptyState
