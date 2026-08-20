@@ -31,6 +31,10 @@ import {
   restoreSoftDeletedContentByTarget,
 } from "@/lib/db/moderation";
 import { createNotifications } from "@/lib/db/notifications";
+import {
+  buildArchiveActionMetadata,
+  buildContentActionMetadata,
+} from "@/lib/admin/actionLogMetadata";
 import { logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
 import { createClient } from "@/lib/supabase/server";
@@ -234,6 +238,7 @@ export async function processNewReport(input: {
 export async function confirmReportViolation(
   reportId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   const report = await getReportById(reportId);
 
@@ -315,7 +320,10 @@ export async function confirmReportViolation(
     targetType: report.target_type,
     targetId: report.target_id,
     metadata: {
-      reportId,
+      ...buildContentActionMetadata(snapshot, {
+        reason,
+        reportId,
+      }),
       archived: true,
       archiveCreated: created,
     },
@@ -329,6 +337,7 @@ export async function confirmReportViolation(
 export async function dismissReportWithReview(
   reportId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   const report = await getReportById(reportId);
 
@@ -481,7 +490,10 @@ export async function dismissReportWithReview(
     targetType: report.target_type,
     targetId: report.target_id,
     metadata: {
-      reportId,
+      ...buildContentActionMetadata(snapshot, {
+        reason,
+        reportId,
+      }),
       restored,
       reporterWarningCount: nextWarnings,
       banned: hadPriorWarning && !isAdminReporter,
@@ -552,6 +564,7 @@ export async function requestArchiveAppeal(input: {
 export async function approveArchiveAppeal(
   archiveId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -619,10 +632,13 @@ export async function approveArchiveAppeal(
     action: "archive_appeal_approved",
     targetType: archive.target_type,
     targetId: archive.target_id,
-    metadata: {
+    metadata: buildArchiveActionMetadata({
       archiveId: archive.id,
+      title: archive.title,
+      snapshot: archive.snapshot,
       appealNote: archive.appeal_note,
-    },
+      reason,
+    }),
   });
 }
 
@@ -630,6 +646,7 @@ export async function approveArchiveAppeal(
 export async function rejectArchiveAppealReview(
   archiveId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -671,9 +688,12 @@ export async function rejectArchiveAppealReview(
     action: "archive_appeal_rejected",
     targetType: archive.target_type as TargetType,
     targetId: archive.target_id,
-    metadata: {
+    metadata: buildArchiveActionMetadata({
       archiveId: archive.id,
+      title: archive.title,
+      snapshot: archive.snapshot,
       appealNote: archive.appeal_note,
-    },
+      reason,
+    }),
   });
 }

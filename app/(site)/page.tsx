@@ -4,12 +4,14 @@ import { CoreModuleGrid } from "@/components/home/CoreModuleGrid";
 import { LatestForumPostsSection } from "@/components/home/LatestForumPostsSection";
 import { HomeValueSection } from "@/components/home/HomeValueSection";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const data = await getHomePageData();
 
   return (
     <div>
-      <HeroSection />
+      <HeroSection announcements={data.announcements} />
 
       <div
         id="home-content"

@@ -68,8 +68,15 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
         </div>
       </td>
       <td className="px-3 py-3 text-sm">
-        <form action={approveAction} className="mb-2">
+        <form action={approveAction} className="mb-4 space-y-2">
           <input type="hidden" name="userId" value={item.id} />
+          <Input
+            name="reason"
+            placeholder="审核理由（必填，将写入操作记录）"
+            className="h-8 text-sm"
+            required
+            maxLength={500}
+          />
           <Button type="submit" size="sm" disabled={approvePending}>
             {approvePending ? "处理中..." : "通过审核"}
           </Button>
@@ -84,8 +91,10 @@ function ReviewRow({ item }: { item: AdminProfileReviewItem }) {
           <input type="hidden" name="userId" value={item.id} />
           <Input
             name="reason"
-            placeholder="违规说明（可选，将通知用户）"
+            placeholder="驳回理由（必填，将通知用户并写入操作记录）"
             className="h-8 text-sm"
+            required
+            maxLength={500}
           />
           <Button
             type="submit"

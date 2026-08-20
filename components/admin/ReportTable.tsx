@@ -1,15 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
 import { Flag } from "lucide-react";
+import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
 import {
   confirmReportViolationAction,
   dismissReportAction,
 } from "@/lib/admin/actions";
-import {
-  adminActionInitialState,
-  type AdminActionState,
-} from "@/lib/admin/state";
 import {
   getReportReasonLabel,
   REPORT_STATUS,
@@ -21,7 +17,6 @@ import {
 } from "@/constants/admin";
 import { formatDateTime } from "@/lib/utils/formatDate";
 import { type ReportWithReporter } from "@/types/report";
-import { Button } from "@/components/ui/button";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
@@ -29,45 +24,6 @@ import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPrevie
 type ReportTableProps = {
   reports: ReportWithReporter[];
 };
-
-function ActionMessage({ state }: { state: AdminActionState }) {
-  if (state.error) {
-    return <p className="text-xs text-destructive">{state.error}</p>;
-  }
-
-  if (state.success) {
-    return <p className="text-xs text-green-600">{state.success}</p>;
-  }
-
-  return null;
-}
-
-function ReportActionForm({
-  reportId,
-  action,
-  label,
-  variant = "outline",
-}: {
-  reportId: string;
-  action: typeof confirmReportViolationAction | typeof dismissReportAction;
-  label: string;
-  variant?: "default" | "outline" | "destructive";
-}) {
-  const [state, formAction, pending] = useActionState(
-    action,
-    adminActionInitialState,
-  );
-
-  return (
-    <form action={formAction} className="inline-flex flex-col items-end gap-1">
-      <input type="hidden" name="reportId" value={reportId} />
-      <Button type="submit" size="sm" variant={variant} disabled={pending}>
-        {pending ? "处理中..." : label}
-      </Button>
-      <ActionMessage state={state} />
-    </form>
-  );
-}
 
 function statusBadgeClass(status: string): string | undefined {
   if (status === REPORT_STATUS.pending) {
@@ -160,17 +116,26 @@ export function ReportTable({ reports }: ReportTableProps) {
                 <td className="px-4 py-3">
                   {isPending ? (
                     <div className="flex flex-wrap justify-end gap-2">
-                      <ReportActionForm
-                        reportId={report.id}
-                        action={confirmReportViolationAction}
+                      <AdminConfirmButton
                         label="确认违规"
-                        variant="destructive"
+                        confirmTitle="确认内容违规？"
+                        confirmDescription="将下架内容并封存备份，通知作者与举报人。请填写审核理由。"
+                        action={confirmReportViolationAction}
+                        hiddenFields={{ reportId: report.id }}
+                        requireReason
+                        reasonLabel="审核理由"
+                        reasonPlaceholder="说明违规依据（必填，将写入操作记录）"
                       />
-                      <ReportActionForm
-                        reportId={report.id}
-                        action={dismissReportAction}
+                      <AdminConfirmButton
                         label="驳回（无违规）"
+                        confirmTitle="驳回举报？"
+                        confirmDescription="认为内容不构成违规，将恢复内容（如曾被自动隐藏）并通知举报人。请填写审核理由。"
+                        action={dismissReportAction}
+                        hiddenFields={{ reportId: report.id }}
                         variant="outline"
+                        requireReason
+                        reasonLabel="审核理由"
+                        reasonPlaceholder="说明驳回依据（必填，将写入操作记录）"
                       />
                     </div>
                   ) : (

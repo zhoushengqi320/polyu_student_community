@@ -35,6 +35,11 @@ import {
 import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { type TargetType } from "@/constants/reportReasons";
+import { parseAdminReviewReason } from "@/lib/admin/reviewReason";
+import {
+  resolveAdminActionLogDetail,
+  type AdminActionLogDetail,
+} from "@/lib/admin/actionLogDetail";
 import { type AdminActionState } from "@/lib/admin/state";
 
 const previewSchema = z.object({
@@ -138,6 +143,38 @@ export async function getAdminContentPreviewAction(input: {
   }
 }
 
+const actionLogDetailSchema = z.object({
+  targetType: z.string().min(1),
+  targetId: z.string().uuid(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+
+export async function getAdminActionLogDetailAction(input: {
+  targetType: string;
+  targetId: string;
+  metadata?: Record<string, unknown> | null;
+}): Promise<{ data?: AdminActionLogDetail; error?: string }> {
+  try {
+    await requireAdmin();
+    const parsed = actionLogDetailSchema.safeParse(input);
+    if (!parsed.success) {
+      return { error: "无效的操作记录目标" };
+    }
+
+    const data = await resolveAdminActionLogDetail({
+      targetType: parsed.data.targetType,
+      targetId: parsed.data.targetId,
+      metadata: parsed.data.metadata ?? null,
+    });
+
+    return { data };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "详情加载失败",
+    };
+  }
+}
+
 async function runAdminAction(
   action: () => Promise<void>,
   successMessage: string,
@@ -147,10 +184,17 @@ async function runAdminAction(
     revalidatePath(ROUTES.admin);
     return { success: successMessage };
   } catch (error) {
+    if (error instanceof DbError) {
+      return { error: error.message };
+    }
     return {
       error: error instanceof Error ? error.message : "操作失败，请稍后重试",
     };
   }
+}
+
+function readReviewReason(formData: FormData): string {
+  return parseAdminReviewReason(formData.get("reason"));
 }
 
 export async function banUserAction(
@@ -283,10 +327,17 @@ export async function approveProfileReviewAction(
     return { error: "无效的用户 ID" };
   }
 
-  return runAdminAction(
-    () => approveProfileReview(userId, admin.id),
-    "资料已通过审核",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => approveProfileReview(userId, admin.id, reason),
+      "资料已通过审核",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 export async function rejectProfileReviewAction(
@@ -295,16 +346,22 @@ export async function rejectProfileReviewAction(
 ): Promise<AdminActionState> {
   const admin = await requireAdmin();
   const userId = String(formData.get("userId") ?? "");
-  const reason = String(formData.get("reason") ?? "");
 
   if (!userId) {
     return { error: "无效的用户 ID" };
   }
 
-  return runAdminAction(
-    () => rejectProfileReview(userId, admin.id, reason),
-    "资料已驳回",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => rejectProfileReview(userId, admin.id, reason),
+      "资料已驳回",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 /** @deprecated 使用 adminDeleteForumPostAction / adminDeleteForumCommentAction */
@@ -337,10 +394,17 @@ export async function adminDeleteForumPostAction(
     return { error: "无效的帖子 ID" };
   }
 
-  return runAdminAction(
-    () => adminDeleteForumPost(postId, admin.id),
-    "帖子已删除",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => adminDeleteForumPost(postId, admin.id, reason),
+      "帖子已删除",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写操作理由",
+    };
+  }
 }
 
 export async function adminDeleteReportedPostAction(
@@ -354,10 +418,17 @@ export async function adminDeleteReportedPostAction(
     return { error: "无效的内容 ID" };
   }
 
-  return runAdminAction(
-    () => adminDeleteReportedPost(postId, admin.id),
-    "内容已删除",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => adminDeleteReportedPost(postId, admin.id, reason),
+      "内容已删除",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写操作理由",
+    };
+  }
 }
 
 export async function adminDeleteForumCommentAction(
@@ -371,10 +442,17 @@ export async function adminDeleteForumCommentAction(
     return { error: "无效的评论 ID" };
   }
 
-  return runAdminAction(
-    () => adminDeleteForumComment(commentId, admin.id),
-    "评论已删除",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => adminDeleteForumComment(commentId, admin.id, reason),
+      "评论已删除",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写操作理由",
+    };
+  }
 }
 
 export async function adminDeleteCourseReviewAction(
@@ -388,10 +466,17 @@ export async function adminDeleteCourseReviewAction(
     return { error: "无效的课程评价 ID" };
   }
 
-  return runAdminAction(
-    () => adminDeleteCourseReview(reviewId, admin.id),
-    "课程评价已删除",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => adminDeleteCourseReview(reviewId, admin.id, reason),
+      "课程评价已删除",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写操作理由",
+    };
+  }
 }
 
 export async function adminHideFoodPlaceAction(
@@ -469,10 +554,17 @@ export async function confirmReportViolationAction(
     return { error: "无效的举报 ID" };
   }
 
-  return runAdminAction(
-    () => confirmReportViolation(reportId, admin.id),
-    "已确认违规并下架内容",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => confirmReportViolation(reportId, admin.id, reason),
+      "已确认违规并下架内容",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 export async function dismissReportAction(
@@ -486,10 +578,17 @@ export async function dismissReportAction(
     return { error: "无效的举报 ID" };
   }
 
-  return runAdminAction(
-    () => dismissReportWithReview(reportId, admin.id),
-    "举报已驳回，内容已恢复（如适用）",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => dismissReportWithReview(reportId, admin.id, reason),
+      "举报已驳回，内容已恢复（如适用）",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 export async function approveArchiveAppealAction(
@@ -503,10 +602,17 @@ export async function approveArchiveAppealAction(
     return { error: "无效的封存 ID" };
   }
 
-  return runAdminAction(
-    () => approveArchiveAppeal(archiveId, admin.id),
-    "申诉已通过，内容已恢复",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => approveArchiveAppeal(archiveId, admin.id, reason),
+      "申诉已通过，内容已恢复",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 export async function rejectArchiveAppealAction(
@@ -520,10 +626,17 @@ export async function rejectArchiveAppealAction(
     return { error: "无效的封存 ID" };
   }
 
-  return runAdminAction(
-    () => rejectArchiveAppealReview(archiveId, admin.id),
-    "申诉已驳回，已通知作者",
-  );
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () => rejectArchiveAppealReview(archiveId, admin.id, reason),
+      "申诉已驳回，已通知作者",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
 }
 
 export async function markReportReviewedAction(

@@ -8,6 +8,7 @@ export const ADMIN_TABS = [
   { id: "content", label: "社区内容" },
   { id: "courses", label: "课程目录" },
   { id: "guides", label: "内容管理" },
+  { id: "announcements", label: "站点公告" },
   { id: "users", label: "用户管理" },
   { id: "actions", label: "操作记录" },
 ] as const;
@@ -26,9 +27,9 @@ export const ADMIN_TAB_IDS = new Set<string>([
   ...Object.keys(LEGACY_ADMIN_TAB_MAP),
 ]);
 
-export function resolveAdminTab(tab?: string | null): AdminTabId | undefined {
+export function resolveAdminTab(tab?: string | null): AdminTabId {
   if (!tab) {
-    return undefined;
+    return "overview";
   }
   if (tab in LEGACY_ADMIN_TAB_MAP) {
     return LEGACY_ADMIN_TAB_MAP[tab];
@@ -36,7 +37,7 @@ export function resolveAdminTab(tab?: string | null): AdminTabId | undefined {
   if (ADMIN_TABS.some((item) => item.id === tab)) {
     return tab as AdminTabId;
   }
-  return undefined;
+  return "overview";
 }
 
 export const REPORT_STATUS_LABELS: Record<
@@ -90,6 +91,12 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   publish_content_article: "发布指南文章",
   hide_content_article: "隐藏指南文章",
   delete_content_article: "删除指南文章",
+  create_announcement: "创建站点公告",
+  schedule_announcement: "预发布站点公告",
+  update_announcement: "编辑站点公告",
+  publish_announcement: "发布站点公告",
+  hide_announcement: "隐藏站点公告",
+  delete_announcement: "删除站点公告",
   update_report_status: "更新举报状态",
   update_report_status_resolved: "标记举报已处理",
   update_report_status_dismissed: "驳回举报",

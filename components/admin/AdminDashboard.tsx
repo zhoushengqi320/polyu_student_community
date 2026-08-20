@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw } from "lucide-react";
-import { ADMIN_TABS, type AdminTabId } from "@/constants/admin";
+import {
+  ADMIN_TABS,
+  resolveAdminTab,
+  type AdminTabId,
+} from "@/constants/admin";
+import { ROUTES } from "@/constants/routes";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import { AdminActionsTable } from "@/components/admin/AdminActionsTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
@@ -14,28 +18,55 @@ import { ContentArchivePanel } from "@/components/admin/ContentArchivePanel";
 import { CommunityContentTabs } from "@/components/admin/CommunityContentTabs";
 import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel";
 import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
+import { AnnouncementPanel } from "@/components/admin/announcements/AnnouncementPanel";
 import { type AdminDashboardData } from "@/types/admin";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
 type AdminDashboardProps = {
   data: AdminDashboardData;
-  initialTab?: AdminTabId;
   initialEditCourseId?: string | null;
 };
 
-export function AdminDashboard({
+function buildAdminUrl(tab: AdminTabId, params: URLSearchParams): string {
+  const next = new URLSearchParams(params.toString());
+
+  if (tab === "overview") {
+    next.delete("tab");
+  } else {
+    next.set("tab", tab);
+  }
+
+  if (tab !== "actions") {
+    next.delete("q");
+    next.delete("page");
+  }
+
+  if (tab !== "courses") {
+    next.delete("editCourseId");
+  }
+
+  const query = next.toString();
+  return query ? `${ROUTES.admin}?${query}` : ROUTES.admin;
+}
+
+function AdminDashboardContent({
   data,
-  initialTab = "reports",
   initialEditCourseId = null,
 }: AdminDashboardProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<AdminTabId>(initialTab);
+  const searchParams = useSearchParams();
   const [isRefreshing, startRefresh] = useTransition();
+  const activeTab = resolveAdminTab(searchParams.get("tab"));
   const pendingAppeals = data.pendingArchiveAppeals ?? [];
+
+  function selectTab(tab: AdminTabId) {
+    router.replace(buildAdminUrl(tab, searchParams));
+  }
 
   function handleRefresh() {
     startRefresh(() => {
+      router.replace(ROUTES.admin);
       router.refresh();
     });
   }
@@ -50,37 +81,37 @@ export function AdminDashboard({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2 border-b pb-1">
-        {ADMIN_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === tab.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {tab.label}
-            {tab.id === "reports" && data.stats.pendingReportCount > 0 ? (
-              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                {data.stats.pendingReportCount}
-              </span>
-            ) : null}
-            {tab.id === "archives" && pendingAppeals.length > 0 ? (
-              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                {pendingAppeals.length}
-              </span>
-            ) : null}
-            {tab.id === "profile-reviews" &&
-            data.stats.pendingProfileReviewCount > 0 ? (
-              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                {data.stats.pendingProfileReviewCount}
-              </span>
-            ) : null}
-          </button>
-        ))}
+          {ADMIN_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => selectTab(tab.id)}
+              className={cn(
+                "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                activeTab === tab.id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {tab.label}
+              {tab.id === "reports" && data.stats.pendingReportCount > 0 ? (
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                  {data.stats.pendingReportCount}
+                </span>
+              ) : null}
+              {tab.id === "archives" && pendingAppeals.length > 0 ? (
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                  {pendingAppeals.length}
+                </span>
+              ) : null}
+              {tab.id === "profile-reviews" &&
+              data.stats.pendingProfileReviewCount > 0 ? (
+                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                  {data.stats.pendingProfileReviewCount}
+                </span>
+              ) : null}
+            </button>
+          ))}
         </div>
         <Button
           type="button"
@@ -156,6 +187,10 @@ export function AdminDashboard({
         />
       ) : null}
 
+      {activeTab === "announcements" ? (
+        <AnnouncementPanel announcements={data.announcements ?? []} />
+      ) : null}
+
       {activeTab === "users" ? (
         <UserManagementTable
           users={data.users}
@@ -179,5 +214,17 @@ export function AdminDashboard({
         </Suspense>
       ) : null}
     </div>
+  );
+}
+
+export function AdminDashboard(props: AdminDashboardProps) {
+  return (
+    <Suspense
+      fallback={
+        <p className="text-sm text-muted-foreground">加载管理后台…</p>
+      }
+    >
+      <AdminDashboardContent {...props} />
+    </Suspense>
   );
 }

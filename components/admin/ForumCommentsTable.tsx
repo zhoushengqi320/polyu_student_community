@@ -86,6 +86,7 @@ export function ForumCommentsTable({ comments }: ForumCommentsTableProps) {
                       confirmDescription="此操作将软删除该评论，前台将不再显示。相关举报将自动标记为已处理。"
                       action={adminDeleteForumCommentAction}
                       hiddenFields={{ commentId: comment.id }}
+                      requireReason
                     />
                   ) : (
                     <span className="text-xs text-muted-foreground">已删除</span>

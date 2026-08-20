@@ -33,12 +33,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* 管理后台独立壳层：隐藏全站导航与页脚，避免跳回前台 */
-body.admin-shell-active .site-header,
-body.admin-shell-active .site-footer {
-  display: none;
-}
-
 .container {
   width: 100%;
   margin-inline: auto;

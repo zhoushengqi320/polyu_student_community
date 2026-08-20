@@ -1,8 +1,14 @@
+import {
+  buildContentActionMetadata,
+  buildProfileActionMetadata,
+} from "@/lib/admin/actionLogMetadata";
 import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { REPORT_STATUS } from "@/constants/reportReasons";
-import { USER_STATUS } from "@/constants/userRoles";
+import { USER_ROLES, USER_STATUS } from "@/constants/userRoles";
+import { computeActivityForUsers } from "@/lib/db/userActivity";
 import { mapAdminUserListItem } from "@/lib/db/mappers/admin";
 import { mapProfileListItemOrFallback, type ProfileRow } from "@/lib/db/mappers/profile";
+import { getContentSnapshot } from "@/lib/db/moderation";
 import { createAdminAction, logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { createNotification } from "@/lib/db/notifications";
 import { NOTIFICATION_TYPES } from "@/constants/moderation";
@@ -68,8 +74,13 @@ export async function getAdminStats(): Promise<AdminStats> {
   };
 }
 
-async function getAuthEmailMap(): Promise<Map<string, string | null>> {
-  const map = new Map<string, string | null>();
+type AuthUserMeta = {
+  email: string | null;
+  lastSignInAt: string | null;
+};
+
+async function getAuthUserMetaMap(): Promise<Map<string, AuthUserMeta>> {
+  const map = new Map<string, AuthUserMeta>();
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
     return map;
@@ -91,7 +102,10 @@ async function getAuthEmailMap(): Promise<Map<string, string | null>> {
       }
 
       for (const user of data.users) {
-        map.set(user.id, user.email ?? null);
+        map.set(user.id, {
+          email: user.email ?? null,
+          lastSignInAt: user.last_sign_in_at ?? null,
+        });
       }
 
       if (data.users.length < 200) {
@@ -100,11 +114,57 @@ async function getAuthEmailMap(): Promise<Map<string, string | null>> {
       page += 1;
     }
   } catch (error) {
-    console.error("Failed to load auth emails:", error);
+    console.error("Failed to load auth users:", error);
   }
 
   return map;
 }
+
+function mapRowToActivityInput(
+  row: ProfileRow,
+  authMeta: AuthUserMeta | undefined,
+) {
+  const extended = row as ProfileRow & {
+    last_seen_at?: string | null;
+    profile_review_status?: string | null;
+    reporter_warning_count?: number;
+    banned_until?: string | null;
+  };
+
+  return {
+    id: row.id,
+    role: String(row.role),
+    status: String(row.status),
+    createdAt: String(row.created_at),
+    polyuVerifiedAt: row.polyu_verified_at ?? null,
+    lastSeenAt: extended.last_seen_at ?? null,
+    lastSignInAt: authMeta?.lastSignInAt ?? null,
+    reporterWarningCount: extended.reporter_warning_count ?? 0,
+    bannedUntil: extended.banned_until ?? null,
+    profileReviewStatus: extended.profile_review_status ?? "approved",
+  };
+}
+
+async function attachActivityToUsers(
+  rows: ProfileRow[],
+  authMap: Map<string, AuthUserMeta>,
+): Promise<AdminUserListItem[]> {
+  const activityInputs = rows.map((row) =>
+    mapRowToActivityInput(row, authMap.get(row.id)),
+  );
+  const activityMap = await computeActivityForUsers(activityInputs);
+
+  return rows.map((row) => {
+    const authMeta = authMap.get(row.id);
+    const activity =
+      row.role === USER_ROLES.admin
+        ? null
+        : activityMap.get(row.id) ?? null;
+
+    return mapAdminUserListItem(row, authMeta?.email ?? null, activity);
+  });
+}
+
 
 export async function listUsers(
   filters: AdminUserFilters = {},
@@ -113,15 +173,17 @@ export async function listUsers(
     return [];
   }
 
-  const { page = 1, pageSize = 50, search, role, status } = filters;
-  const pagination = getPagination(page, pageSize);
+  const {
+    page = 1,
+    pageSize = 50,
+    search,
+    role,
+    status,
+  } = filters;
   const supabase = await createClient();
+  const userPoolSize = 200;
 
-  let query = supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .range(pagination.from, pagination.to);
+  let query = supabase.from("profiles").select("*");
 
   if (role) {
     query = query.eq("role", role);
@@ -137,6 +199,10 @@ export async function listUsers(
     );
   }
 
+  query = query
+    .order("created_at", { ascending: false })
+    .range(0, userPoolSize - 1);
+
   const { data, error } = await query;
 
   if (error) {
@@ -144,11 +210,12 @@ export async function listUsers(
     return [];
   }
 
-  const emailMap = await getAuthEmailMap();
+  const rows = (data ?? []) as ProfileRow[];
+  const authMap = await getAuthUserMetaMap();
+  const users = await attachActivityToUsers(rows, authMap);
 
-  return (data ?? []).map((row: ProfileRow) =>
-    mapAdminUserListItem(row, emailMap.get(row.id) ?? null),
-  );
+  const from = (page - 1) * pageSize;
+  return users.slice(from, from + pageSize);
 }
 
 export async function banUser(
@@ -308,6 +375,7 @@ export async function listPendingProfileReviews(
 export async function approveProfileReview(
   userId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -347,6 +415,11 @@ export async function approveProfileReview(
     action: "approve_profile",
     targetType: "user",
     targetId: userId,
+    metadata: buildProfileActionMetadata({
+      nickname: profile.nickname,
+      avatarUrl: profile.avatar_url,
+      reason,
+    }),
   });
 }
 
@@ -409,7 +482,11 @@ export async function rejectProfileReview(
     action: "reject_profile",
     targetType: "user",
     targetId: userId,
-    metadata: { reason },
+    metadata: buildProfileActionMetadata({
+      nickname: profile.nickname,
+      avatarUrl: profile.avatar_url,
+      reason,
+    }),
   });
 }
 
@@ -609,11 +686,13 @@ export async function getAllCourseReviews(
 export async function adminDeleteForumPost(
   postId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
   }
 
+  const snapshot = await getContentSnapshot(TARGET_TYPES.post, postId);
   const supabase = await createClient();
   const deletedAt = new Date().toISOString();
 
@@ -639,7 +718,7 @@ export async function adminDeleteForumPost(
     action: "delete_forum_post",
     targetType: TARGET_TYPES.post,
     targetId: postId,
-    metadata: { deletedAt },
+    metadata: buildContentActionMetadata(snapshot, { reason, deletedAt }),
   });
 
   await resolveReportsForTarget(TARGET_TYPES.post, postId, adminId);
@@ -648,6 +727,7 @@ export async function adminDeleteForumPost(
 export async function adminDeleteReportedPost(
   postId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -676,7 +756,7 @@ export async function adminDeleteReportedPost(
   const postModule = String(data.module);
 
   if (postModule === FORUM_MODULE) {
-    await adminDeleteForumPost(postId, adminId);
+    await adminDeleteForumPost(postId, adminId, reason);
     return;
   }
 
@@ -698,11 +778,13 @@ export async function adminDeleteReportedPost(
 export async function adminDeleteForumComment(
   commentId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
   }
 
+  const snapshot = await getContentSnapshot(TARGET_TYPES.comment, commentId);
   const supabase = await createClient();
   const deletedAt = new Date().toISOString();
 
@@ -720,7 +802,7 @@ export async function adminDeleteForumComment(
     action: "delete_forum_comment",
     targetType: TARGET_TYPES.comment,
     targetId: commentId,
-    metadata: { deletedAt },
+    metadata: buildContentActionMetadata(snapshot, { reason, deletedAt }),
   });
 
   await resolveReportsForTarget(TARGET_TYPES.comment, commentId, adminId);
@@ -729,11 +811,16 @@ export async function adminDeleteForumComment(
 export async function adminDeleteCourseReview(
   reviewId: string,
   adminId: string,
+  reason: string,
 ): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
   }
 
+  const snapshot = await getContentSnapshot(
+    TARGET_TYPES.course_review,
+    reviewId,
+  );
   const supabase = await createClient();
   const deletedAt = new Date().toISOString();
   const courseReviews = supabase.from("course_reviews") as ReturnType<
@@ -760,7 +847,7 @@ export async function adminDeleteCourseReview(
     action: "delete_course_review",
     targetType: TARGET_TYPES.course_review,
     targetId: reviewId,
-    metadata: { deletedAt },
+    metadata: buildContentActionMetadata(snapshot, { reason, deletedAt }),
   });
 
   await resolveReportsForTarget(TARGET_TYPES.course_review, reviewId, adminId);
@@ -792,7 +879,15 @@ export async function getAdminActions(
 
     if (pattern) {
       builder = builder.or(
-        `action.ilike.${pattern},target_type.ilike.${pattern},target_id.ilike.${pattern}`,
+        [
+          `action.ilike.${pattern}`,
+          `target_type.ilike.${pattern}`,
+          `target_id.ilike.${pattern}`,
+          `metadata->>title.ilike.${pattern}`,
+          `metadata->>excerpt.ilike.${pattern}`,
+          `metadata->>reason.ilike.${pattern}`,
+          `metadata->>targetLabel.ilike.${pattern}`,
+        ].join(","),
       );
     }
 

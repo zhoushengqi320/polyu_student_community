@@ -61,11 +61,11 @@ export default function UploadPdfPage() {
   }
 
   return (
-    <div className="container max-w-2xl py-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">上传课程 PDF</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight">上传课程 PDF</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             上传到 Supabase Storage（course_pdfs），并写入课程的 pdf_url。
           </p>
         </div>

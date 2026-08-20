@@ -1,4 +1,5 @@
 import { type ForumPostListItem } from "@/types/forum";
+import { type SiteAnnouncement } from "@/types/announcement";
 
 export type HomeSectionResult<T> = {
   items: T[];
@@ -7,5 +8,6 @@ export type HomeSectionResult<T> = {
 
 export type HomePageData = {
   latestPosts: HomeSectionResult<ForumPostListItem>;
+  announcements: SiteAnnouncement[];
   isDatabaseConfigured: boolean;
 };

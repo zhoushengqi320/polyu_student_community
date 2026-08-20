@@ -1,7 +1,4 @@
-import { ModulePageShell } from "@/components/common/ModulePageShell";
-import { AdminAccessDenied } from "@/components/admin/AdminAccessDenied";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { getAdminAccessState } from "@/lib/admin/session";
 import {
   getAdminActions,
   getAdminStats,
@@ -19,10 +16,10 @@ import {
 import { listEmailWhitelist } from "@/lib/db/emailWhitelist";
 import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
+import { listAnnouncementsForAdmin, publishDueAnnouncements } from "@/lib/db/announcements";
 import { getReports } from "@/lib/db/reports";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type AdminDashboardData } from "@/types/admin";
-import { resolveAdminTab } from "@/constants/admin";
 
 const EMPTY_DASHBOARD: AdminDashboardData = {
   stats: {
@@ -41,6 +38,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   guides: [],
   studyArticles: [],
   lifeArticles: [],
+  announcements: [],
   adminActions: [],
   contentArchives: [],
   pendingArchiveAppeals: [],
@@ -59,17 +57,12 @@ export default async function AdminPage({
     page?: string;
   }>;
 }) {
-  const { user, reason, isAdmin } = await getAdminAccessState();
+  // 鉴权已在 app/admin/layout.tsx 完成；此处仅加载后台数据。
   const params = await searchParams;
-  const initialTab = resolveAdminTab(params.tab);
   const initialEditCourseId = params.editCourseId ?? null;
   const actionsQuery = params.q?.trim() || undefined;
   const actionsPage = Math.max(1, Number(params.page) || 1);
   const actionsPageSize = 20;
-
-  if (!isAdmin) {
-    return <AdminAccessDenied reason={reason} user={user} />;
-  }
 
   const isDatabaseConfigured = isSupabaseConfigured();
 
@@ -80,8 +73,8 @@ export default async function AdminPage({
 
   if (isDatabaseConfigured) {
     try {
-      // 加载后台时顺带清理逾期封存
       const expiredArchiveCount = await expireDueArchives();
+      await publishDueAnnouncements();
 
       const [
         stats,
@@ -94,13 +87,14 @@ export default async function AdminPage({
         guides,
         studyArticles,
         lifeArticles,
+        announcements,
         adminActionsResult,
         contentArchives,
         pendingArchiveAppeals,
         emailWhitelist,
       ] = await Promise.all([
         getAdminStats(),
-        listUsers({ pageSize: 50 }),
+        listUsers({ pageSize: 200 }),
         listPendingProfileReviews(100),
         getReports({ pageSize: 100 }),
         getAllForumPosts({ pageSize: 100 }),
@@ -109,6 +103,7 @@ export default async function AdminPage({
         getAllGuidesForAdmin({ pageSize: 100 }),
         listContentArticlesForAdmin("study", { pageSize: 100 }),
         listContentArticlesForAdmin("life", { pageSize: 100 }),
+        listAnnouncementsForAdmin(),
         getAdminActions({
           page: actionsPage,
           pageSize: actionsPageSize,
@@ -131,6 +126,7 @@ export default async function AdminPage({
         guides,
         studyArticles,
         lifeArticles,
+        announcements,
         adminActions: adminActionsResult.items,
         adminActionsTotal: adminActionsResult.total,
         adminActionsPage: actionsPage,
@@ -148,17 +144,22 @@ export default async function AdminPage({
   }
 
   return (
-    <ModulePageShell title="管理后台" back={{ href: "/", label: "首页" }}>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">管理后台</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          仅管理员可访问；此区域与前台站点完全隔离。
+        </p>
+      </div>
       {!isDatabaseConfigured ? (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           数据库尚未配置，部分数据无法加载。
         </div>
       ) : null}
       <AdminDashboard
         data={dashboardData}
-        initialTab={initialTab}
         initialEditCourseId={initialEditCourseId}
       />
-    </ModulePageShell>
+    </div>
   );
 }

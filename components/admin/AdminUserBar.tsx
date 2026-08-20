@@ -5,13 +5,14 @@ type AdminUserBarProps = {
   user: SessionUser;
 };
 
+/** 后台顶栏：仅展示管理员身份，不提供返回前台入口。 */
 export function AdminUserBar({ user }: AdminUserBarProps) {
   const displayName = user.profile?.displayName ?? "管理员";
 
   return (
-    <div className="border-b bg-muted/40">
+    <header className="border-b bg-muted/40">
       <div className="container flex items-center justify-between gap-3 py-3">
-        <p className="text-sm font-semibold">PolyUHub 管理后台</p>
+        <p className="text-sm font-semibold tracking-tight">PolyUHub 管理后台</p>
         <div className="flex items-center gap-2.5 text-sm">
           <UserAvatar
             src={user.profile?.avatarUrl}
@@ -21,6 +22,6 @@ export function AdminUserBar({ user }: AdminUserBarProps) {
           <span className="font-medium">{displayName}</span>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

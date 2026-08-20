@@ -170,7 +170,11 @@ export async function deleteCommentAction(
 
   try {
     if (isAdmin(user)) {
-      await adminDeleteForumComment(commentId, user.id);
+      await adminDeleteForumComment(
+        commentId,
+        user.id,
+        "管理员于前台删除评论",
+      );
     } else {
       try {
         assertCan(user, "interaction:comment");

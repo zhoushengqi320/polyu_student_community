@@ -124,6 +124,7 @@ export function CourseReviewsTable({ reviews }: CourseReviewsTableProps) {
                       confirmDescription="此操作将软删除该课程评价，前台将不再显示。相关举报将自动标记为已处理。"
                       action={adminDeleteCourseReviewAction}
                       hiddenFields={{ reviewId: review.id }}
+                      requireReason
                     />
                   ) : (
                     <span className="text-xs text-muted-foreground">已删除</span>

@@ -7,8 +7,14 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export function mapAdminUserListItem(
   row: ProfileRow,
   email: string | null = null,
+  activity: AdminUserListItem["activity"] = null,
 ): AdminUserListItem {
   const profile = mapProfile(row);
+  const extended = row as ProfileRow & {
+    last_seen_at?: string | null;
+    profile_review_status?: string | null;
+  };
+
   return {
     ...mapProfileListItem(row),
     email,
@@ -17,5 +23,8 @@ export function mapAdminUserListItem(
     reporterWarningCount: profile.reporterWarningCount,
     createdAt: profile.createdAt,
     polyuVerifiedAt: profile.polyuVerifiedAt,
+    lastSeenAt: extended.last_seen_at ?? null,
+    profileReviewStatus: extended.profile_review_status ?? "approved",
+    activity,
   };
 }

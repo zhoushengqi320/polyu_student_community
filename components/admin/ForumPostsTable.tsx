@@ -80,6 +80,7 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
                       confirmDescription="此操作将软删除该帖子，前台将不再显示。相关举报将自动标记为已处理。"
                       action={adminDeleteForumPostAction}
                       hiddenFields={{ postId: post.id }}
+                      requireReason
                     />
                   ) : (
                     <span className="text-xs text-muted-foreground">已删除</span>

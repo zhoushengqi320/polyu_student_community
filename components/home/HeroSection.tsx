@@ -1,15 +1,14 @@
-import Link from "next/link";
 import { HOME_HERO } from "@/constants/home";
-import { isFeatureEnabled } from "@/constants/features";
 import { SITE_SLOGAN } from "@/constants/site";
 import { HomeSearchBox } from "@/components/home/HomeSearchBox";
-import { Button } from "@/components/ui/button";
+import { SiteAnnouncementBar } from "@/components/common/SiteAnnouncementBar";
+import { type SiteAnnouncement } from "@/types/announcement";
 
-export function HeroSection() {
-  const extraCta = isFeatureEnabled("seasonalGuides")
-    ? HOME_HERO.seasonalCta
-    : HOME_HERO.secondaryCta;
+type HeroSectionProps = {
+  announcements?: SiteAnnouncement[];
+};
 
+export function HeroSection({ announcements = [] }: HeroSectionProps) {
   return (
     <section className="border-b bg-gradient-to-b from-primary/10 via-primary/5 to-background">
       <div className="container flex flex-col gap-6 py-8 md:gap-7 md:py-10">
@@ -25,19 +24,7 @@ export function HeroSection() {
 
         <HomeSearchBox className="max-w-2xl" />
 
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href={HOME_HERO.primaryCta.href}>{HOME_HERO.primaryCta.label}</Link>
-          </Button>
-          <Button variant="secondary" asChild>
-            <Link href={HOME_HERO.writeReviewCta.href}>
-              {HOME_HERO.writeReviewCta.label}
-            </Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href={extraCta.href}>{extraCta.label}</Link>
-          </Button>
-        </div>
+        <SiteAnnouncementBar announcements={announcements} />
       </div>
     </section>
   );

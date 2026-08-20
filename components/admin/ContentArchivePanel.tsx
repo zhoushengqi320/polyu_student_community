@@ -1,15 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Archive } from "lucide-react";
+import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
 import {
   approveArchiveAppealAction,
   rejectArchiveAppealAction,
 } from "@/lib/admin/actions";
-import {
-  adminActionInitialState,
-  type AdminActionState,
-} from "@/lib/admin/state";
 import {
   ARCHIVE_APPEAL_STATUS_LABELS,
   type ArchiveAppealStatus,
@@ -34,40 +31,33 @@ type ContentArchivePanelProps = {
   expiredCount?: number;
 };
 
-function ActionMessage({ state }: { state: AdminActionState }) {
-  if (state.error) {
-    return <p className="text-xs text-destructive">{state.error}</p>;
-  }
-  if (state.success) {
-    return <p className="text-xs text-green-600">{state.success}</p>;
-  }
-  return null;
-}
-
 function AppealActionForm({
   archiveId,
   action,
   label,
   variant = "outline",
+  confirmTitle,
+  confirmDescription,
 }: {
   archiveId: string;
   action: typeof approveArchiveAppealAction | typeof rejectArchiveAppealAction;
   label: string;
   variant?: "default" | "outline" | "destructive";
+  confirmTitle: string;
+  confirmDescription: string;
 }) {
-  const [state, formAction, pending] = useActionState(
-    action,
-    adminActionInitialState,
-  );
-
   return (
-    <form action={formAction} className="inline-flex flex-col items-end gap-1">
-      <input type="hidden" name="archiveId" value={archiveId} />
-      <Button type="submit" size="sm" variant={variant} disabled={pending}>
-        {pending ? "处理中..." : label}
-      </Button>
-      <ActionMessage state={state} />
-    </form>
+    <AdminConfirmButton
+      label={label}
+      confirmTitle={confirmTitle}
+      confirmDescription={confirmDescription}
+      action={action}
+      hiddenFields={{ archiveId }}
+      variant={variant}
+      requireReason
+      reasonLabel="审核理由"
+      reasonPlaceholder="说明通过或驳回申诉的依据（必填，将写入操作记录）"
+    />
   );
 }
 
@@ -147,12 +137,16 @@ function ArchiveRow({
                 action={approveArchiveAppealAction}
                 label="通过申诉"
                 variant="default"
+                confirmTitle="通过申诉？"
+                confirmDescription="将恢复内容公开并删除封存记录，通知作者。"
               />
               <AppealActionForm
                 archiveId={archive.id}
                 action={rejectArchiveAppealAction}
                 label="驳回申诉"
                 variant="destructive"
+                confirmTitle="驳回申诉？"
+                confirmDescription="内容保持下架，通知作者申诉未通过。"
               />
             </>
           ) : null}

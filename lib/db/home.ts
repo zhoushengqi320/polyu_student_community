@@ -1,5 +1,7 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { HOME_LIMITS } from "@/constants/home";
 import { getForumPosts } from "@/lib/db/forum";
+import { listActiveAnnouncements } from "@/lib/db/announcements";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type HomePageData, type HomeSectionResult } from "@/types/home";
 
@@ -14,6 +16,7 @@ function errorSection<T>(): HomeSectionResult<T> {
 function getEmptyHomePageData(isDatabaseConfigured: boolean): HomePageData {
   return {
     latestPosts: emptySection(),
+    announcements: [],
     isDatabaseConfigured,
   };
 }
@@ -35,16 +38,21 @@ export async function getLatestForumPosts(
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
+  noStore();
   const isDatabaseConfigured = isSupabaseConfigured();
 
   if (!isDatabaseConfigured) {
     return getEmptyHomePageData(false);
   }
 
-  const latestPosts = await getLatestForumPosts();
+  const [latestPosts, announcements] = await Promise.all([
+    getLatestForumPosts(),
+    listActiveAnnouncements(),
+  ]);
 
   return {
     latestPosts,
+    announcements,
     isDatabaseConfigured: true,
   };
 }

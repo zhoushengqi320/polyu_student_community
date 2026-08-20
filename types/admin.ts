@@ -7,6 +7,7 @@ import {
   type ReportWithReporter,
 } from "@/types/report";
 import { type ProfileListItem } from "@/types/user";
+import { type UserActivitySnapshot } from "@/types/userActivity";
 import { type UserRole, type UserStatus } from "@/constants/userRoles";
 
 export type AdminStats = {
@@ -23,6 +24,9 @@ export type AdminUserListItem = ProfileListItem & {
   reporterWarningCount: number;
   createdAt: string;
   polyuVerifiedAt: string | null;
+  lastSeenAt: string | null;
+  profileReviewStatus: string;
+  activity: UserActivitySnapshot | null;
 };
 
 export type AdminProfileReviewItem = {
@@ -116,6 +120,7 @@ export type AdminDashboardData = {
   guides: AdminGuideDetail[];
   studyArticles: AdminContentArticle[];
   lifeArticles: AdminContentArticle[];
+  announcements: import("@/types/announcement").AdminAnnouncement[];
   adminActions: AdminActionLogWithAdmin[];
   adminActionsTotal?: number;
   adminActionsPage?: number;

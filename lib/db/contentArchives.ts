@@ -187,6 +187,49 @@ export async function getActiveArchiveForTarget(
   );
 }
 
+/** 读取目标最近一条封存记录（含已恢复、已逾期），供历史操作日志补查。 */
+export async function getLatestArchiveForTarget(
+  targetType: TargetType,
+  targetId: string,
+): Promise<ContentArchiveRow | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  return withAdminFallback(
+    async (admin) => {
+      const { data, error } = await admin
+        .from("content_archives")
+        .select("*")
+        .eq("target_type", targetType)
+        .eq("target_id", targetId)
+        .order("archived_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        throw new DbError(error.message);
+      }
+      return data ? asArchiveRow(data) : null;
+    },
+    async (supabase) => {
+      const { data, error } = await supabase
+        .from("content_archives")
+        .select("*")
+        .eq("target_type", targetType)
+        .eq("target_id", targetId)
+        .order("archived_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        throw new DbError(error.message);
+      }
+      return data ? asArchiveRow(data) : null;
+    },
+  );
+}
+
 export async function listActiveArchivesByOwner(
   ownerId: string,
 ): Promise<ContentArchiveRow[]> {

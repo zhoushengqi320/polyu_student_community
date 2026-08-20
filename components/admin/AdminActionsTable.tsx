@@ -1,11 +1,17 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatDateTime } from "@/lib/utils/formatDate";
-import { getAdminActionLabel } from "@/constants/admin";
+import { getAdminActionLabel, TARGET_TYPE_LABELS } from "@/constants/admin";
 import { ROUTES } from "@/constants/routes";
+import { type TargetType } from "@/constants/reportReasons";
 import { type AdminActionLogWithAdmin } from "@/types/report";
+import {
+  getAdminActionLogDetailAction,
+} from "@/lib/admin/actions";
+import { type AdminActionLogDetail } from "@/lib/admin/actionLogDetail";
+import { RichContent } from "@/components/common/RichContent";
 import { TagBadge } from "@/components/common/TagBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,42 +30,164 @@ type AdminActionsTableProps = {
   query?: string;
 };
 
-function ContentBackupButton({
-  item,
-}: {
-  item: AdminActionLogWithAdmin;
-}) {
-  const [open, setOpen] = useState(false);
-  const backup = item.metadata?.contentBackup;
-  if (!backup || typeof backup !== "object") {
-    return null;
+function readMetaString(
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+): string | null {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function ActionLogSummary({ item }: { item: AdminActionLogWithAdmin }) {
+  const meta = item.metadata;
+  const title =
+    readMetaString(meta, "title") ??
+    readMetaString(meta, "targetLabel");
+  const excerpt = readMetaString(meta, "excerpt");
+  const reason = readMetaString(meta, "reason");
+  const targetLabel =
+    TARGET_TYPE_LABELS[item.targetType as TargetType] ?? item.targetType;
+
+  if (!title && !excerpt && !reason) {
+    return (
+      <div className="space-y-1 text-muted-foreground">
+        <p>{targetLabel}</p>
+        <p className="font-mono text-xs">{item.targetId.slice(0, 8)}…</p>
+      </div>
+    );
   }
 
-  const title =
-    (typeof item.metadata?.title === "string" && item.metadata.title) ||
-    (typeof (backup as { title?: unknown }).title === "string"
-      ? ((backup as { title: string }).title)
-      : null) ||
-    "内容备份";
+  return (
+    <div className="max-w-md space-y-1">
+      <p className="text-xs text-muted-foreground">{targetLabel}</p>
+      {title ? <p className="font-medium line-clamp-1">{title}</p> : null}
+      {excerpt ? (
+        <p className="text-xs text-muted-foreground line-clamp-2">{excerpt}</p>
+      ) : null}
+      {reason ? (
+        <p className="text-xs">
+          <span className="text-muted-foreground">理由：</span>
+          <span className="line-clamp-2">{reason}</span>
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
-  const body =
-    typeof (backup as { content?: unknown }).content === "string"
-      ? (backup as { content: string }).content
-      : JSON.stringify(backup, null, 2);
+function ActionDetailDialog({ item }: { item: AdminActionLogWithAdmin }) {
+  const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<AdminActionLogDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, startTransition] = useTransition();
+
+  const fallbackTitle =
+    readMetaString(item.metadata, "title") ??
+    readMetaString(item.metadata, "targetLabel") ??
+    getAdminActionLabel(item.action);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    startTransition(async () => {
+      setError(null);
+      const result = await getAdminActionLogDetailAction({
+        targetType: item.targetType,
+        targetId: item.targetId,
+        metadata: item.metadata,
+      });
+
+      if (result.error || !result.data) {
+        setDetail(null);
+        setError(result.error ?? "详情加载失败");
+        return;
+      }
+
+      setDetail(result.data);
+    });
+  }, [open, item.targetType, item.targetId, item.metadata]);
+
+  const dialogTitle = detail?.title ?? fallbackTitle;
 
   return (
     <>
       <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>
-        查看备份
+        查看详情
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
-          <pre className="whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
-            {body}
-          </pre>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              {TARGET_TYPE_LABELS[item.targetType as TargetType] ??
+                item.targetType}{" "}
+              · {item.targetId}
+            </p>
+
+            {loading && !detail ? (
+              <p className="text-muted-foreground">加载中…</p>
+            ) : null}
+
+            {error ? <p className="text-destructive">{error}</p> : null}
+
+            {detail?.sourceNote ? (
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                {detail.sourceNote}
+              </p>
+            ) : null}
+
+            {detail?.reason ? (
+              <div className="rounded-md border bg-muted/40 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">操作理由</p>
+                <p className="mt-1 whitespace-pre-wrap">{detail.reason}</p>
+              </div>
+            ) : null}
+
+            {detail?.appealNote ? (
+              <div className="rounded-md border bg-muted/40 px-3 py-2">
+                <p className="text-xs font-medium text-muted-foreground">用户申诉理由</p>
+                <p className="mt-1 whitespace-pre-wrap">{detail.appealNote}</p>
+              </div>
+            ) : null}
+
+            {detail ? (
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                {detail.module ? <span>模块：{detail.module}</span> : null}
+                {detail.status ? <span>状态：{detail.status}</span> : null}
+                {detail.deletedAt ? (
+                  <span className="text-destructive">已删除</span>
+                ) : null}
+                {detail.authorName ? <span>作者：{detail.authorName}</span> : null}
+              </div>
+            ) : null}
+
+            {detail?.excerpt && !detail.body ? (
+              <p className="whitespace-pre-wrap text-muted-foreground">
+                {detail.excerpt}
+              </p>
+            ) : null}
+
+            {detail?.profileSnapshot ? (
+              <pre className="whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
+                {JSON.stringify(detail.profileSnapshot, null, 2)}
+              </pre>
+            ) : null}
+
+            {detail?.body ? (
+              <div className="rounded-md border bg-muted/40 p-3">
+                <RichContent content={detail.body} className="text-sm leading-relaxed" />
+              </div>
+            ) : null}
+
+            {detail?.source === "none" && !loading ? (
+              <p className="text-muted-foreground">
+                无法恢复该条记录的目标内容详情。
+              </p>
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </>
@@ -95,12 +223,24 @@ export function AdminActionsTable({
         item.admin.username ??
         ""
       ).toLowerCase();
+      const meta = item.metadata;
+      const metaText = [
+        readMetaString(meta, "title"),
+        readMetaString(meta, "excerpt"),
+        readMetaString(meta, "reason"),
+        readMetaString(meta, "targetLabel"),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
       return (
         label.includes(q) ||
         adminName.includes(q) ||
         item.action.toLowerCase().includes(q) ||
         item.targetType.toLowerCase().includes(q) ||
-        item.targetId.toLowerCase().includes(q)
+        item.targetId.toLowerCase().includes(q) ||
+        metaText.includes(q)
       );
     });
   }, [actions, searchValue, total]);
@@ -153,7 +293,7 @@ export function AdminActionsTable({
         <Input
           value={searchValue}
           onChange={(event) => setSearchValue(event.target.value)}
-          placeholder="检索操作、管理员、目标类型或 ID…"
+          placeholder="检索操作、管理员、内容标题、理由或 ID…"
           className="max-w-md"
         />
         <Button type="submit" disabled={pending}>
@@ -180,33 +320,33 @@ export function AdminActionsTable({
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="border-b bg-muted/40">
               <tr>
                 <th className="px-4 py-3 font-medium">操作</th>
                 <th className="px-4 py-3 font-medium">管理员</th>
-                <th className="px-4 py-3 font-medium">目标</th>
+                <th className="px-4 py-3 font-medium">内容摘要</th>
                 <th className="px-4 py-3 font-medium">时间</th>
-                <th className="px-4 py-3 font-medium">备份</th>
+                <th className="px-4 py-3 font-medium">详情</th>
               </tr>
             </thead>
             <tbody>
               {pageItems.map((item) => (
-                <tr key={item.id} className="border-b last:border-0">
+                <tr key={item.id} className="border-b last:border-0 align-top">
                   <td className="px-4 py-3">
                     <TagBadge label={getAdminActionLabel(item.action)} />
                   </td>
                   <td className="px-4 py-3">
                     {item.admin.displayName ?? item.admin.username ?? "系统"}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {item.targetType} · {item.targetId.slice(0, 8)}…
+                  <td className="px-4 py-3">
+                    <ActionLogSummary item={item} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                     {formatDateTime(item.createdAt)}
                   </td>
                   <td className="px-4 py-3">
-                    <ContentBackupButton item={item} />
+                    <ActionDetailDialog item={item} />
                   </td>
                 </tr>
               ))}
