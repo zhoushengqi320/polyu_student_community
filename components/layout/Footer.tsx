@@ -3,7 +3,7 @@ import { SiteLogo } from "@/components/brand/SiteLogo";
 import { HOME_DISCLAIMER } from "@/constants/home";
 import { LEGAL_NAV_ITEMS } from "@/constants/legal";
 import { ROUTES } from "@/constants/routes";
-import { SITE_BYLINE } from "@/constants/site";
+import { SITE_BYLINE, LEGAL_CONTACT_EMAIL } from "@/constants/site";
 
 const FOOTER_LINKS = [
   { label: "课程", href: ROUTES.courses.list },
@@ -54,6 +54,12 @@ export function Footer() {
                 {item.title}
               </Link>
             ))}
+            <a
+              href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+              className="hover:text-foreground"
+            >
+              联系邮箱
+            </a>
           </nav>
           <p className="text-xs">© {year}</p>
         </div>

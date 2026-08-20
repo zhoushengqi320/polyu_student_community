@@ -17,6 +17,9 @@ export const SITE_BYLINE = "For and By Polyuer";
 export const SITE_DESCRIPTION =
   "PolyUHub 香港理工大学学生互助社区，提供课程评价、校园指南与同学讨论，选课前先查 PolyUHub。";
 
+/** 合规事务联系邮箱（私隐 / 版权投诉 / 资料权利申请） */
+export const LEGAL_CONTACT_EMAIL = "teddy_111@163.com";
+
 export const SITE_TAGLINE = SITE_SLOGAN;
 
 export const EMAIL_PLACEHOLDER = "例如：name@connect.polyu.hk";
