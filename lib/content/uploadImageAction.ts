@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/lib/admin/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { detectImageMimeFromBytes } from "@/lib/utils/fileMagic";
 
 const BUCKET = "content-images";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -41,17 +42,18 @@ export async function uploadContentImageAction(
       return { success: false, error: "请选择图片文件" };
     }
 
-    if (!ALLOWED_TYPES.has(file.type)) {
-      return { success: false, error: "仅支持 JPG / PNG / WebP / GIF" };
-    }
-
     if (file.size <= 0 || file.size > MAX_BYTES) {
       return { success: false, error: "图片大小需在 5MB 以内" };
     }
 
-    const ext = extensionForMime(file.type);
-    const path = `${admin.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
+    const detected = detectImageMimeFromBytes(bytes);
+    if (!detected || !ALLOWED_TYPES.has(detected)) {
+      return { success: false, error: "仅支持 JPG / PNG / WebP / GIF" };
+    }
+
+    const ext = extensionForMime(detected);
+    const path = `${admin.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
 
     // 优先用登录态 + Storage RLS；失败再尝试 service role
     let publicUrl: string | null = null;
@@ -59,7 +61,7 @@ export async function uploadContentImageAction(
     try {
       const supabase = await createClient();
       const { error } = await supabase.storage.from(BUCKET).upload(path, bytes, {
-        contentType: file.type,
+        contentType: detected,
         upsert: false,
       });
 
@@ -74,7 +76,7 @@ export async function uploadContentImageAction(
     if (!publicUrl) {
       const adminClient = createAdminClient();
       const { error } = await adminClient.storage.from(BUCKET).upload(path, bytes, {
-        contentType: file.type,
+        contentType: detected,
         upsert: false,
       });
 

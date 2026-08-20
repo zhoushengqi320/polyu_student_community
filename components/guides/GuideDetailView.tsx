@@ -1,5 +1,6 @@
 import { Bookmark, CalendarCheck } from "lucide-react";
 import { ReportDialog } from "@/components/common/ReportDialog";
+import { ContentLikeButton } from "@/components/common/ContentLikeButton";
 import { GuideCommentSection } from "@/components/guides/GuideCommentSection";
 import { GuideFavoriteButton } from "@/components/guides/GuideFavoriteButton";
 import { RichContent } from "@/components/common/RichContent";
@@ -12,11 +13,14 @@ import {
 } from "@/components/ui/card";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { formatDate } from "@/lib/utils/formatDate";
+import { isSafeHref } from "@/lib/utils/safeUrl";
 import { type GuideDetail } from "@/types/guide";
 import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
 
 type GuideDetailViewProps = {
   guide: GuideDetail;
+  likeCount: number;
+  isLiked: boolean;
   favoriteCount: number;
   commentThread: CommentThreadItem[];
   totalCommentCount: number;
@@ -32,6 +36,8 @@ type GuideDetailViewProps = {
 
 export function GuideDetailView({
   guide,
+  likeCount,
+  isLiked,
   favoriteCount,
   commentThread,
   totalCommentCount,
@@ -71,9 +77,18 @@ export function GuideDetailView({
               </span>
             ) : null}
             <span>评论数：{totalCommentCount}</span>
+            <span>点赞：{likeCount}</span>
           </div>
 
           <div className="flex flex-wrap items-start gap-3 border-t pt-4">
+            <ContentLikeButton
+              postId={guide.id}
+              likeCount={likeCount}
+              isLiked={isLiked}
+              isLoggedIn={isLoggedIn}
+              canLike={canLike}
+              revalidatePath={revalidatePath}
+            />
             <GuideFavoriteButton
               guideId={guide.id}
               isFavorited={guide.isFavorited}
@@ -109,17 +124,23 @@ export function GuideDetailView({
             <CardTitle>参考链接</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {guide.meta.sourceLinks.map((link) => (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="block text-sm text-primary hover:underline"
-              >
-                {link.label}
-              </a>
-            ))}
+            {guide.meta.sourceLinks.map((link) =>
+              isSafeHref(link.url) ? (
+                <a
+                  key={link.url}
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="block text-sm text-primary hover:underline"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <span key={link.url} className="block text-sm text-muted-foreground">
+                  {link.label}
+                </span>
+              ),
+            )}
           </CardContent>
         </Card>
       ) : null}

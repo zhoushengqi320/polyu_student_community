@@ -71,21 +71,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const shouldSkipHeartbeat =
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.includes(".");
-
-  if (user && !shouldSkipHeartbeat) {
-    const nowIso = new Date().toISOString();
-    const throttleBefore = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-
-    void supabase
-      .from("profiles")
-      .update({ last_seen_at: nowIso })
-      .eq("id", user.id)
-      .or(`last_seen_at.is.null,last_seen_at.lt."${throttleBefore}"`);
-  }
 
   if (
     user &&

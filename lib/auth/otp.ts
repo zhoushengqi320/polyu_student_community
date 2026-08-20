@@ -10,11 +10,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export type OtpPurpose = "register" | "login" | "reset_password" | "change_password";
 
 function getOtpPepper(): string {
-  return (
-    process.env.OTP_PEPPER ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "polyuhub-dev-otp-pepper"
-  );
+  const pepper =
+    process.env.OTP_PEPPER || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!pepper) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("OTP_PEPPER or SUPABASE_SERVICE_ROLE_KEY is required");
+    }
+    return "polyuhub-dev-otp-pepper";
+  }
+  return pepper;
 }
 
 export function generateOtpCode(): string {
@@ -33,7 +37,17 @@ function getDraftEncryptionKey(): Buffer {
   const secret =
     process.env.REGISTRATION_DRAFT_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "polyuhub-dev-draft-secret-key!!";
+    "";
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "REGISTRATION_DRAFT_SECRET or SUPABASE_SERVICE_ROLE_KEY is required",
+      );
+    }
+    return createHash("sha256")
+      .update("polyuhub-dev-draft-secret-key!!")
+      .digest();
+  }
   return createHash("sha256").update(secret).digest();
 }
 

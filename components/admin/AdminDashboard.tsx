@@ -58,7 +58,7 @@ function AdminDashboardContent({
   const searchParams = useSearchParams();
   const [isRefreshing, startRefresh] = useTransition();
   const activeTab = resolveAdminTab(searchParams.get("tab"));
-  const pendingAppeals = data.pendingArchiveAppeals ?? [];
+  const pendingAppealCount = data.stats.pendingArchiveAppealCount ?? 0;
 
   function selectTab(tab: AdminTabId) {
     router.replace(buildAdminUrl(tab, searchParams));
@@ -99,9 +99,9 @@ function AdminDashboardContent({
                   {data.stats.pendingReportCount}
                 </span>
               ) : null}
-              {tab.id === "archives" && pendingAppeals.length > 0 ? (
+              {tab.id === "archives" && pendingAppealCount > 0 ? (
                 <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                  {pendingAppeals.length}
+                  {pendingAppealCount}
                 </span>
               ) : null}
               {tab.id === "profile-reviews" &&
@@ -137,7 +137,7 @@ function AdminDashboardContent({
                 在「举报中心」：首次举报仅标注待审；第二名举报人触发自动隐藏并复制封存；确认违规会隐藏并封存（作者可申诉）；驳回会警告/失信标记，再次驳回则封禁 30 天。
               </li>
               <li>
-                在「封存申诉」审核作者申诉（通过则恢复并删除封存；驳回则通知作者）。打开本页会自动处理逾期封存。
+                在「封存申诉」审核作者申诉（通过则恢复并删除封存；驳回则通知作者）。打开概览或封存页会自动处理逾期封存。
               </li>
               <li>在「社区内容」中可统一查看帖子与评论（含已删除日志项）。</li>
               <li>在「课程目录」中可维护课程信息，并切换查看课程评价。</li>
@@ -156,7 +156,7 @@ function AdminDashboardContent({
       {activeTab === "archives" ? (
         <ContentArchivePanel
           archives={data.contentArchives ?? []}
-          pendingAppeals={pendingAppeals}
+          pendingAppeals={data.pendingArchiveAppeals ?? []}
           expiredCount={data.expiredArchiveCount ?? 0}
         />
       ) : null}

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { MODULE_REGISTRY } from "@/constants/modules";
+import { ContentViewTracker } from "@/components/common/ContentViewTracker";
 import { GuideDetailView } from "@/components/guides/GuideDetailView";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { ROUTES } from "@/constants/routes";
@@ -11,7 +12,11 @@ import {
   listPostCommentThread,
 } from "@/lib/db/comments";
 import { getGuideById } from "@/lib/db/guides";
-import { countReactions, getReactionSummariesForTargets } from "@/lib/db/reactions";
+import {
+  countReactions,
+  getReactionSummariesForTargets,
+  hasReaction,
+} from "@/lib/db/reactions";
 import { getVisitorId } from "@/lib/guest/visitorId";
 import { can, isAdmin } from "@/lib/utils/permissions";
 
@@ -33,16 +38,31 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
     notFound();
   }
 
-  const favoriteCount = await countReactions({
-    targetType: TARGET_TYPES.post,
-    targetId: id,
-    type: "favorite",
-  });
+  const [favoriteCount, likeCount, isLiked] = await Promise.all([
+    countReactions({
+      targetType: TARGET_TYPES.post,
+      targetId: id,
+      type: "favorite",
+    }),
+    countReactions({
+      targetType: TARGET_TYPES.post,
+      targetId: id,
+      type: "like",
+    }),
+    user
+      ? hasReaction({
+          userId: user.id,
+          targetType: TARGET_TYPES.post,
+          targetId: id,
+          type: "like",
+        })
+      : Promise.resolve(false),
+  ]);
 
   const totalCommentCount = countCommentsInThread(commentThread);
   const canComment = can(user, "interaction:comment");
   const canFavorite = can(user, "interaction:like");
-  const canLikeComments = can(user, "interaction:like");
+  const canLike = can(user, "interaction:like");
   const commentIds = collectCommentIdsFromThread(commentThread);
   const visitorId = user ? null : await getVisitorId();
   const commentReactionMap = Object.fromEntries(
@@ -63,15 +83,18 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
       description={`${MODULE_REGISTRY.guides.label} · 详情页`}
       back={{ href: ROUTES.guides.list, label: "入学攻略" }}
     >
+      <ContentViewTracker targetType={TARGET_TYPES.post} targetId={id} />
       <GuideDetailView
         guide={guide}
+        likeCount={likeCount}
+        isLiked={isLiked}
         favoriteCount={favoriteCount}
         commentThread={commentThread}
         totalCommentCount={totalCommentCount}
         isLoggedIn={Boolean(user)}
         canComment={canComment}
         canFavorite={canFavorite}
-        canLike={canLikeComments}
+        canLike={canLike}
         isAdmin={isAdmin(user)}
         currentUserId={user?.id}
         revalidatePath={revalidatePath}

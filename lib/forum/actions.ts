@@ -14,8 +14,10 @@ import {
   incrementForumPostViewCount,
   updateForumPost,
 } from "@/lib/db/forum";
+import { recordContentViewAction } from "@/lib/content/viewActions";
 import { createNotification } from "@/lib/db/notifications";
 import { DbError } from "@/lib/db/shared";
+import { safeRevalidatePath } from "@/lib/utils/safeRevalidatePath";
 import {
   assessContentRisk,
   assessForumPostRisk,
@@ -308,8 +310,10 @@ export async function createCommentAction(
       });
     }
 
-    const revalidatePathValue =
-      String(formData.get("revalidatePath") ?? "") || ROUTES.forum.detail(postId);
+    const revalidatePathValue = safeRevalidatePath(
+      formData.get("revalidatePath"),
+      ROUTES.forum.detail(postId),
+    );
     revalidatePath(revalidatePathValue);
     return {};
   } catch {
@@ -325,7 +329,15 @@ export async function recordForumPostViewAction(postId: string): Promise<void> {
     return;
   }
 
-  await incrementForumPostViewCount(postId);
-  revalidatePath(ROUTES.forum.detail(postId));
-  revalidatePath(ROUTES.forum.list);
+  try {
+    await Promise.all([
+      incrementForumPostViewCount(postId),
+      recordContentViewAction({
+        targetType: "post",
+        targetId: postId,
+      }),
+    ]);
+  } catch (error) {
+    console.error("recordForumPostViewAction failed:", error);
+  }
 }

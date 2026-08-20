@@ -128,6 +128,9 @@ function CourseForm({
                 <option value="" disabled>
                   请选择
                 </option>
+                {course?.department === "bba" ? (
+                  <option value="bba">商学院 (其他)（历史分类）</option>
+                ) : null}
                 {COURSE_DEPARTMENTS.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.label}

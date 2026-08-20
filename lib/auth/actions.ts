@@ -18,14 +18,16 @@ import {
 } from "@/lib/auth/otp";
 import {
   clearRegistrationDraftCookie,
-  clearResetEmailCookie,
   findAuthUserIdByEmail,
   getOrCreateRegistrationDraft,
   getRegistrationDraftByCookie,
-  getResetEmailCookie,
   setRegistrationDraftCookie,
-  setResetEmailCookie,
 } from "@/lib/auth/registrationDraft";
+import {
+  clearResetVerifiedCookie,
+  getResetVerifiedEmail,
+  setResetVerifiedCookie,
+} from "@/lib/auth/resetPasswordToken";
 import { sendOtpEmail } from "@/lib/email/sendOtpEmail";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -750,7 +752,8 @@ export async function sendResetOtpAction(
     return { error: "该邮箱尚未注册" };
   }
 
-  await setResetEmailCookie(email);
+  // 仅发 OTP；验证通过前不写入可改密 cookie，防止绕过验证码接管账号
+  await clearResetVerifiedCookie();
   return issueOtpAndMaybeEmail(email, "reset_password");
 }
 
@@ -762,9 +765,7 @@ export async function verifyResetOtpAction(
     return authUnavailableState();
   }
 
-  const email =
-    (formData.get("email") as string)?.trim().toLowerCase() ||
-    (await getResetEmailCookie());
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
   if (!email) {
     return { error: "请先获取验证码", step: "email" };
   }
@@ -794,7 +795,7 @@ export async function verifyResetOtpAction(
     };
   }
 
-  await setResetEmailCookie(email);
+  await setResetVerifiedCookie(email);
   return { success: "验证成功，请设置新密码", step: "password" };
 }
 
@@ -806,9 +807,9 @@ export async function setNewPasswordAction(
     return authUnavailableState();
   }
 
-  const email = await getResetEmailCookie();
+  const email = await getResetVerifiedEmail();
   if (!email) {
-    return { error: "重置会话已过期，请重新开始", step: "email" };
+    return { error: "请先完成邮箱验证码校验", step: "email" };
   }
 
   const parsed = setPasswordSchema.safeParse({
@@ -836,7 +837,7 @@ export async function setNewPasswordAction(
     return { error: mapAuthErrorMessage(error.message), step: "password" };
   }
 
-  await clearResetEmailCookie();
+  await clearResetVerifiedCookie();
 
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({

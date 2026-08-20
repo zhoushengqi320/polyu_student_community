@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
   type CSSProperties,
 } from "react";
@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils/cn";
 const SPOTLIGHT_PADDING = 8;
 const TOUR_Z_OVERLAY = 200;
 const TOUR_Z_PANEL = 201;
-const SCROLL_SETTLE_MS = 380;
 
 type HomeProductTourProps = {
   enabled: boolean;
@@ -51,12 +50,15 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
   const [active, setActive] = useState(enabled);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [spotlightReady, setSpotlightReady] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const stepTokenRef = useRef(0);
 
   const step = HOME_TOUR_STEPS[stepIndex];
   const isLast = stepIndex === HOME_TOUR_STEPS.length - 1;
-  const isCenterStep = !step?.target;
+  const wantsTarget = Boolean(step?.target);
+  const isCenterStep = !wantsTarget || (spotlightReady && !targetRect);
 
   useEffect(() => {
     setMounted(true);
@@ -66,9 +68,17 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     setActive(enabled);
   }, [enabled]);
 
-  const measureTarget = useCallback(() => {
+  useLayoutEffect(() => {
+    if (!active) {
+      return;
+    }
+
+    const token = ++stepTokenRef.current;
+    setSpotlightReady(false);
+    setTargetRect(null);
+
     if (!step?.target) {
-      setTargetRect(null);
+      setSpotlightReady(true);
       return;
     }
 
@@ -76,37 +86,30 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
       `[data-tour="${step.target}"]`,
     );
     if (!element) {
+      // 目标缺失时退回居中说明，避免黑屏锁死
+      setSpotlightReady(true);
       setTargetRect(null);
       return;
     }
 
     element.scrollIntoView({
-      behavior: "smooth",
+      behavior: "auto",
       block: "center",
       inline: "nearest",
     });
 
-    const updateRect = () => setTargetRect(element.getBoundingClientRect());
-
-    const timer = window.setTimeout(updateRect, SCROLL_SETTLE_MS);
-    updateRect();
-
-    window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
-
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect, true);
+    const applyRect = () => {
+      if (token !== stepTokenRef.current) {
+        return;
+      }
+      setTargetRect(element.getBoundingClientRect());
+      setSpotlightReady(true);
     };
-  }, [step?.target]);
 
-  useLayoutEffect(() => {
-    if (!active) {
-      return;
-    }
-    return measureTarget();
-  }, [active, stepIndex, measureTarget]);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(applyRect);
+    });
+  }, [active, stepIndex, step?.target]);
 
   useEffect(() => {
     if (!active) {
@@ -121,17 +124,37 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     };
   }, [active]);
 
-  const handleNext = async () => {
-    if (isLast) {
-      setIsCompleting(true);
-      const result = await completeHomeTourAction();
-      setIsCompleting(false);
-      if (!result.error) {
-        setActive(false);
-      }
+  const finishTour = async () => {
+    setIsCompleting(true);
+    const result = await completeHomeTourAction();
+    setIsCompleting(false);
+    if (!result.error) {
+      setActive(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!active) {
       return;
     }
 
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        void finishTour();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only bind while tour active
+  }, [active]);
+
+  const handleNext = async () => {
+    if (isLast) {
+      await finishTour();
+      return;
+    }
     setStepIndex((current) => current + 1);
   };
 
@@ -139,8 +162,11 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     return null;
   }
 
+  const showTargetSpotlight =
+    wantsTarget && spotlightReady && targetRect !== null;
   const tooltipStyle =
-    !isCenterStep && targetRect ? getTooltipStyle(targetRect) : undefined;
+    showTargetSpotlight && targetRect ? getTooltipStyle(targetRect) : undefined;
+  const showPanel = spotlightReady || isCenterStep;
 
   return createPortal(
     <div
@@ -152,73 +178,76 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     >
       <div className="absolute inset-0 pointer-events-auto" aria-hidden="true" />
 
-      {isCenterStep ? (
+      {showTargetSpotlight ? (
         <div
-          className="absolute inset-0 bg-black/75 transition-opacity duration-300"
-          aria-hidden="true"
-        />
-      ) : targetRect ? (
-        <div
-          className="pointer-events-none absolute rounded-xl ring-2 ring-primary/90 transition-all duration-300 ease-out"
+          className="pointer-events-none absolute rounded-xl ring-2 ring-primary/90"
           style={{
-            top: targetRect.top - SPOTLIGHT_PADDING,
-            left: targetRect.left - SPOTLIGHT_PADDING,
-            width: targetRect.width + SPOTLIGHT_PADDING * 2,
-            height: targetRect.height + SPOTLIGHT_PADDING * 2,
+            top: targetRect!.top - SPOTLIGHT_PADDING,
+            left: targetRect!.left - SPOTLIGHT_PADDING,
+            width: targetRect!.width + SPOTLIGHT_PADDING * 2,
+            height: targetRect!.height + SPOTLIGHT_PADDING * 2,
             boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.75)",
             zIndex: TOUR_Z_OVERLAY,
           }}
           aria-hidden="true"
         />
       ) : (
-        <div
-          className="absolute inset-0 bg-black/75"
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 bg-black/75" aria-hidden="true" />
       )}
 
       <div
         className={cn(
           "absolute",
-          isCenterStep
-            ? "inset-0 flex items-center justify-center p-4"
-            : "pointer-events-none",
+          showTargetSpotlight
+            ? "pointer-events-none"
+            : "inset-0 flex items-center justify-center p-4",
         )}
         style={{ zIndex: TOUR_Z_PANEL }}
       >
-        <div
-          className={cn(
-            "pointer-events-auto rounded-xl border border-border/80 bg-background p-6 shadow-2xl",
-            isCenterStep ? "w-full max-w-md" : "fixed",
-          )}
-          style={tooltipStyle}
-        >
-          <p className="text-xs font-medium text-muted-foreground">
-            {stepIndex + 1} / {HOME_TOUR_STEPS.length}
-          </p>
-          <h2
-            id="home-tour-title"
-            className="mt-2 text-lg font-semibold tracking-tight"
+        {showPanel ? (
+          <div
+            className={cn(
+              "pointer-events-auto rounded-xl border border-border/80 bg-background p-6 shadow-2xl",
+              showTargetSpotlight ? "fixed" : "w-full max-w-md",
+            )}
+            style={tooltipStyle}
           >
-            {step.title}
-          </h2>
-          <p
-            id="home-tour-description"
-            className="mt-2 text-sm leading-relaxed text-muted-foreground"
-          >
-            {step.description}
-          </p>
-          <div className="mt-6 flex justify-end">
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={isCompleting}
-              className="min-w-[7.5rem]"
+            <p className="text-xs font-medium text-muted-foreground">
+              {stepIndex + 1} / {HOME_TOUR_STEPS.length}
+            </p>
+            <h2
+              id="home-tour-title"
+              className="mt-2 text-lg font-semibold tracking-tight"
             >
-              {isLast ? "Let's gooo" : "我知道了"}
-            </Button>
+              {step.title}
+            </h2>
+            <p
+              id="home-tour-description"
+              className="mt-2 text-sm leading-relaxed text-muted-foreground"
+            >
+              {step.description}
+            </p>
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => void finishTour()}
+                disabled={isCompleting}
+              >
+                跳过
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void handleNext()}
+                disabled={isCompleting || !spotlightReady}
+                className="min-w-[7.5rem]"
+              >
+                {isLast ? "Let's gooo" : "我知道了"}
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>,
     document.body,

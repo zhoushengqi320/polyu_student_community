@@ -10,8 +10,10 @@ import { notifyContentInteraction } from "@/lib/notifications/interactionNotific
 import { createReport } from "@/lib/db/reports";
 import { reportSchema } from "@/lib/validations/reportSchema";
 import { assertCan, isAdmin, isBanned } from "@/lib/utils/permissions";
+import { safeRevalidatePath } from "@/lib/utils/safeRevalidatePath";
 import { type TargetType, type ReportReasonId } from "@/constants/reportReasons";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { z } from "zod";
 
 export type InteractionActionState = {
   error?: string;
@@ -29,9 +31,16 @@ export async function toggleReactionAction(
   const targetType = String(formData.get("targetType") ?? "") as TargetType;
   const targetId = String(formData.get("targetId") ?? "");
   const type = String(formData.get("type") ?? "") as ReactionType;
-  const revalidatePathValue = String(formData.get("revalidatePath") ?? "/");
+  const revalidatePathValue = safeRevalidatePath(
+    formData.get("revalidatePath"),
+    "/",
+  );
 
-  if (!targetType || !targetId || (type !== "like" && type !== "favorite")) {
+  if (
+    !targetType ||
+    !z.string().uuid().safeParse(targetId).success ||
+    (type !== "like" && type !== "favorite")
+  ) {
     return { error: "无效的操作参数" };
   }
 
@@ -127,7 +136,10 @@ export async function createReportAction(
       description: parsed.data.description,
     });
 
-    const revalidatePathValue = String(formData.get("revalidatePath") ?? "/");
+    const revalidatePathValue = safeRevalidatePath(
+      formData.get("revalidatePath"),
+      "/",
+    );
     revalidatePath(revalidatePathValue);
 
     if (result.autoHidden) {
@@ -162,9 +174,12 @@ export async function deleteCommentAction(
   }
 
   const commentId = String(formData.get("commentId") ?? "");
-  const revalidatePathValue = String(formData.get("revalidatePath") ?? "/");
+  const revalidatePathValue = safeRevalidatePath(
+    formData.get("revalidatePath"),
+    "/",
+  );
 
-  if (!commentId) {
+  if (!commentId || !z.string().uuid().safeParse(commentId).success) {
     return { error: "无效的评论 ID" };
   }
 

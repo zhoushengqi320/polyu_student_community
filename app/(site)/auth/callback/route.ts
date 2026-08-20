@@ -6,6 +6,22 @@ import { needsOnboarding } from "@/lib/auth/onboarding";
 import { getProfileById } from "@/lib/db/profiles";
 import { ROUTES } from "@/constants/routes";
 
+/** 仅允许站内相对路径，防止开放重定向 */
+function sanitizeNextPath(next: string | null): string {
+  const fallback = ROUTES.home;
+  if (!next) {
+    return fallback;
+  }
+  const value = next.trim();
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return fallback;
+  }
+  if (value.includes("\\") || value.includes("\0") || value.length > 200) {
+    return fallback;
+  }
+  return value.split(/[?#]/, 1)[0] || fallback;
+}
+
 async function redirectAfterLogin(origin: string, next: string) {
   const supabase = await createClient();
   const {
@@ -28,11 +44,11 @@ export async function GET(request: Request) {
 
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? ROUTES.home;
+  const next = sanitizeNextPath(searchParams.get("next"));
   const email = searchParams.get("email")?.trim().toLowerCase() ?? "";
   const token = searchParams.get("token")?.trim() ?? "";
 
-  // 开发调试：?email=&token= 走 OTP 校验（仅 DEV_SHOW_LOGIN_OTP=true）
+  // 开发调试：?email=&token= 走 OTP 校验（仅非生产 + DEV_SHOW_LOGIN_OTP=true）
   if (email && token && isDevShowLoginOtp()) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({

@@ -14,7 +14,8 @@ export function isMagicLinkEnabled(): boolean {
 }
 
 export const OTP_LENGTH = 6;
-export const OTP_TTL_MS = 60 * 60 * 1000;
+/** 验证码有效期：10 分钟（缩短爆破窗口） */
+export const OTP_TTL_MS = 10 * 60 * 1000;
 export const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
 

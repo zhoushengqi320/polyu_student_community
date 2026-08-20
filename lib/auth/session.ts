@@ -1,9 +1,11 @@
+import { cache } from "react";
 import { getProfileById } from "@/lib/db/profiles";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type SessionUser } from "@/types/user";
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+/** 同一请求内去重，避免 layout + page 重复拉会话 */
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   if (!isSupabaseConfigured()) {
     return null;
   }
@@ -29,4 +31,4 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   } catch {
     return null;
   }
-}
+});

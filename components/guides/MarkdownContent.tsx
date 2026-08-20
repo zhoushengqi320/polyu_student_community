@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils/cn";
+import { isSafeHref, isSafeImageSrc } from "@/lib/utils/safeUrl";
 
 type MarkdownContentProps = {
   content: string;
@@ -86,16 +87,21 @@ export function MarkdownContent({
             </h6>
           ),
           p: ({ children }) => <p className="leading-7">{children}</p>,
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="break-words font-medium text-primary underline underline-offset-2 hover:opacity-90"
-            >
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) => {
+            if (!isSafeHref(href)) {
+              return <span className="break-words">{children}</span>;
+            }
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="break-words font-medium text-primary underline underline-offset-2 hover:opacity-90"
+              >
+                {children}
+              </a>
+            );
+          },
           strong: ({ children }) => (
             <strong className="font-semibold text-foreground">{children}</strong>
           ),
@@ -123,7 +129,7 @@ export function MarkdownContent({
           ),
           hr: () => <hr className="border-border" />,
           img: ({ src, alt }) => {
-            if (!src || typeof src !== "string") {
+            if (!src || typeof src !== "string" || !isSafeImageSrc(src)) {
               return null;
             }
             return (

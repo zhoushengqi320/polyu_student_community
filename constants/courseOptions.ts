@@ -125,16 +125,23 @@ export const COURSE_DEPARTMENTS = [
   { id: "mm", label: "管理及市场学 (MM)" },
   { id: "sft", label: "时装及纺织 (SFT)" },
   { id: "shtm", label: "酒店及旅游业管理 (SHTM)" },
-  { id: "bba", label: "商学院 (其他)" },
   { id: "other", label: "其他" },
 ] as const;
 
 export type CourseDepartmentId = (typeof COURSE_DEPARTMENTS)[number]["id"];
 
+const LEGACY_DEPARTMENT_LABELS: Record<string, string> = {
+  bba: "商学院 (其他)",
+};
+
 export function getDepartmentLabel(departmentId: string): string {
   const found = COURSE_DEPARTMENTS.find((item) => item.id === departmentId);
   if (found) {
     return found.label;
+  }
+  const legacy = LEGACY_DEPARTMENT_LABELS[departmentId];
+  if (legacy) {
+    return legacy;
   }
   return departmentId.trim().toUpperCase();
 }
@@ -145,12 +152,13 @@ export function getDepartmentCode(departmentId: string): string {
   if (!id) {
     return "";
   }
-  const found = COURSE_DEPARTMENTS.find((item) => item.id === id.toLowerCase());
-  if (found && found.id !== "other" && found.id !== "bba") {
-    return found.id.toUpperCase();
-  }
-  if (found?.id === "bba") {
+  const lower = id.toLowerCase();
+  if (lower === "bba") {
     return "BBA";
+  }
+  const found = COURSE_DEPARTMENTS.find((item) => item.id === lower);
+  if (found && found.id !== "other") {
+    return found.id.toUpperCase();
   }
   return id.toUpperCase();
 }

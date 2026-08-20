@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RichContent } from "@/components/common/RichContent";
+import { ContentLikeButton } from "@/components/common/ContentLikeButton";
 import { EmptyState } from "@/components/common/EmptyState";
 import {
   Card,
@@ -37,7 +38,9 @@ export function ContentGuideList({
               <CardTitle className="transition-colors group-hover:text-primary">
                 {item.title}
               </CardTitle>
-              <CardDescription className="line-clamp-3">NA</CardDescription>
+              <CardDescription className="line-clamp-3">
+                {item.excerpt?.trim() || "点击查看详情"}
+              </CardDescription>
             </CardHeader>
           </Card>
         </Link>
@@ -48,14 +51,38 @@ export function ContentGuideList({
 
 type ContentGuideDetailViewProps = {
   guide: ContentGuideDetail;
+  likeCount: number;
+  isLiked: boolean;
+  isLoggedIn: boolean;
+  canLike: boolean;
+  revalidatePath: string;
 };
 
-export function ContentGuideDetailView({ guide }: ContentGuideDetailViewProps) {
+export function ContentGuideDetailView({
+  guide,
+  likeCount,
+  isLiked,
+  isLoggedIn,
+  canLike,
+  revalidatePath,
+}: ContentGuideDetailViewProps) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <RichContent content={guide.content} stripTitle={guide.title} />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <ContentLikeButton
+          postId={guide.id}
+          likeCount={likeCount}
+          isLiked={isLiked}
+          isLoggedIn={isLoggedIn}
+          canLike={canLike}
+          revalidatePath={revalidatePath}
+        />
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <RichContent content={guide.content} stripTitle={guide.title} />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

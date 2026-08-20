@@ -5,6 +5,7 @@ import {
 } from "@/constants/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { detectImageMimeFromBytes } from "@/lib/utils/fileMagic";
 
 export type UploadAvatarResult =
   | { ok: true; publicUrl: string }
@@ -29,17 +30,19 @@ export async function uploadAvatarFromFormData(
     return { ok: false, error: "头像不能超过 2MB" };
   }
 
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const detected = detectImageMimeFromBytes(new Uint8Array(buffer));
   if (
+    !detected ||
     !AVATAR_ALLOWED_MIME.includes(
-      file.type as (typeof AVATAR_ALLOWED_MIME)[number],
+      detected as (typeof AVATAR_ALLOWED_MIME)[number],
     )
   ) {
     return { ok: false, error: "仅支持 JPG / PNG / WebP" };
   }
 
-  const ext = resolveExtension(file.type);
+  const ext = resolveExtension(detected);
   const path = `${userId}/${Date.now()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
 
   try {
     const client = options?.useServiceRole
@@ -49,7 +52,7 @@ export async function uploadAvatarFromFormData(
     const { error: uploadError } = await client.storage
       .from(AVATAR_BUCKET)
       .upload(path, buffer, {
-        contentType: file.type,
+        contentType: detected,
         upsert: true,
       });
 

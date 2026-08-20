@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { COURSE_DEPARTMENTS } from "@/constants/courseOptions";
 
-const departmentIds = COURSE_DEPARTMENTS.map((item) => item.id) as [
-  string,
-  ...string[],
-];
+const departmentIds = [
+  ...COURSE_DEPARTMENTS.map((item) => item.id),
+  "bba", // 历史院系，允许编辑旧课但不在前台筛选展示
+] as unknown as [string, ...string[]];
 
 function emptyToNull(value: unknown) {
   if (typeof value !== "string") return null;

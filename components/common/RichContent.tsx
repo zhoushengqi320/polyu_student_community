@@ -37,7 +37,8 @@ export function RichContent({ content, stripTitle, className }: RichContentProps
   }
 
   const safe = DOMPurify.sanitize(html, {
-    ADD_ATTR: ["width", "height", "style"],
+    ADD_ATTR: ["width", "height"],
+    FORBID_ATTR: ["style"],
   });
 
   return (

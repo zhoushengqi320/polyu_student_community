@@ -16,9 +16,13 @@ import {
 import { listEmailWhitelist } from "@/lib/db/emailWhitelist";
 import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
-import { listAnnouncementsForAdmin, publishDueAnnouncements } from "@/lib/db/announcements";
+import {
+  listAnnouncementsForAdmin,
+  publishDueAnnouncements,
+} from "@/lib/db/announcements";
 import { getReports } from "@/lib/db/reports";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { resolveAdminTab, type AdminTabId } from "@/constants/admin";
 import { type AdminDashboardData } from "@/types/admin";
 
 const EMPTY_DASHBOARD: AdminDashboardData = {
@@ -26,6 +30,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
     userCount: 0,
     pendingReportCount: 0,
     pendingProfileReviewCount: 0,
+    pendingArchiveAppealCount: 0,
     postCount: 0,
   },
   users: [],
@@ -47,6 +52,76 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   isDatabaseConfigured: false,
 };
 
+async function loadTabData(
+  tab: AdminTabId,
+  options: {
+    actionsQuery?: string;
+    actionsPage: number;
+    actionsPageSize: number;
+  },
+): Promise<Partial<AdminDashboardData>> {
+  switch (tab) {
+    case "overview":
+      return {};
+    case "reports":
+      return { reports: await getReports({ pageSize: 100 }) };
+    case "archives": {
+      const expiredArchiveCount = await expireDueArchives();
+      const [contentArchives, pendingArchiveAppeals] = await Promise.all([
+        listActiveContentArchives(100),
+        listPendingArchiveAppeals(100),
+      ]);
+      return { expiredArchiveCount, contentArchives, pendingArchiveAppeals };
+    }
+    case "profile-reviews":
+      return { profileReviews: await listPendingProfileReviews(100) };
+    case "content": {
+      const [forumPosts, forumComments] = await Promise.all([
+        getAllForumPosts({ pageSize: 100 }),
+        getAllForumComments({ pageSize: 100 }),
+      ]);
+      return { forumPosts, forumComments };
+    }
+    case "courses":
+      return { courseReviews: await getAllCourseReviews({ pageSize: 100 }) };
+    case "guides": {
+      const [guides, studyArticles, lifeArticles] = await Promise.all([
+        getAllGuidesForAdmin({ pageSize: 100 }),
+        listContentArticlesForAdmin("study", { pageSize: 100 }),
+        listContentArticlesForAdmin("life", { pageSize: 100 }),
+      ]);
+      return { guides, studyArticles, lifeArticles };
+    }
+    case "announcements": {
+      await publishDueAnnouncements();
+      return { announcements: await listAnnouncementsForAdmin() };
+    }
+    case "users": {
+      const [users, emailWhitelist] = await Promise.all([
+        listUsers({ pageSize: 200 }),
+        listEmailWhitelist(100),
+      ]);
+      return { users, emailWhitelist };
+    }
+    case "actions": {
+      const adminActionsResult = await getAdminActions({
+        page: options.actionsPage,
+        pageSize: options.actionsPageSize,
+        query: options.actionsQuery,
+      });
+      return {
+        adminActions: adminActionsResult.items,
+        adminActionsTotal: adminActionsResult.total,
+        adminActionsPage: options.actionsPage,
+        adminActionsPageSize: options.actionsPageSize,
+        adminActionsQuery: options.actionsQuery ?? "",
+      };
+    }
+    default:
+      return {};
+  }
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -57,8 +132,8 @@ export default async function AdminPage({
     page?: string;
   }>;
 }) {
-  // 鉴权已在 app/admin/layout.tsx 完成；此处仅加载后台数据。
   const params = await searchParams;
+  const activeTab = resolveAdminTab(params.tab);
   const initialEditCourseId = params.editCourseId ?? null;
   const actionsQuery = params.q?.trim() || undefined;
   const actionsPage = Math.max(1, Number(params.page) || 1);
@@ -73,69 +148,28 @@ export default async function AdminPage({
 
   if (isDatabaseConfigured) {
     try {
-      const expiredArchiveCount = await expireDueArchives();
-      await publishDueAnnouncements();
+      // 概览也会触发逾期封存清理，避免只有打开「封存申诉」才执行
+      const shouldExpireArchives =
+        activeTab === "overview" || activeTab === "archives";
 
-      const [
-        stats,
-        users,
-        profileReviews,
-        reports,
-        forumPosts,
-        forumComments,
-        courseReviews,
-        guides,
-        studyArticles,
-        lifeArticles,
-        announcements,
-        adminActionsResult,
-        contentArchives,
-        pendingArchiveAppeals,
-        emailWhitelist,
-      ] = await Promise.all([
+      const [stats, tabData, expiredOnOverview] = await Promise.all([
         getAdminStats(),
-        listUsers({ pageSize: 200 }),
-        listPendingProfileReviews(100),
-        getReports({ pageSize: 100 }),
-        getAllForumPosts({ pageSize: 100 }),
-        getAllForumComments({ pageSize: 100 }),
-        getAllCourseReviews({ pageSize: 100 }),
-        getAllGuidesForAdmin({ pageSize: 100 }),
-        listContentArticlesForAdmin("study", { pageSize: 100 }),
-        listContentArticlesForAdmin("life", { pageSize: 100 }),
-        listAnnouncementsForAdmin(),
-        getAdminActions({
-          page: actionsPage,
-          pageSize: actionsPageSize,
-          query: actionsQuery,
+        loadTabData(activeTab, {
+          actionsQuery,
+          actionsPage,
+          actionsPageSize,
         }),
-        listActiveContentArchives(100),
-        listPendingArchiveAppeals(100),
-        listEmailWhitelist(100),
+        shouldExpireArchives && activeTab === "overview"
+          ? expireDueArchives()
+          : Promise.resolve(0),
       ]);
 
       dashboardData = {
+        ...EMPTY_DASHBOARD,
+        ...tabData,
         stats,
-        users,
-        profileReviews,
-        reports,
-        forumPosts,
-        forumComments,
-        courseReviews,
-        courses: [],
-        guides,
-        studyArticles,
-        lifeArticles,
-        announcements,
-        adminActions: adminActionsResult.items,
-        adminActionsTotal: adminActionsResult.total,
-        adminActionsPage: actionsPage,
-        adminActionsPageSize: actionsPageSize,
-        adminActionsQuery: actionsQuery ?? "",
-        contentArchives,
-        pendingArchiveAppeals,
-        expiredArchiveCount,
-        emailWhitelist,
+        expiredArchiveCount:
+          tabData.expiredArchiveCount ?? expiredOnOverview ?? 0,
         isDatabaseConfigured,
       };
     } catch (error) {

@@ -32,7 +32,9 @@ export function GuideCard({ guide }: GuideCardProps) {
             <CardTitle className="line-clamp-2 text-lg transition-colors group-hover:text-primary">
               {guide.title}
             </CardTitle>
-            <CardDescription className="line-clamp-3">NA</CardDescription>
+            <CardDescription className="line-clamp-3">
+              {guide.excerpt?.trim() || "点击查看详情"}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">

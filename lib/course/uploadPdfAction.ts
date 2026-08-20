@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/admin/session";
 import { logAdminAction } from "@/lib/db/reports";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { isPdfBytes } from "@/lib/utils/fileMagic";
 
 const BUCKET = "course_pdfs";
 const MAX_BYTES = 50 * 1024 * 1024;
@@ -54,6 +55,10 @@ export async function uploadCoursePdfAction(
     const fileName = sanitizeFileName(file.name || `${code}.pdf`);
     const storagePath = `${code}/${fileName}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
+
+    if (!isPdfBytes(bytes)) {
+      return { success: false, error: "文件内容不是有效的 PDF" };
+    }
 
     let publicUrl: string | null = null;
 

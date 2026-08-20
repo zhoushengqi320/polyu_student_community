@@ -159,8 +159,6 @@ export async function listActiveAnnouncements(): Promise<SiteAnnouncement[]> {
     return [];
   }
 
-  await publishDueAnnouncements();
-
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase

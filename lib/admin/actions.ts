@@ -24,6 +24,11 @@ import {
   removeUnusedWhitelistEntry,
 } from "@/lib/db/emailWhitelist";
 import { getContentSnapshot } from "@/lib/db/moderation";
+import {
+  listContentViewersForAdmin,
+  listReactionUsersForAdmin,
+  type ContentEngagementUser,
+} from "@/lib/db/contentViews";
 import { logAdminAction, updateReportStatus } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
 import {
@@ -67,6 +72,9 @@ export type AdminContentPreview = {
   status: string | null;
   ownerId: string | null;
   authorName: string | null;
+  likeUsers: ContentEngagementUser[];
+  favoriteUsers: ContentEngagementUser[];
+  viewUsers: ContentEngagementUser[];
 };
 
 export async function getAdminContentPreviewAction(input: {
@@ -112,6 +120,23 @@ export async function getAdminContentPreviewAction(input: {
       }
     }
 
+    const [likeUsers, favoriteUsers, viewUsers] = await Promise.all([
+      listReactionUsersForAdmin({
+        targetType: parsed.data.targetType,
+        targetId: parsed.data.targetId,
+        type: "like",
+      }).catch(() => []),
+      listReactionUsersForAdmin({
+        targetType: parsed.data.targetType,
+        targetId: parsed.data.targetId,
+        type: "favorite",
+      }).catch(() => []),
+      listContentViewersForAdmin({
+        targetType: parsed.data.targetType,
+        targetId: parsed.data.targetId,
+      }).catch(() => []),
+    ]);
+
     const title =
       snapshot.title ??
       (parsed.data.targetType === "comment"
@@ -134,6 +159,9 @@ export async function getAdminContentPreviewAction(input: {
         status: snapshot.status,
         ownerId: snapshot.ownerId,
         authorName,
+        likeUsers,
+        favoriteUsers,
+        viewUsers,
       },
     };
   } catch (error) {

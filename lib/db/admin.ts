@@ -3,6 +3,7 @@ import {
   buildProfileActionMetadata,
 } from "@/lib/admin/actionLogMetadata";
 import { CONTENT_STATUS } from "@/constants/contentStatus";
+import { ARCHIVE_APPEAL_STATUS } from "@/constants/moderation";
 import { REPORT_STATUS } from "@/constants/reportReasons";
 import { USER_ROLES, USER_STATUS } from "@/constants/userRoles";
 import { computeActivityForUsers } from "@/lib/db/userActivity";
@@ -34,6 +35,7 @@ const EMPTY_STATS: AdminStats = {
   userCount: 0,
   pendingReportCount: 0,
   pendingProfileReviewCount: 0,
+  pendingArchiveAppealCount: 0,
   postCount: 0,
 };
 
@@ -48,6 +50,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     { count: userCount },
     { count: pendingReportCount },
     { count: pendingProfileReviewCount },
+    { count: pendingArchiveAppealCount },
     { count: postCount },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
@@ -60,6 +63,12 @@ export async function getAdminStats(): Promise<AdminStats> {
       .select("*", { count: "exact", head: true })
       .eq("profile_risk_attention", true),
     supabase
+      .from("content_archives")
+      .select("*", { count: "exact", head: true })
+      .eq("appeal_status", ARCHIVE_APPEAL_STATUS.pending)
+      .is("restored_at", null)
+      .is("expired_at", null),
+    supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
       .eq("status", CONTENT_STATUS.published)
@@ -70,6 +79,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     userCount: userCount ?? 0,
     pendingReportCount: pendingReportCount ?? 0,
     pendingProfileReviewCount: pendingProfileReviewCount ?? 0,
+    pendingArchiveAppealCount: pendingArchiveAppealCount ?? 0,
     postCount: postCount ?? 0,
   };
 }

@@ -14,6 +14,7 @@ export type AdminStats = {
   userCount: number;
   pendingReportCount: number;
   pendingProfileReviewCount: number;
+  pendingArchiveAppealCount: number;
   postCount: number;
 };
 
