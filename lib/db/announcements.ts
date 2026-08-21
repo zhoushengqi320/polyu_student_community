@@ -132,6 +132,46 @@ export async function publishDueAnnouncements(): Promise<number> {
   }
 }
 
+/** 展示结束时间已过的已发布公告自动软删除（后台不再显示为已发布） */
+export async function expireDueAnnouncements(): Promise<number> {
+  if (!isSupabaseConfigured()) {
+    return 0;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("announcements")
+      .update({
+        deleted_at: nowIso,
+        status: CONTENT_STATUS.removed,
+      })
+      .eq("status", CONTENT_STATUS.published)
+      .is("deleted_at", null)
+      .not("ends_at", "is", null)
+      .lte("ends_at", nowIso)
+      .select("id");
+
+    if (error) {
+      console.error("Failed to expire due announcements:", error);
+      return 0;
+    }
+
+    return (data ?? []).length;
+  } catch (error) {
+    console.error("Failed to expire due announcements:", error);
+    return 0;
+  }
+}
+
+/** 先发布到期预告，再清理已过期展示的公告 */
+export async function syncAnnouncementLifecycle(): Promise<void> {
+  await publishDueAnnouncements();
+  await expireDueAnnouncements();
+}
+
 export async function getAnnouncementById(
   id: string,
 ): Promise<AdminAnnouncement | null> {
@@ -159,6 +199,8 @@ export async function listActiveAnnouncements(): Promise<SiteAnnouncement[]> {
     return [];
   }
 
+  await syncAnnouncementLifecycle();
+
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
@@ -185,7 +227,7 @@ export async function listAnnouncementsForAdmin(): Promise<AdminAnnouncement[]> 
     return [];
   }
 
-  await publishDueAnnouncements();
+  await syncAnnouncementLifecycle();
 
   const supabase = await createClient();
   const { data, error } = await supabase

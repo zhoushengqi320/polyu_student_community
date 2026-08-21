@@ -84,7 +84,7 @@ export function CourseReviewsTable({ reviews }: CourseReviewsTableProps) {
                   <div className="space-y-1">
                     <RatingDisplay value={review.overallRating} size="sm" />
                     <p className="text-xs text-muted-foreground">
-                      Difficulty {review.difficultyRating}
+                      难度 {review.difficultyRating}
                     </p>
                   </div>
                 </td>

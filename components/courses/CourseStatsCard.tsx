@@ -30,12 +30,11 @@ export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Course Stats</CardTitle>
-          <CardDescription>暂无评价数据</CardDescription>
+          <CardTitle>课程评价</CardTitle>
         </CardHeader>
         <CardContent>
           <EmptyState
-            title="No reviews yet"
+            title="还没有评价"
             description="成为第一个分享这门课真实体验的人。"
             action={
               <Button asChild>
@@ -59,7 +58,7 @@ export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Course Stats</CardTitle>
+        <CardTitle>课程评价</CardTitle>
         <CardDescription>基于学生课程评价自动聚合</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-3">

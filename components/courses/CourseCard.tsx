@@ -31,7 +31,7 @@ export function CourseCard({ course, canReview }: CourseCardProps) {
             {course.code}
           </span>
           <span>{getDepartmentCode(course.department)}</span>
-          {course.credits ? <span>{course.credits} credits</span> : null}
+          {course.credits ? <span>{course.credits} 学分</span> : null}
         </div>
         <div className="space-y-2">
           <CardTitle className="line-clamp-2 text-lg">
@@ -52,11 +52,11 @@ export function CourseCard({ course, canReview }: CourseCardProps) {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-muted-foreground">Overall</p>
+            <p className="text-muted-foreground">总体推荐</p>
             <RatingDisplay value={course.averageOverallRating} size="sm" />
           </div>
           <div>
-            <p className="text-muted-foreground">Difficulty</p>
+            <p className="text-muted-foreground">课程难度</p>
             <RatingDisplay value={course.averageDifficultyRating} size="sm" />
           </div>
           <div className="flex items-end gap-1 text-muted-foreground">

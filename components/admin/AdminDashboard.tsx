@@ -1,8 +1,7 @@
 "use client";
 
-import { Suspense, useTransition } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RefreshCw } from "lucide-react";
 import {
   ADMIN_TABS,
   resolveAdminTab,
@@ -20,7 +19,6 @@ import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel"
 import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
 import { AnnouncementPanel } from "@/components/admin/announcements/AnnouncementPanel";
 import { type AdminDashboardData } from "@/types/admin";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
 type AdminDashboardProps = {
@@ -56,20 +54,11 @@ function AdminDashboardContent({
 }: AdminDashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isRefreshing, startRefresh] = useTransition();
   const activeTab = resolveAdminTab(searchParams.get("tab"));
   const pendingAppealCount = data.stats.pendingArchiveAppealCount ?? 0;
 
   function selectTab(tab: AdminTabId) {
     router.replace(buildAdminUrl(tab, searchParams));
-  }
-
-  function handleRefresh() {
-    startRefresh(() => {
-      // 保持当前 tab 与查询参数，只刷新数据
-      router.replace(buildAdminUrl(activeTab, searchParams));
-      router.refresh();
-    });
   }
 
   return (
@@ -80,51 +69,38 @@ function AdminDashboardContent({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2 border-b pb-1">
-          {ADMIN_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => selectTab(tab.id)}
-              className={cn(
-                "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {tab.label}
-              {tab.id === "reports" && data.stats.pendingReportCount > 0 ? (
-                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                  {data.stats.pendingReportCount}
-                </span>
-              ) : null}
-              {tab.id === "archives" && pendingAppealCount > 0 ? (
-                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                  {pendingAppealCount}
-                </span>
-              ) : null}
-              {tab.id === "profile-reviews" &&
-              data.stats.pendingProfileReviewCount > 0 ? (
-                <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                  {data.stats.pendingProfileReviewCount}
-                </span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isRefreshing}
-          onClick={handleRefresh}
-          className="gap-1.5"
-        >
-          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-          {isRefreshing ? "刷新中…" : "刷新数据"}
-        </Button>
+      <div className="flex flex-wrap gap-2 border-b pb-1">
+        {ADMIN_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => selectTab(tab.id)}
+            className={cn(
+              "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+              activeTab === tab.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            {tab.label}
+            {tab.id === "reports" && data.stats.pendingReportCount > 0 ? (
+              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                {data.stats.pendingReportCount}
+              </span>
+            ) : null}
+            {tab.id === "archives" && pendingAppealCount > 0 ? (
+              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                {pendingAppealCount}
+              </span>
+            ) : null}
+            {tab.id === "profile-reviews" &&
+            data.stats.pendingProfileReviewCount > 0 ? (
+              <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
+                {data.stats.pendingProfileReviewCount}
+              </span>
+            ) : null}
+          </button>
+        ))}
       </div>
 
       {activeTab === "overview" ? (

@@ -18,7 +18,7 @@ import { getAllGuidesForAdmin } from "@/lib/db/guides";
 import { listContentArticlesForAdmin } from "@/lib/db/contentCms";
 import {
   listAnnouncementsForAdmin,
-  publishDueAnnouncements,
+  syncAnnouncementLifecycle,
 } from "@/lib/db/announcements";
 import { getReports } from "@/lib/db/reports";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -93,7 +93,7 @@ async function loadTabData(
       return { guides, studyArticles, lifeArticles };
     }
     case "announcements": {
-      await publishDueAnnouncements();
+      await syncAnnouncementLifecycle();
       return { announcements: await listAnnouncementsForAdmin() };
     }
     case "users": {

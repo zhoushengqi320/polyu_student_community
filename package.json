@@ -16,7 +16,10 @@
     "deploy:production": "node scripts/deploy-production.mjs",
     "configure:auth": "node scripts/configure-supabase-auth.mjs",
     "sanitize:filenames": "node scripts/sanitize-windows-filenames.mjs",
-    "sanitize:filenames:watch": "node scripts/sanitize-windows-filenames.mjs --watch"
+    "sanitize:filenames:watch": "node scripts/sanitize-windows-filenames.mjs --watch",
+    "translate:courses": "node scripts/translate-course-overview.mjs --concurrency=6",
+    "translate:courses:parallel3": "zsh scripts/start-translate-parallel3.sh",
+    "translate:progress": "node scripts/translate-progress-dashboard.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { AdminUserBar } from "@/components/admin/AdminUserBar";
 import { getAdminAccessState } from "@/lib/admin/session";
@@ -37,7 +38,17 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <AdminUserBar user={user} />
+      <Suspense
+        fallback={
+          <header className="sticky top-0 z-50 border-b bg-background py-3">
+            <div className="container text-sm font-semibold">
+              PolyUHub 管理后台
+            </div>
+          </header>
+        }
+      >
+        <AdminUserBar user={user} />
+      </Suspense>
       <main className="flex-1">
         <div className="container py-6 md:py-8">{children}</div>
       </main>

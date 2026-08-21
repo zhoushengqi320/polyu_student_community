@@ -160,7 +160,7 @@ function CourseForm({
               <Input id="level" name="level" defaultValue={course?.level ?? ""} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="credits">Credits（可选）</Label>
+              <Label htmlFor="credits">学分（可选）</Label>
               <Input
                 id="credits"
                 name="credits"
