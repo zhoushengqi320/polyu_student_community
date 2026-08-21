@@ -546,14 +546,18 @@ function AnnouncementRow({
 
   return (
     <tr className="border-b last:border-0">
-      <td className="px-3 py-2.5">
-        <p className="font-medium">{announcement.title}</p>
-        <p className="mt-0.5 line-clamp-1 text-muted-foreground">{announcement.body}</p>
+      <td className="max-w-[280px] px-3 py-2.5">
+        <p className="truncate font-medium" title={announcement.title}>
+          {announcement.title}
+        </p>
+        <p className="mt-0.5 line-clamp-1 text-muted-foreground" title={announcement.body}>
+          {announcement.body}
+        </p>
       </td>
-      <td className="px-3 py-2.5">
+      <td className="whitespace-nowrap px-3 py-2.5">
         {ANNOUNCEMENT_CATEGORIES[announcement.category]}
       </td>
-      <td className="px-3 py-2.5">
+      <td className="whitespace-nowrap px-3 py-2.5">
         <span
           className={
             announcement.importance === "important"
@@ -564,13 +568,15 @@ function AnnouncementRow({
           {ANNOUNCEMENT_IMPORTANCE[announcement.importance]}
         </span>
       </td>
-      <td className="px-3 py-2.5">
+      <td className="whitespace-nowrap px-3 py-2.5">
         <TagBadge
           label={getStatusLabel(announcement)}
           className={getStatusClassName(announcement)}
         />
       </td>
-      <td className="px-3 py-2.5">{announcement.isPinned ? "是" : "—"}</td>
+      <td className="whitespace-nowrap px-3 py-2.5">
+        {announcement.isPinned ? "是" : "—"}
+      </td>
       <td className="px-3 py-2.5 whitespace-nowrap">
         {announcement.publishedAt ? formatDateTime(announcement.publishedAt) : "—"}
       </td>
@@ -579,9 +585,9 @@ function AnnouncementRow({
         <br />
         至 {announcement.endsAt ? formatDateTime(announcement.endsAt) : "—"}
       </td>
-      <td className="px-3 py-2.5">
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex flex-wrap justify-end gap-1.5">
+      <td className="whitespace-nowrap px-3 py-2.5">
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-nowrap items-center justify-end gap-1.5">
             <Button type="button" size="sm" variant="outline" onClick={onEdit}>
               编辑
             </Button>

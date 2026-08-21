@@ -20,6 +20,9 @@ export const SITE_DESCRIPTION =
 /** 合规事务联系邮箱（私隐 / 版权投诉 / 资料权利申请） */
 export const LEGAL_CONTACT_EMAIL = "teddy_111@163.com";
 
+/** 后台发布的学习/生活/入学攻略等内容，前台作者统一展示名 */
+export const OFFICIAL_CONTENT_AUTHOR_NAME = "PolyUHub";
+
 export const SITE_TAGLINE = SITE_SLOGAN;
 
 export const EMAIL_PLACEHOLDER = "例如：name@connect.polyu.hk";

@@ -58,25 +58,30 @@ export function ForumPostCard({ post }: ForumPostCardProps) {
           ) : null}
         </CardHeader>
         <CardContent className="space-y-3">
-          {post.topics.length > 0 ? (
-            <div
-              className="flex flex-wrap gap-1.5"
-              onClick={(event) => event.stopPropagation()}
-            >
-              {post.topics.slice(0, 3).map((topic) => (
-                <TopicBadge
-                  key={topic}
-                  topic={topic}
-                  href={buildForumUrl({ topic })}
-                />
-              ))}
-              {post.topics.length > 3 ? (
-                <span className="text-xs text-muted-foreground">
-                  +{post.topics.length - 3}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
+          {/* 无论有无话题都预留同一行高度，保证作者区位置一致 */}
+          <div
+            className="flex min-h-7 flex-wrap items-center gap-1.5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {post.topics.length > 0 ? (
+              <>
+                {post.topics.slice(0, 3).map((topic) => (
+                  <TopicBadge
+                    key={topic}
+                    topic={topic}
+                    href={buildForumUrl({ topic })}
+                  />
+                ))}
+                {post.topics.length > 3 ? (
+                  <span className="text-xs text-muted-foreground">
+                    +{post.topics.length - 3}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <span className="invisible text-xs">#占位</span>
+            )}
+          </div>
 
           <div
             className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"

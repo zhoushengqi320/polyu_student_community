@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
+import { OFFICIAL_CONTENT_AUTHOR_NAME } from "@/constants/site";
 import { interactiveCardClassName } from "@/lib/utils/interactiveCard";
 import { type GuideListItem } from "@/types/guide";
 
@@ -38,7 +39,7 @@ export function GuideCard({ guide }: GuideCardProps) {
           </div>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>{guide.author.displayName ?? guide.author.username}</span>
+          <span>{OFFICIAL_CONTENT_AUTHOR_NAME}</span>
           <span className="inline-flex items-center gap-1">
             <MessageSquare className="h-4 w-4" aria-hidden="true" />
             {guide.commentCount} 条评论

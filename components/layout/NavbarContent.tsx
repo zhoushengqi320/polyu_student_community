@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { AuthButtons, UserMenu } from "@/components/auth/UserMenu";
 import { SiteLogo } from "@/components/brand/SiteLogo";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { NavbarSearch } from "@/components/layout/NavbarSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { isFeatureEnabled } from "@/constants/features";
 import { AUTH_NAV_ITEMS, NAV_ITEMS, ROUTES } from "@/constants/routes";
@@ -16,6 +17,7 @@ import { type SessionUser } from "@/types/user";
 type NavbarContentProps = {
   user: SessionUser | null;
   unreadNotificationCount?: number;
+  unreadFeedbackCount?: number;
 };
 
 const NAV_LINK_CLASS =
@@ -24,6 +26,7 @@ const NAV_LINK_CLASS =
 export function NavbarContent({
   user,
   unreadNotificationCount = 0,
+  unreadFeedbackCount = 0,
 }: NavbarContentProps) {
   return (
     <header className="site-header sticky top-0 z-50 border-b border-primary/20 bg-primary text-primary-foreground shadow-sm backdrop-blur supports-[backdrop-filter]:bg-primary/95">
@@ -59,6 +62,7 @@ export function NavbarContent({
                 </Link>
               ),
             )}
+            <NavbarSearch className="ml-1" />
           </nav>
         </div>
 
@@ -88,14 +92,19 @@ export function NavbarContent({
                     className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   />
                 ) : null}
-                <UserMenu user={user} variant="header" />
+                <UserMenu
+                  user={user}
+                  variant="header"
+                  unreadFeedbackCount={unreadFeedbackCount}
+                />
               </>
             ) : (
               <AuthButtons variant="header" />
             )}
           </div>
 
-          <div className="flex items-center gap-3 lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
+            <NavbarSearch />
             {!user ? (
               <Button
                 variant="secondary"
@@ -114,6 +123,7 @@ export function NavbarContent({
             ) : null}
             <MobileNav
               user={user}
+              unreadFeedbackCount={unreadFeedbackCount}
               trigger={
                 <Button
                   variant="outline"
@@ -132,7 +142,13 @@ export function NavbarContent({
   );
 }
 
-export function MobileNavLinks({ user }: { user: SessionUser | null }) {
+export function MobileNavLinks({
+  user,
+  unreadFeedbackCount = 0,
+}: {
+  user: SessionUser | null;
+  unreadFeedbackCount?: number;
+}) {
   return (
     <nav className="flex flex-col gap-1">
       {NAV_ITEMS.map((item) => (
@@ -167,7 +183,11 @@ export function MobileNavLinks({ user }: { user: SessionUser | null }) {
               </Link>
             </Button>
           ) : null}
-          <UserMenu user={user} variant="mobile" />
+          <UserMenu
+            user={user}
+            variant="mobile"
+            unreadFeedbackCount={unreadFeedbackCount}
+          />
         </>
       ) : (
         AUTH_NAV_ITEMS.map((item) => (

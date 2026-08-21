@@ -55,10 +55,13 @@ export function SiteAnnouncementBar({ announcements }: SiteAnnouncementBarProps)
       <div
         aria-label="平台公告"
         className={cn(
-          "max-w-2xl space-y-2 overflow-y-auto overscroll-y-contain pr-1",
+          "space-y-2.5 overflow-y-auto overscroll-y-contain border-t border-primary/15 pt-4 pr-1",
           HOME_ANNOUNCEMENT_MAX_HEIGHT,
         )}
       >
+        <p className="text-sm font-semibold tracking-tight text-foreground">
+          公告栏
+        </p>
         {announcements.map((announcement) => {
           const styles =
             IMPORTANCE_STYLES[announcement.importance] ?? IMPORTANCE_STYLES.normal;

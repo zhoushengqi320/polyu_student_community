@@ -111,6 +111,30 @@ export async function createFeedbackPost(input: {
   return mapForumPostDetail(data as ForumPostWithProfileRow);
 }
 
+/** 尚未收到回复的反馈数量（管理员角标用） */
+export async function countUnrepliedFeedbackPosts(): Promise<number> {
+  if (!isSupabaseConfigured()) {
+    return 0;
+  }
+
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("posts")
+    .select("id", { count: "exact", head: true })
+    .eq("module", FEEDBACK_MODULE)
+    .eq("status", CONTENT_STATUS.published)
+    .is("deleted_at", null)
+    .eq("school_id", DEFAULT_SCHOOL_ID)
+    .eq("comment_count", 0);
+
+  if (error) {
+    console.error("Failed to count unreplied feedback:", error);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
 export async function updateFeedbackPostContent(
   postId: string,
   content: string,

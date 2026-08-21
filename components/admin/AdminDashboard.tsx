@@ -66,7 +66,8 @@ function AdminDashboardContent({
 
   function handleRefresh() {
     startRefresh(() => {
-      router.replace(ROUTES.admin);
+      // 保持当前 tab 与查询参数，只刷新数据
+      router.replace(buildAdminUrl(activeTab, searchParams));
       router.refresh();
     });
   }

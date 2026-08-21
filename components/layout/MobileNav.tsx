@@ -8,9 +8,14 @@ import { type SessionUser } from "@/types/user";
 type MobileNavProps = {
   trigger: React.ReactNode;
   user: SessionUser | null;
+  unreadFeedbackCount?: number;
 };
 
-export function MobileNav({ trigger, user }: MobileNavProps) {
+export function MobileNav({
+  trigger,
+  user,
+  unreadFeedbackCount = 0,
+}: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -52,7 +57,10 @@ export function MobileNav({ trigger, user }: MobileNavProps) {
                 className="min-h-0 flex-1 overflow-y-auto"
                 onClick={() => setOpen(false)}
               >
-                <MobileNavLinks user={user} />
+                <MobileNavLinks
+                  user={user}
+                  unreadFeedbackCount={unreadFeedbackCount}
+                />
               </div>
             </aside>
           </div>,

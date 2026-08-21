@@ -46,7 +46,7 @@ export function GuideFavoriteButton({
           <Link href={ROUTES.login} className="font-medium text-primary hover:underline">
             登录
           </Link>{" "}
-          后即可收藏攻略
+          后即可收藏
         </p>
       </div>
     );

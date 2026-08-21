@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TARGET_TYPES } from "@/constants/reportReasons";
+import { OFFICIAL_CONTENT_AUTHOR_NAME } from "@/constants/site";
 import { formatDate } from "@/lib/utils/formatDate";
 import { isSafeHref } from "@/lib/utils/safeUrl";
 import { type GuideDetail } from "@/types/guide";
@@ -50,6 +51,8 @@ export function GuideDetailView({
   revalidatePath,
   commentReactionMap,
 }: GuideDetailViewProps) {
+  const authorName = OFFICIAL_CONTENT_AUTHOR_NAME;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -63,12 +66,8 @@ export function GuideDetailView({
             </div>
           ) : null}
           <div>
-            <CardDescription>
-              {guide.author.displayName ?? guide.author.username}
-            </CardDescription>
+            <CardDescription>{authorName}</CardDescription>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
             {guide.meta?.lastVerifiedAt ? (
               <span className="inline-flex items-center gap-1">
@@ -79,37 +78,7 @@ export function GuideDetailView({
             <span>评论数：{totalCommentCount}</span>
             <span>点赞：{likeCount}</span>
           </div>
-
-          <div className="flex flex-wrap items-start gap-3 border-t pt-4">
-            <ContentLikeButton
-              postId={guide.id}
-              likeCount={likeCount}
-              isLiked={isLiked}
-              isLoggedIn={isLoggedIn}
-              canLike={canLike}
-              revalidatePath={revalidatePath}
-            />
-            <GuideFavoriteButton
-              guideId={guide.id}
-              isFavorited={guide.isFavorited}
-              favoriteCount={favoriteCount}
-              isLoggedIn={isLoggedIn}
-              canFavorite={canFavorite}
-              revalidatePath={revalidatePath}
-            />
-            <ReportDialog
-              targetType={TARGET_TYPES.post}
-              targetId={guide.id}
-              isLoggedIn={isLoggedIn}
-              ownerId={guide.userId}
-              currentUserId={currentUserId}
-              revalidatePath={revalidatePath}
-              triggerLabel="举报攻略"
-              triggerVariant="outline"
-              triggerSize="default"
-            />
-          </div>
-        </CardContent>
+        </CardHeader>
       </Card>
 
       <Card>
@@ -144,6 +113,36 @@ export function GuideDetailView({
           </CardContent>
         </Card>
       ) : null}
+
+      <div className="flex flex-wrap items-start gap-3 rounded-xl border bg-card px-4 py-3">
+        <ContentLikeButton
+          postId={guide.id}
+          likeCount={likeCount}
+          isLiked={isLiked}
+          isLoggedIn={isLoggedIn}
+          canLike={canLike}
+          revalidatePath={revalidatePath}
+        />
+        <GuideFavoriteButton
+          guideId={guide.id}
+          isFavorited={guide.isFavorited}
+          favoriteCount={favoriteCount}
+          isLoggedIn={isLoggedIn}
+          canFavorite={canFavorite}
+          revalidatePath={revalidatePath}
+        />
+        <ReportDialog
+          targetType={TARGET_TYPES.post}
+          targetId={guide.id}
+          isLoggedIn={isLoggedIn}
+          ownerId={guide.userId}
+          currentUserId={currentUserId}
+          revalidatePath={revalidatePath}
+          triggerLabel="举报攻略"
+          triggerVariant="outline"
+          triggerSize="default"
+        />
+      </div>
 
       <GuideCommentSection
         guideId={guide.id}

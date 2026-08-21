@@ -50,7 +50,7 @@ export const HOME_TOUR_STEPS: HomeTourStep[] = [
     id: "search",
     target: "home-search",
     title: "全局搜索",
-    description: "搜课程、指南、帖子或攻略，一站找到你需要的信息。",
+    description: "点击页眉放大镜即可搜索课程、指南、帖子或攻略。",
   },
   ...PERMANENT_MODULES.map((module) => ({
     id: `module-${module.key}`,

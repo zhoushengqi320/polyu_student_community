@@ -13,13 +13,28 @@ import { type SessionUser } from "@/types/user";
 type UserMenuProps = {
   user: SessionUser;
   variant?: "desktop" | "mobile" | "header";
+  /** 仅管理员：待回复反馈数量 */
+  unreadFeedbackCount?: number;
 };
 
 function getDisplayName(user: SessionUser): string {
   return user.profile?.displayName ?? "PolyU 同学";
 }
 
-export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
+function FeedbackBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold leading-none text-destructive-foreground">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+export function UserMenu({
+  user,
+  variant = "desktop",
+  unreadFeedbackCount = 0,
+}: UserMenuProps) {
   const displayName = getDisplayName(user);
   const avatarUrl = user.profile?.avatarUrl;
   const profileHref = ROUTES.profile(user.id);
@@ -27,6 +42,7 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
     ? USER_ROLE_LABELS[user.profile.role]
     : "用户";
   const showAdminLink = can(user, "admin:access");
+  const showFeedbackBadge = showAdminLink && unreadFeedbackCount > 0;
 
   if (variant === "mobile") {
     return (
@@ -57,6 +73,9 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
           <Link href={ROUTES.feedback.list}>
             <CircleHelp className="mr-2 h-4 w-4" />
             问题反馈
+            {showFeedbackBadge ? (
+              <FeedbackBadge count={unreadFeedbackCount} />
+            ) : null}
           </Link>
         </Button>
         {showAdminLink ? (
@@ -85,11 +104,13 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
     );
   }
 
-  // 桌面 / 顶栏：头像 + 反馈
+  // 桌面 / 顶栏：头像 + 反馈（反馈再靠右）
   const isHeader = variant === "header";
 
   return (
-    <div className={`flex items-center ${isHeader ? "gap-3" : "gap-2.5"}`}>
+    <div
+      className={`flex items-center ${isHeader ? "gap-2 pl-1" : "gap-2.5"}`}
+    >
       <Link
         href={profileHref}
         title={displayName}
@@ -103,14 +124,19 @@ export function UserMenu({ user, variant = "desktop" }: UserMenuProps) {
         size="sm"
         className={
           isHeader
-            ? "border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
-            : undefined
+            ? "relative ml-3 border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground sm:ml-4"
+            : "relative"
         }
         asChild
       >
         <Link href={ROUTES.feedback.list} title="问题反馈">
           <CircleHelp className="mr-1.5 h-4 w-4" />
           反馈
+          {showFeedbackBadge ? (
+            <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 py-0.5 text-[10px] font-semibold leading-none text-destructive-foreground">
+              {unreadFeedbackCount > 99 ? "99+" : unreadFeedbackCount}
+            </span>
+          ) : null}
         </Link>
       </Button>
     </div>
