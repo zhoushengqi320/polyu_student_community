@@ -43,7 +43,7 @@ export function EmailWhitelistPanel({ entries }: EmailWhitelistPanelProps) {
       <div>
         <h3 className="text-base font-semibold">注册白名单</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          添加非理大邮箱后，对方注册可跳过验证码直接设密码；注册成功后名额作废并保留记录。白名单用户仅支持密码登录。
+          添加非理大邮箱后，对方注册可跳过验证码直接设密码；注册成功后名额作废并保留记录。已注册的白名单账号可使用密码或验证码登录。
         </p>
       </div>
 

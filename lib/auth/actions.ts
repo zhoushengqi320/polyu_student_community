@@ -275,8 +275,11 @@ export async function startRegisterAction(
 
     const existingId = await findAuthUserIdByEmail(email);
     if (existingId) {
+      const whitelisted = await isActiveWhitelistEmail(email);
       return {
-        error: "该邮箱已注册，请直接登录",
+        error: whitelisted
+          ? "该邮箱已注册。白名单账号请使用「密码登录」，或通过「忘记密码」重置密码。"
+          : "该邮箱已注册，请直接登录",
         step: "already_registered",
       };
     }
@@ -626,7 +629,7 @@ export async function sendLoginOtpAction(
     return authUnavailableState();
   }
 
-  const parsed = polyuEmailSchema.safeParse({
+  const parsed = registerEmailSchema.safeParse({
     email: formData.get("email"),
   });
   if (!parsed.success) {
@@ -640,6 +643,15 @@ export async function sendLoginOtpAction(
   const existingId = await findAuthUserIdByEmail(email);
   if (!existingId) {
     return { error: "该邮箱尚未注册，请先注册" };
+  }
+
+  if (!isAllowedPolyuEmail(email) && !(await isActiveWhitelistEmail(email))) {
+    return {
+      fieldErrors: {
+        email: "仅支持理大学生邮箱（@connect.polyu.hk）",
+      },
+      error: "请检查邮箱地址",
+    };
   }
 
   return issueOtpAndMaybeEmail(email, "login");

@@ -16,34 +16,70 @@ import { cn } from "@/lib/utils/cn";
 const SPOTLIGHT_PADDING = 8;
 const TOUR_Z_OVERLAY = 200;
 const TOUR_Z_PANEL = 201;
+const TOOLTIP_ESTIMATED_HEIGHT = 240;
+const VIEWPORT_MARGIN = 16;
 
 type HomeProductTourProps = {
   enabled: boolean;
 };
 
-function getTooltipStyle(rect: DOMRect): CSSProperties {
-  const margin = 16;
-  const width = Math.min(400, window.innerWidth - margin * 2);
-  const left = Math.max(
-    margin,
-    Math.min(rect.left, window.innerWidth - width - margin),
-  );
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const placeBelow = spaceBelow >= 180 || spaceBelow >= rect.top;
+function isRectMostlyVisible(rect: DOMRect): boolean {
+  const visibleTop = Math.max(rect.top, VIEWPORT_MARGIN);
+  const visibleBottom = Math.min(rect.bottom, window.innerHeight - VIEWPORT_MARGIN);
+  const visibleLeft = Math.max(rect.left, VIEWPORT_MARGIN);
+  const visibleRight = Math.min(rect.right, window.innerWidth - VIEWPORT_MARGIN);
 
-  if (placeBelow) {
-    return {
-      top: rect.bottom + margin,
-      left,
-      width,
-    };
+  if (visibleBottom <= visibleTop || visibleRight <= visibleLeft) {
+    return false;
   }
 
+  const visibleArea =
+    (visibleBottom - visibleTop) * (visibleRight - visibleLeft);
+  const totalArea = Math.max(rect.width, 1) * Math.max(rect.height, 1);
+
+  return visibleArea / totalArea >= 0.35;
+}
+
+function getTooltipStyle(rect: DOMRect): CSSProperties {
+  const width = Math.min(400, window.innerWidth - VIEWPORT_MARGIN * 2);
+  const left = Math.max(
+    VIEWPORT_MARGIN,
+    Math.min(rect.left, window.innerWidth - width - VIEWPORT_MARGIN),
+  );
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const placeBelow =
+    spaceBelow >= TOOLTIP_ESTIMATED_HEIGHT || spaceBelow >= rect.top;
+
+  if (placeBelow) {
+    const top = Math.min(
+      rect.bottom + VIEWPORT_MARGIN,
+      window.innerHeight - TOOLTIP_ESTIMATED_HEIGHT - VIEWPORT_MARGIN,
+    );
+    return { top: Math.max(VIEWPORT_MARGIN, top), left, width };
+  }
+
+  const bottom = Math.min(
+    window.innerHeight - rect.top + VIEWPORT_MARGIN,
+    window.innerHeight - TOOLTIP_ESTIMATED_HEIGHT - VIEWPORT_MARGIN,
+  );
+
   return {
-    bottom: window.innerHeight - rect.top + margin,
+    bottom: Math.max(VIEWPORT_MARGIN, bottom),
     left,
     width,
   };
+}
+
+function scrollTargetIntoView(element: HTMLElement) {
+  const previousOverflow = document.body.style.overflow;
+  // 引导会锁 body 滚动；先临时解锁，否则底部锚点 scrollIntoView 无效
+  document.body.style.overflow = "";
+  element.scrollIntoView({
+    behavior: "auto",
+    block: "center",
+    inline: "nearest",
+  });
+  document.body.style.overflow = previousOverflow || "hidden";
 }
 
 export function HomeProductTour({ enabled }: HomeProductTourProps) {
@@ -52,20 +88,28 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [spotlightReady, setSpotlightReady] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const stepTokenRef = useRef(0);
+  const dismissedRef = useRef(false);
 
   const step = HOME_TOUR_STEPS[stepIndex];
   const isLast = stepIndex === HOME_TOUR_STEPS.length - 1;
   const wantsTarget = Boolean(step?.target);
-  const isCenterStep = !wantsTarget || (spotlightReady && !targetRect);
+  const useCenterLayout =
+    !wantsTarget || (spotlightReady && targetRect === null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    setActive(enabled);
+    if (enabled && !dismissedRef.current) {
+      setActive(true);
+    }
+    if (!enabled) {
+      dismissedRef.current = false;
+    }
   }, [enabled]);
 
   useLayoutEffect(() => {
@@ -88,21 +132,25 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     if (!element) {
       // 目标缺失时退回居中说明，避免黑屏锁死
       setSpotlightReady(true);
-      setTargetRect(null);
       return;
     }
 
-    element.scrollIntoView({
-      behavior: "auto",
-      block: "center",
-      inline: "nearest",
-    });
+    scrollTargetIntoView(element);
 
     const applyRect = () => {
       if (token !== stepTokenRef.current) {
         return;
       }
-      setTargetRect(element.getBoundingClientRect());
+
+      const rect = element.getBoundingClientRect();
+      if (!isRectMostlyVisible(rect)) {
+        // 目标仍在视口外时改用居中弹窗，避免按钮被定位到屏幕外
+        setTargetRect(null);
+        setSpotlightReady(true);
+        return;
+      }
+
+      setTargetRect(rect);
       setSpotlightReady(true);
     };
 
@@ -125,12 +173,18 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
   }, [active]);
 
   const finishTour = async () => {
+    setFinishError(null);
     setIsCompleting(true);
     const result = await completeHomeTourAction();
     setIsCompleting(false);
-    if (!result.error) {
-      setActive(false);
+
+    if (result.error) {
+      setFinishError(result.error);
+      return;
     }
+
+    dismissedRef.current = true;
+    setActive(false);
   };
 
   useEffect(() => {
@@ -151,6 +205,7 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
   }, [active]);
 
   const handleNext = async () => {
+    setFinishError(null);
     if (isLast) {
       await finishTour();
       return;
@@ -166,7 +221,8 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     wantsTarget && spotlightReady && targetRect !== null;
   const tooltipStyle =
     showTargetSpotlight && targetRect ? getTooltipStyle(targetRect) : undefined;
-  const showPanel = spotlightReady || isCenterStep;
+  const showPanel = spotlightReady || useCenterLayout;
+  const nextDisabled = isCompleting || (wantsTarget && !spotlightReady);
 
   return createPortal(
     <div
@@ -227,6 +283,11 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
             >
               {step.description}
             </p>
+            {finishError ? (
+              <p className="mt-3 text-sm text-destructive" role="alert">
+                {finishError}
+              </p>
+            ) : null}
             <div className="mt-6 flex items-center justify-between gap-3">
               <Button
                 type="button"
@@ -240,10 +301,14 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
               <Button
                 type="button"
                 onClick={() => void handleNext()}
-                disabled={isCompleting || !spotlightReady}
+                disabled={nextDisabled}
                 className="min-w-[7.5rem]"
               >
-                {isLast ? "Let's gooo" : "我知道了"}
+                {isCompleting && isLast
+                  ? "保存中…"
+                  : isLast
+                    ? "Let's gooo"
+                    : "我知道了"}
               </Button>
             </div>
           </div>
