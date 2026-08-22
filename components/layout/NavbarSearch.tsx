@@ -117,7 +117,6 @@ export function NavbarSearch({ className }: NavbarSearchProps) {
             <button
               type="button"
               aria-label="打开搜索"
-              data-tour="home-search"
               onClick={() => setOpen(true)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-md text-primary-foreground transition-colors hover:bg-primary-foreground/10"
             >

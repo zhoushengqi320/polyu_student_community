@@ -16,6 +16,7 @@ import { STUDENT_GRADES } from "@/constants/profileOptions";
 import { ROUTES } from "@/constants/routes";
 import { AvatarCropField } from "@/components/common/AvatarCropField";
 import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
+import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -160,8 +161,8 @@ export function SignupWizard({
       </CardHeader>
       <CardContent className="space-y-4">
         {step === "password" && whitelisted ? (
-          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
-            欢迎，尊贵的白名单用户
+          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-950">
+            邮箱已确认，请设置密码
           </p>
         ) : null}
 
@@ -373,6 +374,7 @@ export function SignupWizard({
             <p className="text-xs text-muted-foreground">
               未设置昵称/头像时将展示系统默认资料。
             </p>
+            <CommunityRulesNotice />
             {profileState.error ? (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {profileState.error}

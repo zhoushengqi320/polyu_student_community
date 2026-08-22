@@ -17,6 +17,7 @@ import { attachUserUploads } from "@/lib/db/userUploads";
 import { validatePendingUploadIds } from "@/lib/content/userUploadActions";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { assertCan } from "@/lib/utils/permissions";
+import { getPermissionDeniedMessage } from "@/lib/utils/authPrompts";
 import {
   foodPlaceSubmitSchema,
   foodRecommendationSchema,
@@ -40,9 +41,9 @@ export async function createFoodRecommendationAction(
   try {
     assertCan(user, "content:create:food");
   } catch {
-    return { error: "请先登录后再发布推荐" };
+    return { error: getPermissionDeniedMessage(user, "发布推荐") };
   }
-  if (!user) return { error: "请先登录" };
+  if (!user) return { error: getPermissionDeniedMessage(null, "发布推荐") };
 
   const uploadIds = formData
     .getAll("uploadIds")
@@ -115,9 +116,9 @@ export async function submitFoodPlaceAction(
   try {
     assertCan(user, "content:create:food");
   } catch {
-    return { error: "请先登录后再提交地点" };
+    return { error: getPermissionDeniedMessage(user, "提交地点") };
   }
-  if (!user) return { error: "请先登录" };
+  if (!user) return { error: getPermissionDeniedMessage(null, "提交地点") };
 
   const uploadIds = formData
     .getAll("uploadIds")

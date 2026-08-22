@@ -14,6 +14,7 @@ import {
 } from "@/constants/auth";
 import { EMAIL_PLACEHOLDER, SITE_NAME } from "@/constants/site";
 import { ROUTES } from "@/constants/routes";
+import { sanitizeNextPath } from "@/lib/auth/nextPath";
 import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,9 +86,15 @@ function useResendCountdown(resendAvailableAt?: string) {
 
 export function LoginForm({
   magicLinkEnabled = false,
+  nextPath,
 }: {
   magicLinkEnabled?: boolean;
+  nextPath?: string;
 }) {
+  const safeNextPath = nextPath ? sanitizeNextPath(nextPath) : undefined;
+  const nextHiddenField = safeNextPath ? (
+    <input type="hidden" name="next" value={safeNextPath} />
+  ) : null;
   const [mode, setMode] = useState<LoginMode>("password");
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -155,6 +162,7 @@ export function LoginForm({
 
         {mode === "password" ? (
           <form action={passwordAction} className="space-y-4">
+            {nextHiddenField}
             <div className="space-y-2">
               <Label htmlFor="login-email">理大学生邮箱</Label>
               <Input
@@ -206,6 +214,7 @@ export function LoginForm({
           <div className="space-y-4">
             {!otpSent ? (
               <form action={sendOtpAction} className="space-y-4">
+                {nextHiddenField}
                 <div className="space-y-2">
                   <Label htmlFor="otp-email">理大学生邮箱</Label>
                   <Input
@@ -240,6 +249,7 @@ export function LoginForm({
               </form>
             ) : (
               <form action={verifyOtpAction} className="space-y-4">
+                {nextHiddenField}
                 <input type="hidden" name="email" value={email} />
                 <div className="space-y-2">
                   <Label htmlFor="login-otp">6 位验证码</Label>
@@ -336,7 +346,14 @@ export function LoginForm({
 
         <p className="text-center text-sm text-muted-foreground">
           还没有账号？{" "}
-          <Link href={ROUTES.signup} className="underline underline-offset-2">
+          <Link
+            href={
+              safeNextPath
+                ? `${ROUTES.signup}?next=${encodeURIComponent(safeNextPath)}`
+                : ROUTES.signup
+            }
+            className="underline underline-offset-2"
+          >
             注册
           </Link>
         </p>

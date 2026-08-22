@@ -23,6 +23,7 @@ type FoodListProps = {
   area?: FoodAreaId;
   search?: string;
   canSubmit: boolean;
+  submitPrompt?: { href: string; label: string } | null;
 };
 
 function areaLabel(area: string) {
@@ -34,6 +35,7 @@ export function FoodList({
   area,
   search,
   canSubmit,
+  submitPrompt = null,
 }: FoodListProps) {
   return (
     <div className="space-y-6">
@@ -84,8 +86,14 @@ export function FoodList({
           description="还没有收录吃喝玩乐地点，欢迎成为第一个提交的人。"
           action={
             <Button asChild>
-              <Link href={canSubmit ? ROUTES.food.new : ROUTES.login}>
-                {canSubmit ? "提交地点" : "登录后提交"}
+              <Link
+                href={
+                  canSubmit
+                    ? ROUTES.food.new
+                    : (submitPrompt?.href ?? ROUTES.login)
+                }
+              >
+                {canSubmit ? "提交地点" : (submitPrompt?.label ?? "登录后提交")}
               </Link>
             </Button>
           }

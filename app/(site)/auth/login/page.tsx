@@ -5,11 +5,12 @@ import { AuthLegalFooter } from "@/components/legal/AuthLegalFooter";
 import { isMagicLinkEnabled, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+  const nextPath = next?.trim() || undefined;
 
   return (
     <ModulePageShell
@@ -23,7 +24,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             邮箱验证失败，请重新登录。
           </p>
         ) : null}
-        <LoginForm magicLinkEnabled={isMagicLinkEnabled()} />
+        <LoginForm magicLinkEnabled={isMagicLinkEnabled()} nextPath={nextPath} />
         <AuthLegalFooter prefix="继续使用即表示你同意我们的" />
       </div>
     </ModulePageShell>

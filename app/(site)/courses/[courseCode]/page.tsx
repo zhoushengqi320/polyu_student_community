@@ -5,7 +5,7 @@ import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { getSessionUser } from "@/lib/auth/session";
 import { getCourseDetailByCode } from "@/lib/db/courses";
 import { hasReaction } from "@/lib/db/reactions";
-import { canCreateInModule, isAdmin } from "@/lib/utils/permissions";
+import { isAdmin } from "@/lib/utils/permissions";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 
 type CourseDetailPageProps = {
@@ -21,7 +21,6 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
     notFound();
   }
 
-  const canReview = canCreateInModule(user, "courses");
   const isFavorited =
     user && course
       ? await hasReaction({
@@ -40,8 +39,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
     >
       <CourseDetailView
         course={course}
-        canReview={canReview}
-        isLoggedIn={Boolean(user)}
+        user={user}
         isFavorited={isFavorited}
         currentUserId={user?.id ?? null}
         isAdminUser={isAdmin(user)}

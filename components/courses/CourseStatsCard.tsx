@@ -10,11 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
+import { getCourseReviewPrompt } from "@/lib/utils/authPrompts";
+import { type SessionUser } from "@/types/user";
 import { type CourseDetail } from "@/types/course";
 
 type CourseStatsCardProps = {
   course: CourseDetail;
-  canReview: boolean;
+  user: SessionUser | null;
 };
 
 function averageOf(
@@ -25,7 +27,9 @@ function averageOf(
   return Math.round((nums.reduce((sum, value) => sum + value, 0) / nums.length) * 10) / 10;
 }
 
-export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
+export function CourseStatsCard({ course, user }: CourseStatsCardProps) {
+  const review = getCourseReviewPrompt(user, course.code);
+
   if (course.reviewCount === 0) {
     return (
       <Card>
@@ -38,10 +42,8 @@ export function CourseStatsCard({ course, canReview }: CourseStatsCardProps) {
             description="成为第一个分享这门课真实体验的人。"
             action={
               <Button asChild>
-                <Link
-                  href={canReview ? ROUTES.courses.review(course.code) : ROUTES.login}
-                >
-                  {canReview ? "写第一条评价" : "登录后评价"}
+                <Link href={review.href}>
+                  {review.canReview ? "写第一条评价" : review.label}
                 </Link>
               </Button>
             }

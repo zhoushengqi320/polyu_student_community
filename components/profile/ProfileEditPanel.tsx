@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ProfileChangePasswordForm } from "@/components/profile/ProfileChangePasswordForm";
-import { Button } from "@/components/ui/button";
+import { resetHomeTourFormAction } from "@/lib/profile/homeTourActions";
 import { logoutFormAction } from "@/lib/auth/actions";
+import { Button } from "@/components/ui/button";
 import { type Profile } from "@/types/user";
 
 type ProfileEditPanelProps = {
@@ -29,6 +30,11 @@ export function ProfileEditPanel({ profile, email }: ProfileEditPanelProps) {
         <form action={logoutFormAction}>
           <Button type="submit" variant="outline" size="sm">
             退出登录
+          </Button>
+        </form>
+        <form action={resetHomeTourFormAction}>
+          <Button type="submit" variant="outline" size="sm">
+            重新查看首页引导
           </Button>
         </form>
       </div>

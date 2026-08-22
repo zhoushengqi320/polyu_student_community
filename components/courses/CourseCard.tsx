@@ -11,17 +11,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { getDepartmentCode } from "@/constants/courseOptions";
 import { ROUTES } from "@/constants/routes";
+import { getCourseReviewPrompt } from "@/lib/utils/authPrompts";
+import { type SessionUser } from "@/types/user";
 import { type CourseWithStats } from "@/types/course";
 
 type CourseCardProps = {
   course: CourseWithStats;
-  canReview: boolean;
+  user: SessionUser | null;
 };
 
-export function CourseCard({ course, canReview }: CourseCardProps) {
-  const reviewHref = canReview
-    ? ROUTES.courses.review(course.code)
-    : ROUTES.login;
+export function CourseCard({ course, user }: CourseCardProps) {
+  const review = getCourseReviewPrompt(user, course.code);
 
   return (
     <Card className="h-full">
@@ -73,7 +73,7 @@ export function CourseCard({ course, canReview }: CourseCardProps) {
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline">
-            <Link href={reviewHref}>{canReview ? "写评价" : "认证后评价"}</Link>
+            <Link href={review.href}>{review.canReview ? "写评价" : review.label}</Link>
           </Button>
         </div>
       </CardContent>

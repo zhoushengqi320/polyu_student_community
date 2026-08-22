@@ -5,7 +5,7 @@ import { FEEDBACK_DESCRIPTION } from "@/constants/feedback";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
 import { getFeedbackPosts } from "@/lib/db/feedback";
-import { canCreateInModule } from "@/lib/utils/permissions";
+import { getModuleCreatePrompt } from "@/lib/utils/authPrompts";
 import { Button } from "@/components/ui/button";
 
 type FeedbackPageProps = {
@@ -19,7 +19,16 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
     getSessionUser(),
     getFeedbackPosts({ page }),
   ]);
-  const canCreate = canCreateInModule(user, "feedback");
+  const createPrompt = getModuleCreatePrompt(
+    user,
+    "feedback",
+    {
+      login: "登录后反馈",
+      banned: "账号受限",
+      unverified: "认证后反馈",
+    },
+    ROUTES.feedback.new,
+  );
 
   return (
     <ModulePageShell
@@ -27,13 +36,13 @@ export default async function FeedbackPage({ searchParams }: FeedbackPageProps) 
       description={FEEDBACK_DESCRIPTION}
       back={{ href: ROUTES.home, label: "首页" }}
       actions={
-        canCreate ? (
-          <Button asChild>
-            <Link href={ROUTES.feedback.new}>提交反馈</Link>
+        createPrompt ? (
+          <Button variant="outline" asChild>
+            <Link href={createPrompt.href}>{createPrompt.label}</Link>
           </Button>
         ) : (
-          <Button variant="outline" asChild>
-            <Link href={ROUTES.login}>登录后反馈</Link>
+          <Button asChild>
+            <Link href={ROUTES.feedback.new}>提交反馈</Link>
           </Button>
         )
       }

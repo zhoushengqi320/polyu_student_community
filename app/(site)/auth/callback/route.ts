@@ -2,25 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { isDevShowLoginOtp } from "@/lib/auth/devLoginOtp";
-import { needsOnboarding } from "@/lib/auth/onboarding";
+import { sanitizeNextPath, resolvePostLoginPath } from "@/lib/auth/nextPath";
 import { getProfileById } from "@/lib/db/profiles";
 import { ROUTES } from "@/constants/routes";
-
-/** 仅允许站内相对路径，防止开放重定向 */
-function sanitizeNextPath(next: string | null): string {
-  const fallback = ROUTES.home;
-  if (!next) {
-    return fallback;
-  }
-  const value = next.trim();
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
-    return fallback;
-  }
-  if (value.includes("\\") || value.includes("\0") || value.length > 200) {
-    return fallback;
-  }
-  return value.split(/[?#]/, 1)[0] || fallback;
-}
 
 async function redirectAfterLogin(origin: string, next: string) {
   const supabase = await createClient();
@@ -30,7 +14,7 @@ async function redirectAfterLogin(origin: string, next: string) {
 
   if (user) {
     const profile = await getProfileById(user.id);
-    const destination = needsOnboarding(profile) ? ROUTES.onboarding : next;
+    const destination = resolvePostLoginPath(next, profile);
     return NextResponse.redirect(`${origin}${destination}`);
   }
 

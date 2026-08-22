@@ -4,7 +4,6 @@ import { CourseList } from "@/components/courses/CourseList";
 import { COURSE_SORT_OPTIONS, type CourseSortId } from "@/constants/courseOptions";
 import { getSessionUser } from "@/lib/auth/session";
 import { listCourses } from "@/lib/db/courses";
-import { canCreateInModule } from "@/lib/utils/permissions";
 
 type CoursesPageProps = {
   searchParams: Promise<{
@@ -30,7 +29,6 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
     getSessionUser(),
     listCourses({ search: query, department, sort, page }),
   ]);
-  const canReview = canCreateInModule(user, "courses");
 
   return (
     <ModulePageShell
@@ -43,7 +41,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
         query={query}
         department={department}
         sort={sort}
-        canReview={canReview}
+        user={user}
       />
     </ModulePageShell>
   );

@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { FOOD_AREAS, type FoodAreaId } from "@/constants/categories";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
+import { getModuleCreatePrompt } from "@/lib/utils/authPrompts";
 import { listFoodPlaces } from "@/lib/db/food";
-import { can } from "@/lib/utils/permissions";
 
 type FoodPageProps = {
   searchParams: Promise<{
@@ -31,7 +31,17 @@ export default async function FoodPage({ searchParams }: FoodPageProps) {
   const search = params.q?.trim() || undefined;
   const page = Number(params.page ?? "1") || 1;
   const result = await listFoodPlaces({ area, search, page, pageSize: 12 });
-  const canSubmit = can(user, "content:create:food");
+  const submitPrompt = getModuleCreatePrompt(
+    user,
+    "food",
+    {
+      login: "登录后提交",
+      banned: "账号受限",
+      unverified: "认证后提交",
+    },
+    ROUTES.food.new,
+  );
+  const canSubmit = !submitPrompt;
 
   return (
     <ModulePageShell
@@ -39,11 +49,15 @@ export default async function FoodPage({ searchParams }: FoodPageProps) {
       description={MODULE_REGISTRY.food.description}
       back={{ href: "/", label: "首页" }}
       actions={
-        <Button asChild variant="outline">
-          <Link href={canSubmit ? ROUTES.food.new : ROUTES.login}>
-            {canSubmit ? "提交新地点" : "登录后提交"}
-          </Link>
-        </Button>
+        submitPrompt ? (
+          <Button asChild variant="outline">
+            <Link href={submitPrompt.href}>{submitPrompt.label}</Link>
+          </Button>
+        ) : (
+          <Button asChild variant="outline">
+            <Link href={ROUTES.food.new}>提交新地点</Link>
+          </Button>
+        )
       }
     >
       <FoodList
@@ -51,6 +65,7 @@ export default async function FoodPage({ searchParams }: FoodPageProps) {
         area={area}
         search={search}
         canSubmit={canSubmit}
+        submitPrompt={submitPrompt}
       />
     </ModulePageShell>
   );

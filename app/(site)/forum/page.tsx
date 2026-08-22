@@ -6,7 +6,7 @@ import { ForumList } from "@/components/forum/ForumList";
 import { getSessionUser } from "@/lib/auth/session";
 import { getForumPosts, getForumTopics } from "@/lib/db/forum";
 import { ROUTES } from "@/constants/routes";
-import { canCreateInModule } from "@/lib/utils/permissions";
+import { getModuleCreatePrompt } from "@/lib/utils/authPrompts";
 import { Button } from "@/components/ui/button";
 
 type ForumPageProps = {
@@ -31,7 +31,18 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
     getForumTopics(FORUM_POPULAR_TOPICS_LIMIT),
   ]);
 
-  const canCreate = canCreateInModule(user, "forum");
+  const createPrompt = getModuleCreatePrompt(
+    user,
+    "forum",
+    {
+      login: "登录发帖",
+      banned: "账号受限",
+      unverified: "认证后发帖",
+    },
+    ROUTES.forum.new,
+  );
+
+  const canCreate = !createPrompt;
 
   return (
     <ModulePageShell
@@ -39,15 +50,13 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
       description={FORUM_DESCRIPTION}
       back={{ href: ROUTES.home, label: "首页" }}
       actions={
-        canCreate ? (
-          <Button asChild>
-            <Link href={ROUTES.forum.new}>发布帖子</Link>
+        createPrompt ? (
+          <Button variant="outline" asChild>
+            <Link href={createPrompt.href}>{createPrompt.label}</Link>
           </Button>
         ) : (
-          <Button variant="outline" asChild>
-            <Link href={user ? ROUTES.profile(user.id) : ROUTES.login}>
-              {user ? "认证后发帖" : "登录发帖"}
-            </Link>
+          <Button asChild>
+            <Link href={ROUTES.forum.new}>发布帖子</Link>
           </Button>
         )
       }

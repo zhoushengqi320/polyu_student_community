@@ -18,12 +18,13 @@ import {
   normalizeDisplayCode,
   normalizeDisplayName,
 } from "@/lib/courses/normalizeDisplay";
+import { getCourseReviewPrompt } from "@/lib/utils/authPrompts";
+import { type SessionUser } from "@/types/user";
 import { type CourseDetail } from "@/types/course";
 
 type CourseDetailViewProps = {
   course: CourseDetail;
-  canReview: boolean;
-  isLoggedIn: boolean;
+  user: SessionUser | null;
   isFavorited: boolean;
   currentUserId?: string | null;
   isAdminUser?: boolean;
@@ -31,14 +32,15 @@ type CourseDetailViewProps = {
 
 export function CourseDetailView({
   course,
-  canReview,
-  isLoggedIn,
+  user,
   isFavorited,
   currentUserId = null,
   isAdminUser = false,
 }: CourseDetailViewProps) {
   const displayCode = normalizeDisplayCode(course.code);
   const displayName = normalizeDisplayName(course.name, course.code);
+  const review = getCourseReviewPrompt(user, course.code);
+  const isLoggedIn = Boolean(user);
 
   return (
     <div className="space-y-6">
@@ -67,10 +69,8 @@ export function CourseDetailView({
                 isLoggedIn={isLoggedIn}
               />
               <Button asChild>
-                <Link
-                  href={canReview ? ROUTES.courses.review(course.code) : ROUTES.login}
-                >
-                  {canReview ? "写课程评价" : "登录后评价"}
+                <Link href={review.href}>
+                  {review.canReview ? "写课程评价" : review.label}
                 </Link>
               </Button>
             </div>
@@ -78,7 +78,7 @@ export function CourseDetailView({
         </CardHeader>
       </Card>
 
-      <CourseStatsCard course={course} canReview={canReview} />
+      <CourseStatsCard course={course} user={user} />
 
       <CourseDetailTabs
         tabs={[

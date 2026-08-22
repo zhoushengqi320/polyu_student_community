@@ -1,5 +1,6 @@
 import { HOME_HERO } from "@/constants/home";
 import { SiteAnnouncementBar } from "@/components/common/SiteAnnouncementBar";
+import { HomeSearchBox } from "@/components/home/HomeSearchBox";
 import { type SiteAnnouncement } from "@/types/announcement";
 
 type HeroSectionProps = {
@@ -19,7 +20,8 @@ export function HeroSection({ announcements = [] }: HeroSectionProps) {
           </p>
         </div>
 
-        <div className="max-w-2xl">
+        <div className="max-w-2xl space-y-4">
+          <HomeSearchBox />
           <SiteAnnouncementBar announcements={announcements} />
         </div>
       </div>

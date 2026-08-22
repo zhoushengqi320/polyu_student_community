@@ -13,6 +13,7 @@ import { ROUTES } from "@/constants/routes";
 import { USER_ROLE_LABELS } from "@/constants/userRoles";
 import { getStudentGradeLabel } from "@/constants/profileOptions";
 import { formatDate } from "@/lib/utils/formatDate";
+import { buildLoginHref } from "@/lib/utils/authPrompts";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 type ProfilePageProps = {
   params: Promise<{ id: string }>;
@@ -30,18 +31,13 @@ type ProfilePageProps = {
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id } = await params;
   const sessionUser = await getSessionUser();
-
-  if (!sessionUser) {
-    redirect(ROUTES.login);
-  }
-
   const profile = await getProfileById(id);
 
   if (!profile) {
     notFound();
   }
 
-  const isOwnProfile = sessionUser.id === id;
+  const isOwnProfile = sessionUser?.id === id;
   const [favorites, works] = isOwnProfile
     ? await Promise.all([getUserFavorites(id), listProfileWorks(id)])
     : [null, null];
@@ -51,7 +47,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       title={profile.displayName ?? "PolyU 同学"}
       back={{ href: "/", label: "首页" }}
       actions={
-        isOwnProfile && !profile.isFirstSetupCompleted ? (
+        isOwnProfile && sessionUser && !profile.isFirstSetupCompleted ? (
           <Button variant="outline" asChild>
             <Link href={ROUTES.onboarding}>完善资料</Link>
           </Button>
@@ -90,12 +86,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <p className="text-muted-foreground">
               加入时间：{formatDate(profile.createdAt)}
             </p>
-            {!isOwnProfile ? (
+            {sessionUser && !isOwnProfile ? (
               <Button variant="outline" size="sm" asChild>
                 <Link href={ROUTES.profile(sessionUser.id)}>返回我的主页</Link>
               </Button>
             ) : null}
-            {isOwnProfile && !profile.isFirstSetupCompleted ? (
+            {!sessionUser ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={buildLoginHref(ROUTES.profile(id))}>登录</Link>
+              </Button>
+            ) : null}
+            {isOwnProfile && sessionUser && !profile.isFirstSetupCompleted ? (
               <p className="rounded-md bg-amber-50 px-3 py-2 text-amber-900">
                 请先{" "}
                 <Link href={ROUTES.onboarding} className="font-medium underline">
@@ -104,7 +105,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 后再使用完整功能。
               </p>
             ) : null}
-            {isOwnProfile ? (
+            {isOwnProfile && sessionUser ? (
               <div className="pt-2">
                 <ProfileEditPanel
                   profile={profile}

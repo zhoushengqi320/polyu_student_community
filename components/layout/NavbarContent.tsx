@@ -106,14 +106,24 @@ export function NavbarContent({
           <div className="flex items-center gap-2 lg:hidden">
             <NavbarSearch />
             {!user ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-                asChild
-              >
-                <Link href={ROUTES.signup}>注册</Link>
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary-foreground hover:bg-primary-foreground/10"
+                  asChild
+                >
+                  <Link href={ROUTES.login}>登录</Link>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                  asChild
+                >
+                  <Link href={ROUTES.signup}>注册</Link>
+                </Button>
+              </>
             ) : null}
             {user && isFeatureEnabled("notifications") ? (
               <NotificationBell

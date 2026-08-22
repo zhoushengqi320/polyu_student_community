@@ -41,8 +41,12 @@ import {
   setPasswordSchema,
 } from "@/lib/validations/authSchema";
 import { type ActionResult } from "@/types/common";
-import { isNicknameAvailable } from "@/lib/db/profiles";
+import { getProfileById, isNicknameAvailable } from "@/lib/db/profiles";
 import { isAllowedPolyuEmail } from "@/constants/auth";
+import {
+  readNextFromFormData,
+  resolvePostLoginPath,
+} from "@/lib/auth/nextPath";
 import {
   canStartRegistrationWithEmail,
   consumeWhitelistEmail,
@@ -275,11 +279,8 @@ export async function startRegisterAction(
 
     const existingId = await findAuthUserIdByEmail(email);
     if (existingId) {
-      const whitelisted = await isActiveWhitelistEmail(email);
       return {
-        error: whitelisted
-          ? "该邮箱已注册。白名单账号请使用「密码登录」，或通过「忘记密码」重置密码。"
-          : "该邮箱已注册，请直接登录",
+        error: "该邮箱已注册，请直接登录",
         step: "already_registered",
       };
     }
@@ -587,6 +588,22 @@ export async function completeRegisterAction(
 
 // ---------- 登录 ----------
 
+async function redirectAfterLoginAction(formData: FormData): Promise<never> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let destination: string = ROUTES.home;
+  if (user) {
+    const profile = await getProfileById(user.id);
+    destination = resolvePostLoginPath(readNextFromFormData(formData), profile);
+  }
+
+  revalidatePath("/", "layout");
+  redirect(destination);
+}
+
 export async function loginWithPasswordAction(
   _prevState: AuthFormState,
   formData: FormData,
@@ -617,8 +634,7 @@ export async function loginWithPasswordAction(
     return { error: mapAuthErrorMessage(error.message) };
   }
 
-  revalidatePath("/", "layout");
-  redirect(ROUTES.home);
+  return redirectAfterLoginAction(formData);
 }
 
 export async function sendLoginOtpAction(
@@ -734,8 +750,7 @@ export async function verifyLoginOtpAction(
     }
   }
 
-  revalidatePath("/", "layout");
-  redirect(ROUTES.home);
+  return redirectAfterLoginAction(formData);
 }
 
 // ---------- 忘记密码 ----------

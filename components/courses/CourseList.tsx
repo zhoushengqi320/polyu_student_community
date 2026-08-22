@@ -13,13 +13,14 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { type PaginatedResult } from "@/types/common";
 import { type CourseWithStats } from "@/types/course";
+import { type SessionUser } from "@/types/user";
 
 type CourseListProps = {
   result: PaginatedResult<CourseWithStats>;
   query?: string;
   department?: string;
   sort: CourseSortId;
-  canReview: boolean;
+  user: SessionUser | null;
 };
 
 export function CourseList({
@@ -27,7 +28,7 @@ export function CourseList({
   query,
   department,
   sort,
-  canReview,
+  user,
 }: CourseListProps) {
   return (
     <div className="space-y-6">
@@ -86,11 +87,7 @@ export function CourseList({
         <>
           <div className="grid gap-4 md:grid-cols-2">
             {result.data.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                canReview={canReview}
-              />
+              <CourseCard key={course.id} course={course} user={user} />
             ))}
           </div>
 

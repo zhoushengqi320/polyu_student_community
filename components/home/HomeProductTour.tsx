@@ -82,6 +82,28 @@ function scrollTargetIntoView(element: HTMLElement) {
   document.body.style.overflow = previousOverflow || "hidden";
 }
 
+function findVisibleTourTarget(target: string): HTMLElement | null {
+  const elements = document.querySelectorAll<HTMLElement>(
+    `[data-tour="${target}"]`,
+  );
+
+  for (const element of elements) {
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      continue;
+    }
+
+    const style = window.getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden") {
+      continue;
+    }
+
+    return element;
+  }
+
+  return null;
+}
+
 export function HomeProductTour({ enabled }: HomeProductTourProps) {
   const [active, setActive] = useState(enabled);
   const [stepIndex, setStepIndex] = useState(0);
@@ -126,9 +148,7 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
       return;
     }
 
-    const element = document.querySelector<HTMLElement>(
-      `[data-tour="${step.target}"]`,
-    );
+    const element = findVisibleTourTarget(step.target);
     if (!element) {
       // 目标缺失时退回居中说明，避免黑屏锁死
       setSpotlightReady(true);
@@ -187,6 +207,12 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     setActive(false);
   };
 
+  const skipTour = () => {
+    setFinishError(null);
+    dismissedRef.current = true;
+    setActive(false);
+  };
+
   useEffect(() => {
     if (!active) {
       return;
@@ -195,7 +221,7 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        void finishTour();
+        skipTour();
       }
     };
 
@@ -293,7 +319,7 @@ export function HomeProductTour({ enabled }: HomeProductTourProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => void finishTour()}
+                onClick={skipTour}
                 disabled={isCompleting}
               >
                 跳过
