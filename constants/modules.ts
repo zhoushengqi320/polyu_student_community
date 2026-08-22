@@ -68,7 +68,7 @@ export const MODULE_REGISTRY = {
     key: "feedback" as const,
     route: "/feedback",
     label: "问题反馈",
-    description: "反馈使用问题与建议，由管理员回复",
+    description: "反馈使用问题与建议，由站点团队回复",
     requiresVerification: false,
     icon: "CircleHelp",
   },

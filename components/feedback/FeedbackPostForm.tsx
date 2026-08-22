@@ -38,7 +38,7 @@ export function FeedbackPostForm() {
         <CardHeader>
           <CardTitle>提交问题反馈</CardTitle>
           <CardDescription>
-            请简明描述遇到的问题或建议，管理员会在反馈下方回复。
+            请简明描述遇到的问题或建议，我们会在反馈下方回复。
           </CardDescription>
         </CardHeader>
         <CardContent>

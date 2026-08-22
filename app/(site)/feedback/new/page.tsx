@@ -20,7 +20,7 @@ export default async function NewFeedbackPage() {
         back={{ href: ROUTES.feedback.list, label: "问题反馈" }}
       >
         <p className="text-sm text-muted-foreground">
-          账号可能已被限制，请联系管理员。
+          账号可能已被限制，请通过问题反馈联系我们。
         </p>
       </ModulePageShell>
     );

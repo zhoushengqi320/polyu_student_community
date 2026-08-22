@@ -35,7 +35,7 @@ export default async function FeedbackDetailPage({
   return (
     <ModulePageShell
       title="反馈详情"
-      description="用户反馈与管理员回复"
+      description="问题反馈与回复"
       back={{ href: ROUTES.feedback.list, label: "问题反馈" }}
     >
       <div className="mx-auto max-w-3xl space-y-6">
@@ -43,7 +43,7 @@ export default async function FeedbackDetailPage({
         {isAdmin(user) ? <FeedbackAdminReplyForm postId={post.id} /> : null}
         {!isAdmin(user) ? (
           <p className="text-xs text-muted-foreground">
-            仅管理员可以回复反馈。如需补充信息，请再提交一条新反馈。
+            反馈暂不支持用户互评。如需补充信息，请再提交一条新反馈。
           </p>
         ) : null}
       </div>

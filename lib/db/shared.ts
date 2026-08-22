@@ -16,6 +16,23 @@ export class DbError extends Error {
   }
 }
 
+/** 避免把 Postgres 约束名等内部信息直接展示给用户 */
+export function toUserFacingDbError(
+  error: { message?: string } | null | undefined,
+  fallback: string,
+): DbError {
+  const message = error?.message ?? "";
+  if (
+    message.includes("violates check constraint") ||
+    message.includes("violates not-null constraint") ||
+    message.includes("invalid input syntax")
+  ) {
+    return new DbError(fallback, "VALIDATION");
+  }
+
+  return new DbError(message || fallback, "UNKNOWN");
+}
+
 export const DEFAULT_PAGE_SIZE = 20;
 
 export function getPagination(page = 1, pageSize = DEFAULT_PAGE_SIZE) {

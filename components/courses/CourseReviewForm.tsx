@@ -572,7 +572,7 @@ export function CourseReviewForm({
                 className="h-4 w-4 rounded border-input"
               />
               <Label htmlFor="isAnonymous" className="font-normal">
-                匿名展示（管理员仍可追溯账号）
+                匿名展示
               </Label>
             </div>
 

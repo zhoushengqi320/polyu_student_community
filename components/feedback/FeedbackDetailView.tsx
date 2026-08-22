@@ -28,11 +28,11 @@ export function FeedbackDetailView({ post, replies }: FeedbackDetailViewProps) {
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">
-          管理员回复（{replies.length}）
+          官方回复（{replies.length}）
         </h2>
         {replies.length === 0 ? (
           <p className="rounded-xl border border-dashed px-4 py-6 text-sm text-muted-foreground">
-            暂无回复，管理员处理中。
+            暂无回复，处理中。
           </p>
         ) : (
           <ul className="space-y-3">
@@ -46,7 +46,7 @@ export function FeedbackDetailView({ post, replies }: FeedbackDetailViewProps) {
                     size="xs"
                   />
                   <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary">
-                    管理员
+                    官方
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {formatDateTime(reply.createdAt)}

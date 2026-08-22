@@ -17,7 +17,7 @@ import {
   type CourseWithStats,
   type CreateCourseReviewInput,
 } from "@/types/course";
-import { DbError, toPaginatedResult, getPagination } from "@/lib/db/shared";
+import { DbError, toPaginatedResult, getPagination, toUserFacingDbError } from "@/lib/db/shared";
 import {
   buildCourseSearchOrFilter,
   sortCoursesBySearchRelevance,
@@ -334,7 +334,7 @@ export async function createCourseReview(
       teaching_rating: input.teachingRating,
       exam_type: input.examType,
       assignment_type: input.assignmentType,
-      attendance_required: input.attendanceRequired,
+      attendance_required: input.attendanceRequired || null,
       content: input.reviewText,
       review_text: input.reviewText,
       tips: input.tips,
@@ -346,7 +346,10 @@ export async function createCourseReview(
     .single();
 
   if (error || !data) {
-    throw new DbError(error?.message ?? "发布课程评价失败", "VALIDATION");
+    throw toUserFacingDbError(
+      error,
+      "发布课程评价失败，请检查填写内容后重试",
+    );
   }
 
   return mapCourseReviewWithAuthor(data as CourseReviewWithProfileRow);

@@ -52,7 +52,7 @@ function AppealForm({ work }: { work: ProfileWorkItem }) {
       <input type="hidden" name="targetType" value={work.targetType} />
       <input type="hidden" name="targetId" value={work.id} />
       <p className="text-xs text-muted-foreground">
-        申诉截止：{formatDate(work.archive.appealDeadline)}。提交后由管理员审核，不会自动恢复。
+        申诉截止：{formatDate(work.archive.appealDeadline)}。提交后将进行审核，通过后会恢复展示。
       </p>
       <textarea
         name="appealNote"
@@ -156,7 +156,7 @@ export function ProfileWorksSection({ works }: ProfileWorksSectionProps) {
       <CardHeader>
         <CardTitle>我的作品</CardTitle>
         <CardDescription>
-          仅自己可见。封禁中的内容可在申诉期内提交理由，由管理员审核后决定是否恢复。
+          仅自己可见。封禁中的内容可在申诉期内提交理由，审核通过后可恢复展示。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

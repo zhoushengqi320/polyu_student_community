@@ -187,7 +187,7 @@ export function FormImageAttachments({
         </div>
       ) : (
         <div className="rounded-lg border border-dashed px-4 py-6 text-center text-xs text-muted-foreground">
-          可附上页面截图，便于管理员定位问题
+          可附上页面截图，便于我们定位问题
         </div>
       )}
     </div>

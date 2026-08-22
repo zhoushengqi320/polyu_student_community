@@ -97,7 +97,7 @@ export function ReportDialog({
         <DialogHeader>
           <DialogTitle>举报{targetLabel}</DialogTitle>
           <DialogDescription>
-            请选择举报原因。管理员会尽快审核处理，恶意举报可能导致账号受限。处理依据见
+            请选择举报原因。我们会尽快审核处理，恶意举报可能导致账号受限。处理依据见
             <CommunityRulesDialog
               triggerLabel="社区规则"
               triggerClassName="mx-1"
