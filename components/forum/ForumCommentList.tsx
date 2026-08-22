@@ -84,6 +84,7 @@ function CommentItem({
             userId={comment.author.id}
             name={getAuthorName(comment)}
             avatarUrl={comment.author.avatarUrl}
+            role={comment.author.role}
             size="xs"
           />
           {replyTargetName ? (

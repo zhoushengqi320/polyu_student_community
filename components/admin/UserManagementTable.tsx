@@ -12,6 +12,10 @@ import {
   type AdminActionState,
 } from "@/lib/admin/state";
 import { USER_ACTIVITY_SILENT_THRESHOLD } from "@/constants/userActivity";
+import {
+  getOnlinePresenceSortKey,
+  isUserOnline,
+} from "@/constants/userPresence";
 import { USER_ROLE_LABELS, USER_STATUS_LABELS } from "@/constants/userRoles";
 import { USER_ROLES } from "@/constants/userRoles";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/formatDate";
@@ -21,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { EmailWhitelistPanel } from "@/components/admin/EmailWhitelistPanel";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { type EmailWhitelistRow } from "@/lib/db/emailWhitelist";
 import { cn } from "@/lib/utils/cn";
 import { Users } from "lucide-react";
@@ -30,7 +35,7 @@ type UserManagementTableProps = {
   whitelistEntries?: EmailWhitelistRow[];
 };
 
-type UserSortField = "activity" | "createdAt";
+type UserSortField = "activity" | "createdAt" | "online";
 type SortDirection = "asc" | "desc";
 
 function SortableHeader({
@@ -94,22 +99,22 @@ function sortUsers(
       return (aScore - bScore) * direction;
     }
 
+    if (sortField === "online") {
+      const aKey = getOnlinePresenceSortKey(a.lastSeenAt);
+      const bKey = getOnlinePresenceSortKey(b.lastSeenAt);
+      if (aKey !== bKey) {
+        return (aKey - bKey) * direction;
+      }
+
+      const aTime = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+      const bTime = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+      return (aTime - bTime) * direction;
+    }
+
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
     return (aTime - bTime) * direction;
   });
-}
-
-function ActionMessage({ state }: { state: AdminActionState }) {
-  if (state.error) {
-    return <p className="text-sm text-destructive">{state.error}</p>;
-  }
-
-  if (state.success) {
-    return <p className="text-sm text-green-600">{state.success}</p>;
-  }
-
-  return null;
 }
 
 function UserActionForm({
@@ -129,12 +134,16 @@ function UserActionForm({
   );
 
   return (
-    <form action={formAction} className="inline-flex flex-col items-end gap-1">
+    <form action={formAction} className="inline-flex items-center gap-1">
       <input type="hidden" name="userId" value={userId} />
       <Button type="submit" size="sm" variant={variant} disabled={pending}>
         {pending ? "处理中..." : label}
       </Button>
-      <ActionMessage state={state} />
+      {state.error ? (
+        <span className="sr-only">{state.error}</span>
+      ) : state.success ? (
+        <span className="sr-only">{state.success}</span>
+      ) : null}
     </form>
   );
 }
@@ -181,15 +190,41 @@ function ActivityCell({ user }: { user: AdminUserListItem }) {
       )}
       title={title}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <span className="inline-flex items-center gap-2">
         <span className="font-medium tabular-nums">{activity.score}</span>
         <TagBadge
           label={activity.tierLabel}
           className={activityBadgeClass(activity.score)}
         />
-      </div>
+      </span>
     </div>
   );
+}
+
+function OnlineStatusCell({ user }: { user: AdminUserListItem }) {
+  const online = isUserOnline(user.lastSeenAt);
+
+  if (online) {
+    return (
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-green-700">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" aria-hidden="true" />
+        在线
+      </span>
+    );
+  }
+
+  if (user.lastSeenAt) {
+    return (
+      <span
+        className="whitespace-nowrap text-xs text-muted-foreground"
+        title={formatDateTime(user.lastSeenAt)}
+      >
+        离线 · {formatRelativeTime(user.lastSeenAt)}
+      </span>
+    );
+  }
+
+  return <span className="text-xs text-muted-foreground">无记录</span>;
 }
 
 function LastActiveCell({ user }: { user: AdminUserListItem }) {
@@ -243,7 +278,8 @@ export function UserManagementTable({
       <EmailWhitelistPanel entries={whitelistEntries} />
 
       <p className="text-xs text-muted-foreground">
-        活跃度仅后台可见，按近 90 天访问与互动计算；管理员账号不参与计分。点击表头可排序。
+        活跃度仅后台可见，按近 90 天访问与互动计算；管理员账号不参与计分。在线状态依据最近
+        35 分钟内的心跳记录；点击表头可排序。
       </p>
 
       {sortedUsers.length === 0 ? (
@@ -253,15 +289,24 @@ export function UserManagementTable({
           description="接入 Supabase 后将在此展示用户列表。"
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[1020px] text-left text-sm">
+        <div className={ADMIN_TABLE.wrap}>
+          <table className="w-full min-w-[1280px] text-left text-sm">
             <thead className="border-b bg-muted/40">
               <tr>
-                <th className="px-4 py-3 font-medium">用户</th>
-                <th className="px-4 py-3 font-medium">绑定邮箱</th>
-                <th className="px-4 py-3 font-medium">角色</th>
-                <th className="px-4 py-3 font-medium">状态</th>
-                <th className="px-4 py-3">
+                <th className={ADMIN_TABLE.headCell}>用户</th>
+                <th className={ADMIN_TABLE.headCell}>绑定邮箱</th>
+                <th className={ADMIN_TABLE.headCell}>角色</th>
+                <th className={ADMIN_TABLE.headCell}>状态</th>
+                <th className={ADMIN_TABLE.headCell}>
+                  <SortableHeader
+                    label="在线情况"
+                    field="online"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className={ADMIN_TABLE.headCell}>
                   <SortableHeader
                     label="活跃度"
                     field="activity"
@@ -270,9 +315,9 @@ export function UserManagementTable({
                     onSort={handleSort}
                   />
                 </th>
-                <th className="px-4 py-3 font-medium">最近活跃</th>
-                <th className="px-4 py-3 font-medium">举报警告</th>
-                <th className="px-4 py-3">
+                <th className={ADMIN_TABLE.headCell}>最近活跃</th>
+                <th className={ADMIN_TABLE.headCell}>举报警告</th>
+                <th className={ADMIN_TABLE.headCell}>
                   <SortableHeader
                     label="注册时间"
                     field="createdAt"
@@ -281,7 +326,7 @@ export function UserManagementTable({
                     onSort={handleSort}
                   />
                 </th>
-                <th className="px-4 py-3 text-right font-medium">操作</th>
+                <th className={`${ADMIN_TABLE.headCell} text-right`}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -302,66 +347,83 @@ export function UserManagementTable({
                 return (
                   <tr
                     key={user.id}
-                    className={cn(
-                      "border-b last:border-0",
-                      isSilent && "bg-muted/20",
-                    )}
+                    className={cn(ADMIN_TABLE.row, isSilent && "bg-muted/20")}
                   >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                    <td className={ADMIN_TABLE.cell}>
+                      <div className="flex max-w-[260px] items-center gap-2">
                         <UserAvatar
                           src={user.avatarUrl}
                           name={user.displayName ?? user.username}
                           size="sm"
                         />
-                        <div className="min-w-0">
-                          <div
-                            className={cn(
-                              "font-medium",
-                              isSilent && "text-muted-foreground",
-                            )}
-                          >
-                            {user.displayName ?? user.username}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            @{user.username}
-                          </div>
-                        </div>
+                        <span
+                          className={cn(
+                            "min-w-0 truncate font-medium",
+                            isSilent && "text-muted-foreground",
+                          )}
+                          title={user.displayName ?? user.username}
+                        >
+                          {user.displayName ?? user.username}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          @{user.username}
+                        </span>
+                        {isAdmin ? (
+                          <TagBadge
+                            label="管理员"
+                            className="shrink-0 bg-primary/10 text-primary"
+                          />
+                        ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={adminTruncateCell("max-w-[200px]")}>
                       {user.email ? (
-                        <span className="font-mono text-xs">{user.email}</span>
+                        <span className="font-mono text-xs" title={user.email}>
+                          {user.email}
+                        </span>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE.cell}>
                       <TagBadge label={USER_ROLE_LABELS[user.role]} />
                     </td>
-                    <td className="px-4 py-3">
-                      <TagBadge
-                        label={USER_STATUS_LABELS[user.status]}
-                        className={
-                          isBanned
-                            ? "bg-destructive/10 text-destructive"
+                    <td className={ADMIN_TABLE.cell}>
+                      <span
+                        className="inline-flex items-center gap-2"
+                        title={
+                          user.bannedUntil &&
+                          new Date(user.bannedUntil) > new Date()
+                            ? `限制至 ${formatDateTime(user.bannedUntil)}`
                             : undefined
                         }
-                      />
-                      {user.bannedUntil &&
-                      new Date(user.bannedUntil) > new Date() ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          限制至 {formatDateTime(user.bannedUntil)}
-                        </p>
-                      ) : null}
+                      >
+                        <TagBadge
+                          label={USER_STATUS_LABELS[user.status]}
+                          className={
+                            isBanned
+                              ? "bg-destructive/10 text-destructive"
+                              : undefined
+                          }
+                        />
+                        {user.bannedUntil &&
+                        new Date(user.bannedUntil) > new Date() ? (
+                          <span className="text-xs text-muted-foreground">
+                            至 {formatDateTime(user.bannedUntil)}
+                          </span>
+                        ) : null}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE.cell}>
+                      <OnlineStatusCell user={user} />
+                    </td>
+                    <td className={ADMIN_TABLE.cell}>
                       <ActivityCell user={user} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE.cell}>
                       <LastActiveCell user={user} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE.cell}>
                       {hasReportWarning ? (
                         <TagBadge
                           label={`${user.reporterWarningCount} 次`}
@@ -371,16 +433,16 @@ export function UserManagementTable({
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className={`${ADMIN_TABLE.cell} text-muted-foreground`}>
                       {formatDateTime(user.createdAt)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE.cellRight}>
                       {isAdmin ? (
-                        <span className="block text-right text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           管理员账号
                         </span>
                       ) : (
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className={ADMIN_TABLE.actions}>
                           {canVerify ? (
                             <UserActionForm
                               userId={user.id}

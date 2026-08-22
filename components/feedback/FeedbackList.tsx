@@ -44,6 +44,7 @@ export function FeedbackList({ result }: FeedbackListProps) {
                     userId={item.author.id}
                     name={item.author.displayName ?? item.author.username}
                     avatarUrl={item.author.avatarUrl}
+                    role={item.author.role}
                     size="xs"
                     nameClassName="text-xs font-normal text-muted-foreground"
                   />

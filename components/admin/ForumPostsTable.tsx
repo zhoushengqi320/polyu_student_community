@@ -3,6 +3,7 @@
 import { Newspaper } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
 import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { adminDeleteForumPostAction } from "@/lib/admin/actions";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { TagBadge } from "@/components/common/TagBadge";
@@ -26,15 +27,15 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[780px] text-left text-sm">
+    <div className={ADMIN_TABLE.wrap}>
+      <table className="w-full min-w-[900px] text-left text-sm">
         <thead className="border-b bg-muted/40">
           <tr>
-            <th className="px-4 py-3 font-medium">标题</th>
-            <th className="px-4 py-3 font-medium">作者</th>
-            <th className="px-4 py-3 font-medium">状态</th>
-            <th className="px-4 py-3 font-medium">发布时间</th>
-            <th className="px-4 py-3 font-medium text-right">操作</th>
+            <th className={ADMIN_TABLE.headCell}>标题</th>
+            <th className={ADMIN_TABLE.headCell}>作者</th>
+            <th className={ADMIN_TABLE.headCell}>状态</th>
+            <th className={ADMIN_TABLE.headCell}>发布时间</th>
+            <th className={`${ADMIN_TABLE.headCell} text-right`}>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -42,37 +43,38 @@ export function ForumPostsTable({ posts }: ForumPostsTableProps) {
             const isDeleted = Boolean(post.deletedAt);
 
             return (
-              <tr key={post.id} className="border-b last:border-0">
-                <td className="px-4 py-3">
-                  {isDeleted ? (
-                    <span className="font-medium text-muted-foreground line-clamp-2">
+              <tr key={post.id} className={ADMIN_TABLE.row}>
+                <td className={adminTruncateCell("max-w-[320px]")}>
+                  <span className="inline-flex max-w-full items-center gap-2">
+                    <span
+                      className={isDeleted ? "text-muted-foreground" : "font-medium"}
+                      title={post.title}
+                    >
                       {post.title}
-                      <span className="mt-1 block text-xs">已删除（仅日志）</span>
+                      {isDeleted ? "（已删除）" : ""}
                     </span>
-                  ) : (
-                    <div className="space-y-1">
-                      <span className="font-medium line-clamp-2">{post.title}</span>
+                    {!isDeleted ? (
                       <AdminContentPreviewDialog
                         targetType={TARGET_TYPES.post}
                         targetId={post.id}
                       />
-                    </div>
-                  )}
+                    ) : null}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className={adminTruncateCell("max-w-[140px]")}>
                   {post.author.displayName ?? post.author.username}
                 </td>
-                <td className="px-4 py-3">
+                <td className={ADMIN_TABLE.cell}>
                   {isDeleted ? (
                     <TagBadge label="Deleted" className="bg-destructive/10 text-destructive" />
                   ) : (
                     <TagBadge label="正常" />
                   )}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className={`${ADMIN_TABLE.cell} text-muted-foreground`}>
                   {formatDateTime(post.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className={ADMIN_TABLE.cellRight}>
                   {!isDeleted ? (
                     <AdminConfirmButton
                       label="删除帖子"

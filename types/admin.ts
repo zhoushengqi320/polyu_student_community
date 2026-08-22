@@ -12,6 +12,7 @@ import { type UserRole, type UserStatus } from "@/constants/userRoles";
 
 export type AdminStats = {
   userCount: number;
+  onlineUserCount: number;
   pendingReportCount: number;
   pendingProfileReviewCount: number;
   pendingArchiveAppealCount: number;

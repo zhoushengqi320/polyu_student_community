@@ -67,6 +67,7 @@ export function ForumPostDetailView({
             userId={post.isAnonymous ? undefined : post.author.id}
             name={getAuthorName(post)}
             avatarUrl={post.isAnonymous ? null : post.author.avatarUrl}
+            role={post.isAnonymous ? null : post.author.role}
             size="sm"
           />
           <span className="inline-flex items-center gap-1" title="进入详情页后累计">

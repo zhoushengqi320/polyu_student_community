@@ -91,6 +91,7 @@ export function ForumPostCard({ post }: ForumPostCardProps) {
               userId={post.isAnonymous ? undefined : post.author.id}
               name={getAuthorName(post)}
               avatarUrl={post.isAnonymous ? null : post.author.avatarUrl}
+              role={post.isAnonymous ? null : post.author.role}
               size="xs"
               nameClassName="font-normal text-muted-foreground"
               disableLink

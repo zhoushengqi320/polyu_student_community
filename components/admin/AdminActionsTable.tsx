@@ -13,6 +13,7 @@ import {
 import { type AdminActionLogDetail } from "@/lib/admin/actionLogDetail";
 import { RichContent } from "@/components/common/RichContent";
 import { TagBadge } from "@/components/common/TagBadge";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,29 +49,21 @@ function ActionLogSummary({ item }: { item: AdminActionLogWithAdmin }) {
   const targetLabel =
     TARGET_TYPE_LABELS[item.targetType as TargetType] ?? item.targetType;
 
-  if (!title && !excerpt && !reason) {
-    return (
-      <div className="space-y-1 text-muted-foreground">
-        <p>{targetLabel}</p>
-        <p className="font-mono text-xs">{item.targetId.slice(0, 8)}…</p>
-      </div>
-    );
-  }
+  const summary =
+    title ??
+    excerpt ??
+    reason ??
+    `${targetLabel} · ${item.targetId.slice(0, 8)}…`;
 
   return (
-    <div className="max-w-md space-y-1">
-      <p className="text-xs text-muted-foreground">{targetLabel}</p>
-      {title ? <p className="font-medium line-clamp-1">{title}</p> : null}
-      {excerpt ? (
-        <p className="text-xs text-muted-foreground line-clamp-2">{excerpt}</p>
-      ) : null}
-      {reason ? (
-        <p className="text-xs">
-          <span className="text-muted-foreground">理由：</span>
-          <span className="line-clamp-2">{reason}</span>
-        </p>
-      ) : null}
-    </div>
+    <span
+      className="block max-w-[360px] truncate"
+      title={[targetLabel, title, excerpt, reason].filter(Boolean).join(" · ")}
+    >
+      <span className="text-xs text-muted-foreground">{targetLabel}</span>
+      {" · "}
+      <span>{summary}</span>
+    </span>
   );
 }
 
@@ -319,33 +312,33 @@ export function AdminActionsTable({
           没有匹配的操作记录。
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[900px] text-left text-sm">
+        <div className={ADMIN_TABLE.wrap}>
+          <table className="w-full min-w-[960px] text-left text-sm">
             <thead className="border-b bg-muted/40">
               <tr>
-                <th className="px-4 py-3 font-medium">操作</th>
-                <th className="px-4 py-3 font-medium">管理员</th>
-                <th className="px-4 py-3 font-medium">内容摘要</th>
-                <th className="px-4 py-3 font-medium">时间</th>
-                <th className="px-4 py-3 font-medium">详情</th>
+                <th className={ADMIN_TABLE.headCell}>操作</th>
+                <th className={ADMIN_TABLE.headCell}>管理员</th>
+                <th className={ADMIN_TABLE.headCell}>内容摘要</th>
+                <th className={ADMIN_TABLE.headCell}>时间</th>
+                <th className={ADMIN_TABLE.headCell}>详情</th>
               </tr>
             </thead>
             <tbody>
               {pageItems.map((item) => (
-                <tr key={item.id} className="border-b last:border-0 align-top">
-                  <td className="px-4 py-3">
+                <tr key={item.id} className={ADMIN_TABLE.row}>
+                  <td className={ADMIN_TABLE.cell}>
                     <TagBadge label={getAdminActionLabel(item.action)} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className={adminTruncateCell("max-w-[120px]")}>
                     {item.admin.displayName ?? item.admin.username ?? "系统"}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className={ADMIN_TABLE.cell}>
                     <ActionLogSummary item={item} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                  <td className={`${ADMIN_TABLE.cell} text-muted-foreground`}>
                     {formatDateTime(item.createdAt)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className={ADMIN_TABLE.cell}>
                     <ActionDetailDialog item={item} />
                   </td>
                 </tr>

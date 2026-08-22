@@ -19,6 +19,7 @@ export function FeedbackDetailView({ post, replies }: FeedbackDetailViewProps) {
             userId={post.author.id}
             name={post.author.displayName ?? post.author.username}
             avatarUrl={post.author.avatarUrl}
+            role={post.author.role}
             size="sm"
           />
           <span>{formatDateTime(post.createdAt)}</span>
@@ -43,11 +44,9 @@ export function FeedbackDetailView({ post, replies }: FeedbackDetailViewProps) {
                     userId={reply.author.id}
                     name={reply.author.displayName ?? reply.author.username}
                     avatarUrl={reply.author.avatarUrl}
+                    role={reply.author.role}
                     size="xs"
                   />
-                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary">
-                    官方
-                  </span>
                   <span className="text-xs text-muted-foreground">
                     {formatDateTime(reply.createdAt)}
                   </span>

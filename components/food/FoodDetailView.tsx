@@ -119,6 +119,7 @@ export function FoodDetailView({
                       userId={item.author.id}
                       name={item.author.displayName ?? item.author.username}
                       avatarUrl={item.author.avatarUrl}
+                      role={item.author.role}
                       size="sm"
                     />
                     <CardDescription>

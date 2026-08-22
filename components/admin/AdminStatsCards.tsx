@@ -1,4 +1,4 @@
-import { FileText, Flag, Users, UserRoundCheck } from "lucide-react";
+import { FileText, Flag, Radio, Users, UserRoundCheck } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,11 @@ const STAT_ITEMS = [
     icon: Users,
   },
   {
+    key: "onlineUserCount" as const,
+    label: "当前在线",
+    icon: Radio,
+  },
+  {
     key: "postCount" as const,
     label: "已发布帖子",
     icon: FileText,
@@ -37,7 +42,7 @@ const STAT_ITEMS = [
 
 export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {STAT_ITEMS.map(({ key, label, icon: Icon }) => (
         <Card key={key}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

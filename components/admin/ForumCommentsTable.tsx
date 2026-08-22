@@ -3,6 +3,7 @@
 import { MessageSquare } from "lucide-react";
 import { AdminConfirmButton } from "@/components/admin/AdminConfirmButton";
 import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { adminDeleteForumCommentAction } from "@/lib/admin/actions";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 import { TagBadge } from "@/components/common/TagBadge";
@@ -26,16 +27,16 @@ export function ForumCommentsTable({ comments }: ForumCommentsTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[960px] text-left text-sm">
+    <div className={ADMIN_TABLE.wrap}>
+      <table className="w-full min-w-[1040px] text-left text-sm">
         <thead className="border-b bg-muted/40">
           <tr>
-            <th className="px-4 py-3 font-medium">评论内容</th>
-            <th className="px-4 py-3 font-medium">所属帖子</th>
-            <th className="px-4 py-3 font-medium">作者</th>
-            <th className="px-4 py-3 font-medium">状态</th>
-            <th className="px-4 py-3 font-medium">时间</th>
-            <th className="px-4 py-3 font-medium text-right">操作</th>
+            <th className={ADMIN_TABLE.headCell}>评论内容</th>
+            <th className={ADMIN_TABLE.headCell}>所属帖子</th>
+            <th className={ADMIN_TABLE.headCell}>作者</th>
+            <th className={ADMIN_TABLE.headCell}>状态</th>
+            <th className={ADMIN_TABLE.headCell}>时间</th>
+            <th className={`${ADMIN_TABLE.headCell} text-right`}>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -43,42 +44,38 @@ export function ForumCommentsTable({ comments }: ForumCommentsTableProps) {
             const isDeleted = Boolean(comment.deletedAt);
 
             return (
-              <tr key={comment.id} className="border-b last:border-0">
-                <td className="px-4 py-3">
-                  <p className="line-clamp-2 max-w-xs">{comment.content}</p>
+              <tr key={comment.id} className={ADMIN_TABLE.row}>
+                <td className={adminTruncateCell("max-w-[280px]")}>
+                  <span title={comment.content}>{comment.content}</span>
                 </td>
-                <td className="px-4 py-3">
-                  {isDeleted ? (
-                    <span className="text-muted-foreground line-clamp-1 max-w-[180px]">
+                <td className={adminTruncateCell("max-w-[220px]")}>
+                  <span className="inline-flex max-w-full items-center gap-2">
+                    <span title={comment.postTitle}>
                       {comment.postTitle}
-                      <span className="mt-1 block text-xs">已删除（仅日志）</span>
+                      {isDeleted ? "（已删除）" : ""}
                     </span>
-                  ) : (
-                    <div className="space-y-1">
-                      <span className="line-clamp-1 max-w-[180px]">
-                        {comment.postTitle}
-                      </span>
+                    {!isDeleted ? (
                       <AdminContentPreviewDialog
                         targetType={TARGET_TYPES.post}
                         targetId={comment.postId}
                       />
-                    </div>
-                  )}
+                    ) : null}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className={adminTruncateCell("max-w-[120px]")}>
                   {comment.author.displayName ?? comment.author.username}
                 </td>
-                <td className="px-4 py-3">
+                <td className={ADMIN_TABLE.cell}>
                   {isDeleted ? (
                     <TagBadge label="Deleted" className="bg-destructive/10 text-destructive" />
                   ) : (
                     <TagBadge label="正常" />
                   )}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className={`${ADMIN_TABLE.cell} text-muted-foreground`}>
                   {formatDateTime(comment.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className={ADMIN_TABLE.cellRight}>
                   {!isDeleted ? (
                     <AdminConfirmButton
                       label="删除评论"

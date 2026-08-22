@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { AdminRoleBadge } from "@/components/common/AdminRoleBadge";
 import {
   UserAvatar,
   type UserAvatarSize,
 } from "@/components/common/UserAvatar";
+import { USER_ROLES, type UserRole } from "@/constants/userRoles";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -10,6 +12,7 @@ type UserIdentityProps = {
   userId?: string;
   name: string;
   avatarUrl?: string | null;
+  role?: UserRole | string | null;
   size?: UserAvatarSize;
   className?: string;
   nameClassName?: string;
@@ -23,15 +26,19 @@ export function UserIdentity({
   userId,
   name,
   avatarUrl,
+  role,
   size = "sm",
   className,
   nameClassName,
   disableLink = false,
 }: UserIdentityProps) {
+  const showAdminBadge = role === USER_ROLES.admin;
+
   const identity = (
     <>
       <UserAvatar src={avatarUrl} name={name} size={size} />
       <span className={cn("truncate font-medium", nameClassName)}>{name}</span>
+      {showAdminBadge ? <AdminRoleBadge /> : null}
     </>
   );
 

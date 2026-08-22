@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TagBadge } from "@/components/common/TagBadge";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Mail } from "lucide-react";
 
@@ -81,16 +82,16 @@ export function EmailWhitelistPanel({ entries }: EmailWhitelistPanelProps) {
           description="添加后，对应邮箱即可跳过验证码完成注册。"
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[720px] text-left text-sm">
+        <div className={ADMIN_TABLE.wrap}>
+          <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="border-b bg-muted/40">
               <tr>
-                <th className="px-3 py-2 font-medium">邮箱</th>
-                <th className="px-3 py-2 font-medium">状态</th>
-                <th className="px-3 py-2 font-medium">备注</th>
-                <th className="px-3 py-2 font-medium">添加时间</th>
-                <th className="px-3 py-2 font-medium">使用时间</th>
-                <th className="px-3 py-2 font-medium text-right">操作</th>
+                <th className={ADMIN_TABLE.headCellCompact}>邮箱</th>
+                <th className={ADMIN_TABLE.headCellCompact}>状态</th>
+                <th className={ADMIN_TABLE.headCellCompact}>备注</th>
+                <th className={ADMIN_TABLE.headCellCompact}>添加时间</th>
+                <th className={ADMIN_TABLE.headCellCompact}>使用时间</th>
+                <th className={`${ADMIN_TABLE.headCellCompact} text-right`}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -106,16 +107,20 @@ export function EmailWhitelistPanel({ entries }: EmailWhitelistPanelProps) {
 }
 
 function WhitelistRow({ entry }: { entry: EmailWhitelistRow }) {
-  const [state, formAction, pending] = useActionState(
+  const [, formAction, pending] = useActionState(
     removeEmailWhitelistAction,
     adminActionInitialState,
   );
   const used = Boolean(entry.consumedAt);
 
   return (
-    <tr className="border-b last:border-0">
-      <td className="px-3 py-2 font-mono text-xs">{entry.email}</td>
-      <td className="px-3 py-2">
+    <tr className={ADMIN_TABLE.row}>
+      <td className={adminTruncateCell("max-w-[200px]", true)}>
+        <span className="font-mono text-xs" title={entry.email}>
+          {entry.email}
+        </span>
+      </td>
+      <td className={ADMIN_TABLE.cellCompact}>
         {used ? (
           <TagBadge label="已使用" className="bg-muted text-muted-foreground" />
         ) : (
@@ -125,20 +130,20 @@ function WhitelistRow({ entry }: { entry: EmailWhitelistRow }) {
           />
         )}
       </td>
-      <td className="px-3 py-2 text-muted-foreground">
+      <td className={adminTruncateCell("max-w-[140px]", true)}>
         {entry.note || "—"}
       </td>
-      <td className="px-3 py-2 text-muted-foreground">
+      <td className={`${ADMIN_TABLE.cellCompact} text-muted-foreground`}>
         {formatDateTime(entry.createdAt)}
       </td>
-      <td className="px-3 py-2 text-muted-foreground">
+      <td className={`${ADMIN_TABLE.cellCompact} text-muted-foreground`}>
         {entry.consumedAt ? formatDateTime(entry.consumedAt) : "—"}
       </td>
-      <td className="px-3 py-2 text-right">
+      <td className={ADMIN_TABLE.cellRight}>
         {used ? (
           <span className="text-xs text-muted-foreground">保留记录</span>
         ) : (
-          <form action={formAction} className="inline-flex flex-col items-end gap-1">
+          <form action={formAction} className="inline-flex items-center gap-1">
             <input type="hidden" name="id" value={entry.id} />
             <Button
               type="submit"
@@ -148,7 +153,6 @@ function WhitelistRow({ entry }: { entry: EmailWhitelistRow }) {
             >
               {pending ? "删除中..." : "删除"}
             </Button>
-            <ActionMessage state={state} />
           </form>
         )}
       </td>

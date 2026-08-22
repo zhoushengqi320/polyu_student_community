@@ -28,6 +28,7 @@ import {
 import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { EmptyState } from "@/components/common/EmptyState";
 import { TagBadge } from "@/components/common/TagBadge";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -137,18 +138,18 @@ export function AnnouncementPanel({ announcements }: AnnouncementPanelProps) {
           description="创建并发布后，将在首页搜索框下方展示给所有访客。"
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[1120px] text-left text-xs">
+        <div className={ADMIN_TABLE.wrap}>
+          <table className="w-full min-w-[1180px] text-left text-xs">
             <thead className="border-b bg-muted/40">
-              <tr className="whitespace-nowrap">
-                <th className="px-3 py-2.5 font-medium">标题</th>
-                <th className="px-3 py-2.5 font-medium">类型</th>
-                <th className="px-3 py-2.5 font-medium">重要等级</th>
-                <th className="px-3 py-2.5 font-medium">状态</th>
-                <th className="px-3 py-2.5 font-medium">置顶</th>
-                <th className="px-3 py-2.5 font-medium">预发布/发布时间</th>
-                <th className="px-3 py-2.5 font-medium">展示时段</th>
-                <th className="px-3 py-2.5 font-medium text-right">操作</th>
+              <tr>
+                <th className={ADMIN_TABLE.headCellCompact}>标题</th>
+                <th className={ADMIN_TABLE.headCellCompact}>类型</th>
+                <th className={ADMIN_TABLE.headCellCompact}>重要等级</th>
+                <th className={ADMIN_TABLE.headCellCompact}>状态</th>
+                <th className={ADMIN_TABLE.headCellCompact}>置顶</th>
+                <th className={ADMIN_TABLE.headCellCompact}>预发布/发布时间</th>
+                <th className={ADMIN_TABLE.headCellCompact}>展示时段</th>
+                <th className={`${ADMIN_TABLE.headCellCompact} text-right`}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -536,7 +537,7 @@ function AnnouncementRow({
   announcement: AdminAnnouncement;
   onEdit: () => void;
 }) {
-  const [hideState, hideAction, hidePending] = useActionState(
+  const [, hideAction, hidePending] = useActionState(
     hideAnnouncementAction,
     adminActionInitialState,
   );
@@ -545,19 +546,17 @@ function AnnouncementRow({
   const isScheduled = announcement.status === ANNOUNCEMENT_STATUS.scheduled;
 
   return (
-    <tr className="border-b last:border-0">
-      <td className="max-w-[280px] px-3 py-2.5">
-        <p className="truncate font-medium" title={announcement.title}>
-          {announcement.title}
-        </p>
-        <p className="mt-0.5 line-clamp-1 text-muted-foreground" title={announcement.body}>
-          {announcement.body}
-        </p>
+    <tr className={ADMIN_TABLE.row}>
+      <td className={adminTruncateCell("max-w-[280px]", true)}>
+        <span title={`${announcement.title} — ${announcement.body}`}>
+          <span className="font-medium">{announcement.title}</span>
+          <span className="text-muted-foreground"> · {announcement.body}</span>
+        </span>
       </td>
-      <td className="whitespace-nowrap px-3 py-2.5">
+      <td className={ADMIN_TABLE.cellCompact}>
         {ANNOUNCEMENT_CATEGORIES[announcement.category]}
       </td>
-      <td className="whitespace-nowrap px-3 py-2.5">
+      <td className={ADMIN_TABLE.cellCompact}>
         <span
           className={
             announcement.importance === "important"
@@ -568,50 +567,47 @@ function AnnouncementRow({
           {ANNOUNCEMENT_IMPORTANCE[announcement.importance]}
         </span>
       </td>
-      <td className="whitespace-nowrap px-3 py-2.5">
+      <td className={ADMIN_TABLE.cellCompact}>
         <TagBadge
           label={getStatusLabel(announcement)}
           className={getStatusClassName(announcement)}
         />
       </td>
-      <td className="whitespace-nowrap px-3 py-2.5">
+      <td className={ADMIN_TABLE.cellCompact}>
         {announcement.isPinned ? "是" : "—"}
       </td>
-      <td className="px-3 py-2.5 whitespace-nowrap">
+      <td className={ADMIN_TABLE.cellCompact}>
         {announcement.publishedAt ? formatDateTime(announcement.publishedAt) : "—"}
       </td>
-      <td className="px-3 py-2.5 whitespace-nowrap text-[11px] leading-relaxed">
+      <td className={adminTruncateCell("max-w-[240px]", true)}>
         {announcement.startsAt ? formatDateTime(announcement.startsAt) : "—"}
-        <br />
-        至 {announcement.endsAt ? formatDateTime(announcement.endsAt) : "—"}
+        {" 至 "}
+        {announcement.endsAt ? formatDateTime(announcement.endsAt) : "—"}
       </td>
-      <td className="whitespace-nowrap px-3 py-2.5">
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex flex-nowrap items-center justify-end gap-1.5">
-            <Button type="button" size="sm" variant="outline" onClick={onEdit}>
-              编辑
-            </Button>
-            {isPublished ? (
-              <form action={hideAction}>
-                <input type="hidden" name="announcementId" value={announcement.id} />
-                <Button type="submit" size="sm" variant="secondary" disabled={hidePending}>
-                  隐藏
-                </Button>
-              </form>
-            ) : null}
-            {isScheduled ? (
-              <TagBadge label="排队中" className="bg-sky-50 text-sky-800" />
-            ) : null}
-            <AdminConfirmButton
-              label="删除"
-              confirmTitle="删除公告"
-              confirmDescription="确定删除这条公告吗？删除后首页将不再展示。"
-              action={deleteAnnouncementAction}
-              hiddenFields={{ announcementId: announcement.id }}
-              variant="destructive"
-            />
-          </div>
-          <ActionMessage state={hideState} />
+      <td className={ADMIN_TABLE.cellCompact}>
+        <div className={ADMIN_TABLE.actions}>
+          <Button type="button" size="sm" variant="outline" onClick={onEdit}>
+            编辑
+          </Button>
+          {isPublished ? (
+            <form action={hideAction}>
+              <input type="hidden" name="announcementId" value={announcement.id} />
+              <Button type="submit" size="sm" variant="secondary" disabled={hidePending}>
+                隐藏
+              </Button>
+            </form>
+          ) : null}
+          {isScheduled ? (
+            <TagBadge label="排队中" className="bg-sky-50 text-sky-800" />
+          ) : null}
+          <AdminConfirmButton
+            label="删除"
+            confirmTitle="删除公告"
+            confirmDescription="确定删除这条公告吗？删除后首页将不再展示。"
+            action={deleteAnnouncementAction}
+            hiddenFields={{ announcementId: announcement.id }}
+            variant="destructive"
+          />
         </div>
       </td>
     </tr>

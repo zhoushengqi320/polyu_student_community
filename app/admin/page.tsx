@@ -28,6 +28,7 @@ import { type AdminDashboardData } from "@/types/admin";
 const EMPTY_DASHBOARD: AdminDashboardData = {
   stats: {
     userCount: 0,
+    onlineUserCount: 0,
     pendingReportCount: 0,
     pendingProfileReviewCount: 0,
     pendingArchiveAppealCount: 0,

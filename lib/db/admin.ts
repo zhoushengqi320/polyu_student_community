@@ -6,6 +6,7 @@ import { CONTENT_STATUS } from "@/constants/contentStatus";
 import { ARCHIVE_APPEAL_STATUS } from "@/constants/moderation";
 import { REPORT_STATUS } from "@/constants/reportReasons";
 import { USER_ROLES, USER_STATUS } from "@/constants/userRoles";
+import { USER_ONLINE_THRESHOLD_MS } from "@/constants/userPresence";
 import { computeActivityForUsers } from "@/lib/db/userActivity";
 import { mapAdminUserListItem } from "@/lib/db/mappers/admin";
 import { mapProfileListItemOrFallback, type ProfileRow } from "@/lib/db/mappers/profile";
@@ -33,6 +34,7 @@ import { type AdminActionLogWithAdmin } from "@/types/report";
 
 const EMPTY_STATS: AdminStats = {
   userCount: 0,
+  onlineUserCount: 0,
   pendingReportCount: 0,
   pendingProfileReviewCount: 0,
   pendingArchiveAppealCount: 0,
@@ -45,15 +47,23 @@ export async function getAdminStats(): Promise<AdminStats> {
   }
 
   const supabase = await createClient();
+  const onlineSince = new Date(
+    Date.now() - USER_ONLINE_THRESHOLD_MS,
+  ).toISOString();
 
   const [
     { count: userCount },
+    { count: onlineUserCount },
     { count: pendingReportCount },
     { count: pendingProfileReviewCount },
     { count: pendingArchiveAppealCount },
     { count: postCount },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("last_seen_at", onlineSince),
     supabase
       .from("reports")
       .select("*", { count: "exact", head: true })
@@ -77,6 +87,7 @@ export async function getAdminStats(): Promise<AdminStats> {
 
   return {
     userCount: userCount ?? 0,
+    onlineUserCount: onlineUserCount ?? 0,
     pendingReportCount: pendingReportCount ?? 0,
     pendingProfileReviewCount: pendingProfileReviewCount ?? 0,
     pendingArchiveAppealCount: pendingArchiveAppealCount ?? 0,

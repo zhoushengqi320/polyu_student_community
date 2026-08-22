@@ -20,6 +20,7 @@ import { type ReportWithReporter } from "@/types/report";
 import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 
 type ReportTableProps = {
   reports: ReportWithReporter[];
@@ -57,17 +58,17 @@ export function ReportTable({ reports }: ReportTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[960px] text-left text-sm">
+    <div className={ADMIN_TABLE.wrap}>
+      <table className="w-full min-w-[1100px] text-left text-sm">
         <thead className="border-b bg-muted/40">
           <tr>
-            <th className="px-4 py-3 font-medium">举报类型</th>
-            <th className="px-4 py-3 font-medium">原因</th>
-            <th className="px-4 py-3 font-medium">说明</th>
-            <th className="px-4 py-3 font-medium">举报人</th>
-            <th className="px-4 py-3 font-medium">状态</th>
-            <th className="px-4 py-3 font-medium">时间</th>
-            <th className="px-4 py-3 font-medium text-right">操作</th>
+            <th className={ADMIN_TABLE.headCell}>举报类型</th>
+            <th className={ADMIN_TABLE.headCell}>原因</th>
+            <th className={ADMIN_TABLE.headCell}>说明</th>
+            <th className={ADMIN_TABLE.headCell}>举报人</th>
+            <th className={ADMIN_TABLE.headCell}>状态</th>
+            <th className={ADMIN_TABLE.headCell}>时间</th>
+            <th className={`${ADMIN_TABLE.headCell} text-right`}>操作</th>
           </tr>
         </thead>
         <tbody>
@@ -75,9 +76,9 @@ export function ReportTable({ reports }: ReportTableProps) {
             const isPending = isReportOpenStatus(report.status);
 
             return (
-              <tr key={report.id} className="border-b last:border-0">
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
+              <tr key={report.id} className={ADMIN_TABLE.row}>
+                <td className={ADMIN_TABLE.cell}>
+                  <div className="flex flex-nowrap items-center gap-2">
                     <TagBadge label={TARGET_TYPE_LABELS[report.targetType]} />
                     {report.postModule ? (
                       <span className="text-xs text-muted-foreground">
@@ -90,32 +91,38 @@ export function ReportTable({ reports }: ReportTableProps) {
                     />
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className={ADMIN_TABLE.cell}>
                   {getReportReasonLabel(report.reason)}
                 </td>
-                <td className="px-4 py-3">
-                  <p className="max-w-xs text-xs text-muted-foreground line-clamp-2">
+                <td className={adminTruncateCell("max-w-[220px]")}>
+                  <span
+                    className="text-xs text-muted-foreground"
+                    title={report.description || undefined}
+                  >
                     {report.description || "—"}
-                  </p>
+                  </span>
                 </td>
-                <td className="px-4 py-3">
-                  <div>{report.reporter.displayName ?? report.reporter.username}</div>
-                  <div className="text-xs text-muted-foreground">
-                    @{report.reporter.username}
-                  </div>
+                <td className={adminTruncateCell("max-w-[160px]")}>
+                  <span title={`@${report.reporter.username}`}>
+                    {report.reporter.displayName ?? report.reporter.username}
+                    <span className="text-xs text-muted-foreground">
+                      {" "}
+                      @{report.reporter.username}
+                    </span>
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className={ADMIN_TABLE.cell}>
                   <TagBadge
                     label={REPORT_STATUS_LABELS[report.status]}
                     className={statusBadgeClass(report.status)}
                   />
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
+                <td className={`${ADMIN_TABLE.cell} text-muted-foreground`}>
                   {formatDateTime(report.createdAt)}
                 </td>
-                <td className="px-4 py-3">
+                <td className={ADMIN_TABLE.cellRight}>
                   {isPending ? (
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className={ADMIN_TABLE.actions}>
                       <AdminConfirmButton
                         label="确认违规"
                         confirmTitle="确认内容违规？"
@@ -139,9 +146,7 @@ export function ReportTable({ reports }: ReportTableProps) {
                       />
                     </div>
                   ) : (
-                    <span className="block text-right text-xs text-muted-foreground">
-                      已结案
-                    </span>
+                    <span className="text-xs text-muted-foreground">已结案</span>
                   )}
                 </td>
               </tr>

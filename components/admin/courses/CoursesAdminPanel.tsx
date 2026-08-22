@@ -8,6 +8,7 @@ import {
   useTransition,
 } from "react";
 import { COURSE_DEPARTMENTS, getDepartmentCode } from "@/constants/courseOptions";
+import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
 import {
   createCourseAdminAction,
   deleteCourseAdminAction,
@@ -417,26 +418,32 @@ export function CoursesAdminPanel({
           <p className="text-sm text-destructive">{loadError}</p>
         ) : null}
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead>
-              <tr className="border-b text-muted-foreground">
-                <th className="px-2 py-2 font-medium">代码</th>
-                <th className="px-2 py-2 font-medium">名称</th>
-                <th className="px-2 py-2 font-medium">院系</th>
-                <th className="px-2 py-2 font-medium">评价数</th>
-                <th className="px-2 py-2 font-medium">操作</th>
+        <div className={`${ADMIN_TABLE.wrap} rounded-lg`}>
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="border-b bg-muted/40">
+              <tr>
+                <th className={ADMIN_TABLE.headCellCompact}>代码</th>
+                <th className={ADMIN_TABLE.headCellCompact}>名称</th>
+                <th className={ADMIN_TABLE.headCellCompact}>院系</th>
+                <th className={ADMIN_TABLE.headCellCompact}>评价数</th>
+                <th className={ADMIN_TABLE.headCellCompact}>操作</th>
               </tr>
             </thead>
             <tbody>
               {items.map((course) => (
-                <tr key={course.id} className="border-b">
-                  <td className="px-2 py-2 font-medium">{course.code}</td>
-                  <td className="px-2 py-2">{course.name}</td>
-                  <td className="px-2 py-2">{getDepartmentCode(course.department)}</td>
-                  <td className="px-2 py-2">{course.reviewCount}</td>
-                  <td className="px-2 py-2">
-                    <div className="flex flex-wrap gap-2">
+                <tr key={course.id} className={ADMIN_TABLE.row}>
+                  <td className={`${ADMIN_TABLE.cellCompact} font-medium`}>
+                    {course.code}
+                  </td>
+                  <td className={adminTruncateCell("max-w-[240px]", true)}>
+                    {course.name}
+                  </td>
+                  <td className={ADMIN_TABLE.cellCompact}>
+                    {getDepartmentCode(course.department)}
+                  </td>
+                  <td className={ADMIN_TABLE.cellCompact}>{course.reviewCount}</td>
+                  <td className={ADMIN_TABLE.cellCompact}>
+                    <div className="flex flex-nowrap items-center gap-2">
                       <Button
                         type="button"
                         size="sm"
