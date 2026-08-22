@@ -22,7 +22,6 @@ import { sendOtpEmail } from "@/lib/email/sendOtpEmail";
 import { createClient } from "@/lib/supabase/server";
 import { uploadAvatarFromFormData } from "@/lib/profile/uploadAvatar";
 import {
-  OTP_SPAM_HINT,
   isAllowedPolyuEmail,
 } from "@/constants/auth";
 import { z } from "zod";
@@ -249,7 +248,7 @@ export async function sendChangePasswordOtpAction(
   }
 
   return {
-    success: `验证码已发送至 ${email}。${OTP_SPAM_HINT}`,
+    success: "验证码已发送",
     step: "set_password",
     resendAvailableAt: created.resendAvailableAt,
     devInfo: isDevShowLoginOtp() ? { email, otp: created.code } : null,

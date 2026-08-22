@@ -6,10 +6,8 @@ import {
   sendChangePasswordOtpAction,
   type ChangePasswordFormState,
 } from "@/lib/profile/actions";
-import {
-  OTP_SPAM_HINT,
-  PASSWORD_MIN_LENGTH,
-} from "@/constants/auth";
+import { PASSWORD_MIN_LENGTH } from "@/constants/auth";
+import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,6 +57,7 @@ export function ProfileChangePasswordForm({ email }: { email: string }) {
   const [step, setStep] = useState<"send_otp" | "set_password" | "done">(
     "send_otp",
   );
+  const [otpHintOpen, setOtpHintOpen] = useState(false);
 
   const [sendState, sendAction, sendPending] = useActionState(
     sendChangePasswordOtpAction,
@@ -74,8 +73,9 @@ export function ProfileChangePasswordForm({ email }: { email: string }) {
   useEffect(() => {
     if (sendState.step === "set_password" || sendState.success) {
       setStep("set_password");
+      setOtpHintOpen(true);
     }
-  }, [sendState.step, sendState.success]);
+  }, [sendState.step, sendState.success, sendState.resendAvailableAt]);
 
   useEffect(() => {
     if (changeState.step === "done") {
@@ -85,11 +85,12 @@ export function ProfileChangePasswordForm({ email }: { email: string }) {
 
   return (
     <Card className="max-w-2xl">
+      <OtpSentHintDialog open={otpHintOpen} onOpenChange={setOtpHintOpen} />
       <CardHeader>
         <CardTitle>修改密码</CardTitle>
         <CardDescription>
           将向你的绑定邮箱 <span className="font-mono">{email}</span>{" "}
-          发送验证码，验证通过后方可设置新密码。{OTP_SPAM_HINT}
+          发送验证码，验证通过后方可设置新密码。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -97,9 +98,6 @@ export function ProfileChangePasswordForm({ email }: { email: string }) {
           <form action={sendAction} className="space-y-4">
             {sendState.error ? (
               <p className="text-sm text-destructive">{sendState.error}</p>
-            ) : null}
-            {sendState.success ? (
-              <p className="text-sm text-green-700">{sendState.success}</p>
             ) : null}
             {sendState.devInfo ? <DevOtpBox {...sendState.devInfo} /> : null}
             <Button type="submit" className="w-full" disabled={sendPending || cooldown > 0}>

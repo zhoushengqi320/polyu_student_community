@@ -142,13 +142,13 @@ async function issueOtpAndMaybeEmail(
 
   const successBase =
     purpose === "register"
-      ? "验证码已发送到你的理大邮箱"
+      ? "验证码已发送"
       : purpose === "login"
         ? "登录验证码已发送"
         : "重置密码验证码已发送";
 
   return {
-    success: `${successBase}。${OTP_SPAM_HINT}`,
+    success: successBase,
     resendAvailableAt: created.resendAvailableAt,
     step: "otp",
     devInfo: isDevShowLoginOtp()

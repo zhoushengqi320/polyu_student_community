@@ -8,9 +8,10 @@ import {
   verifyResetOtpAction,
   type AuthFormState,
 } from "@/lib/auth/actions";
-import { OTP_SPAM_HINT, PASSWORD_MIN_LENGTH, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
+import { PASSWORD_MIN_LENGTH, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
 import { EMAIL_PLACEHOLDER } from "@/constants/site";
 import { ROUTES } from "@/constants/routes";
+import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +62,7 @@ function useResendCountdown(resendAvailableAt?: string) {
 export function ForgotPasswordForm() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
+  const [otpHintOpen, setOtpHintOpen] = useState(false);
 
   const [sendState, sendAction, sendPending] = useActionState(
     sendResetOtpAction,
@@ -80,8 +82,9 @@ export function ForgotPasswordForm() {
   useEffect(() => {
     if (sendState.success || sendState.devInfo) {
       setStep("otp");
+      setOtpHintOpen(true);
     }
-  }, [sendState.success, sendState.devInfo]);
+  }, [sendState.success, sendState.devInfo, sendState.resendAvailableAt]);
 
   useEffect(() => {
     if (verifyState.step === "password") {
@@ -91,6 +94,7 @@ export function ForgotPasswordForm() {
 
   return (
     <Card className="mx-auto w-full max-w-md">
+      <OtpSentHintDialog open={otpHintOpen} onOpenChange={setOtpHintOpen} />
       <CardHeader>
         <CardTitle>重置密码</CardTitle>
         <CardDescription>
@@ -112,15 +116,9 @@ export function ForgotPasswordForm() {
                 required
               />
             </div>
-            <p className="text-xs text-muted-foreground">{OTP_SPAM_HINT}</p>
             {sendState.error ? (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {sendState.error}
-              </p>
-            ) : null}
-            {sendState.success ? (
-              <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-                {sendState.success}
               </p>
             ) : null}
             {sendState.devInfo ? <DevOtpBox {...sendState.devInfo} /> : null}
@@ -149,6 +147,19 @@ export function ForgotPasswordForm() {
             {sendState.devInfo ? <DevOtpBox {...sendState.devInfo} /> : null}
             <Button type="submit" className="w-full" disabled={verifyPending}>
               {verifyPending ? "验证中..." : "验证"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={sendPending || cooldown > 0}
+              onClick={() => {
+                const fd = new FormData();
+                fd.set("email", email);
+                sendAction(fd);
+              }}
+            >
+              {cooldown > 0 ? `${cooldown}s 后可重发` : "重新发送验证码"}
             </Button>
           </form>
         ) : null}

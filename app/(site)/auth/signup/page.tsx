@@ -34,7 +34,7 @@ export default async function SignupPage() {
           draftEmail={draft?.email ?? ""}
           initialWhitelisted={initialWhitelisted}
         />
-        <AuthLegalFooter prefix="注册即表示你同意" />
+        <AuthLegalFooter prefix="注册即表示同意本站" />
       </div>
     </ModulePageShell>
   );

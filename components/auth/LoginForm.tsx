@@ -10,11 +10,11 @@ import {
   type AuthFormState,
 } from "@/lib/auth/actions";
 import {
-  OTP_SPAM_HINT,
   POLYU_EMAIL_SUFFIX,
 } from "@/constants/auth";
 import { EMAIL_PLACEHOLDER, SITE_NAME } from "@/constants/site";
 import { ROUTES } from "@/constants/routes";
+import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,6 +91,7 @@ export function LoginForm({
   const [mode, setMode] = useState<LoginMode>("password");
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [otpHintOpen, setOtpHintOpen] = useState(false);
 
   const [passwordState, passwordAction, passwordPending] = useActionState(
     loginWithPasswordAction,
@@ -116,11 +117,13 @@ export function LoginForm({
   useEffect(() => {
     if (sendOtpState.success || sendOtpState.devInfo) {
       setOtpSent(true);
+      setOtpHintOpen(true);
     }
-  }, [sendOtpState.success, sendOtpState.devInfo]);
+  }, [sendOtpState.success, sendOtpState.devInfo, sendOtpState.resendAvailableAt]);
 
   return (
     <Card className="mx-auto w-full max-w-md">
+      <OtpSentHintDialog open={otpHintOpen} onOpenChange={setOtpHintOpen} />
       <CardHeader>
         <CardTitle>登录 {SITE_NAME}</CardTitle>
         <CardDescription>
@@ -215,15 +218,9 @@ export function LoginForm({
                     required
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">{OTP_SPAM_HINT}</p>
                 {sendOtpState.error ? (
                   <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                     {sendOtpState.error}
-                  </p>
-                ) : null}
-                {sendOtpState.success ? (
-                  <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-                    {sendOtpState.success}
                   </p>
                 ) : null}
                 {sendOtpState.devInfo ? (
