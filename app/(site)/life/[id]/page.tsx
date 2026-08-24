@@ -18,7 +18,7 @@ import {
 } from "@/lib/db/reactions";
 import { getVisitorId } from "@/lib/guest/visitorId";
 import { ROUTES } from "@/constants/routes";
-import { can, isAdmin } from "@/lib/utils/permissions";
+import { can } from "@/lib/utils/permissions";
 
 type LifeDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -99,7 +99,6 @@ export default async function LifeDetailPage({ params }: LifeDetailPageProps) {
         canLike={canLike}
         canFavorite={canFavorite}
         canComment={canComment}
-        isAdmin={isAdmin(user)}
         currentUserId={user?.id}
         revalidatePath={revalidatePath}
         commentReactionMap={commentReactionMap}

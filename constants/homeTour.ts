@@ -32,6 +32,11 @@ const MODULE_TOUR_COPY: Record<
     description:
       "电话卡、银行、八达通、医疗、交通等抵港与生活适应信息，新生老手都实用。",
   },
+  market: {
+    title: "二手市集",
+    description:
+      "教材、电子产品、家具等校园闲置转让；Guest 可浏览列表，认证同学可发布。",
+  },
   forum: {
     title: "自由讨论区",
     description:

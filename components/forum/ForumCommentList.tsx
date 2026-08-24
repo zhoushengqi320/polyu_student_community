@@ -24,7 +24,6 @@ type ForumCommentListProps = {
   totalCount: number;
   revalidatePath?: string;
   currentUserId?: string | null;
-  isAdmin?: boolean;
   reactionMap: Record<string, CommentReactionSummary>;
 };
 
@@ -47,7 +46,6 @@ type CommentItemProps = {
   canLike: boolean;
   revalidatePath: string;
   currentUserId?: string | null;
-  isAdmin?: boolean;
   reactionMap: Record<string, CommentReactionSummary>;
   replyTargetName?: string;
   nested?: boolean;
@@ -61,7 +59,6 @@ function CommentItem({
   canLike,
   revalidatePath,
   currentUserId,
-  isAdmin = false,
   reactionMap,
   replyTargetName,
   nested = false,
@@ -69,7 +66,9 @@ function CommentItem({
   const [replyOpen, setReplyOpen] = useState(false);
   const reaction = reactionMap[comment.id] ?? { count: 0, isLiked: false };
   const canDelete =
-    isLoggedIn && (isAdmin || (currentUserId != null && comment.userId === currentUserId));
+    isLoggedIn &&
+    currentUserId != null &&
+    comment.userId === currentUserId;
 
   return (
     <li
@@ -156,7 +155,6 @@ function CommentThreadNode({
   canLike,
   revalidatePath,
   currentUserId,
-  isAdmin,
   reactionMap,
 }: Omit<CommentItemProps, "replyTargetName" | "nested">) {
   const replies = flattenReplies(comment);
@@ -175,7 +173,6 @@ function CommentThreadNode({
           canLike={canLike}
           revalidatePath={revalidatePath}
           currentUserId={currentUserId}
-          isAdmin={isAdmin}
           reactionMap={reactionMap}
         />
       </ul>
@@ -192,7 +189,6 @@ function CommentThreadNode({
               canLike={canLike}
               revalidatePath={revalidatePath}
               currentUserId={currentUserId}
-              isAdmin={isAdmin}
               reactionMap={reactionMap}
               replyTargetName={getAuthorName(
                 commentsById.get(reply.parentId ?? "") ?? comment,
@@ -215,7 +211,6 @@ export function ForumCommentList({
   totalCount,
   revalidatePath = ROUTES.forum.detail(postId),
   currentUserId,
-  isAdmin = false,
   reactionMap,
 }: ForumCommentListProps) {
   if (comments.length === 0) {
@@ -244,7 +239,6 @@ export function ForumCommentList({
               canLike={canLike}
               revalidatePath={revalidatePath}
               currentUserId={currentUserId}
-              isAdmin={isAdmin}
               reactionMap={reactionMap}
             />
           </li>

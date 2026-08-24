@@ -232,3 +232,41 @@ body {
   }
 }
 
+@keyframes message-search-highlight {
+  0% {
+    background-color: transparent;
+  }
+  15% {
+    background-color: color-mix(in oklab, var(--color-muted) 85%, transparent);
+  }
+  70% {
+    background-color: color-mix(in oklab, var(--color-muted) 85%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes message-search-dim {
+  0% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-message-search-highlight {
+  animation: message-search-highlight 1s ease-in-out forwards;
+}
+
+.animate-message-search-dim {
+  animation: message-search-dim 1s ease-in-out forwards;
+}
+

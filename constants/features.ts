@@ -1,11 +1,11 @@
 export const FEATURES = {
-  marketplace: false,
+  marketplace: true,
   housing: false,
   internships: false,
   gpaCalculator: false,
   coursePlanner: false,
   notifications: true,
-  messaging: false,
+  messaging: true,
   multiSchool: false,
   /** 开学季临时展示「入学攻略」；关闭后导航与首页不再常驻该入口 */
   seasonalGuides: true,

@@ -12,7 +12,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { createCourseReview, getCourseByCode, softDeleteCourseReview } from "@/lib/db/courses";
 import { DbError } from "@/lib/db/shared";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { assertCan, isAdmin } from "@/lib/utils/permissions";
+import { assertCan } from "@/lib/utils/permissions";
 import { courseReviewSchema } from "@/lib/validations/courseReviewSchema";
 
 export type CourseReviewFormValuesState = {
@@ -213,9 +213,7 @@ export async function deleteOwnCourseReviewAction(
   }
 
   try {
-    await softDeleteCourseReview(reviewId, user.id, {
-      allowAdmin: isAdmin(user),
-    });
+    await softDeleteCourseReview(reviewId, user.id);
     revalidatePath(ROUTES.courses.detail(courseCode));
     revalidatePath(ROUTES.courses.list);
     return {};

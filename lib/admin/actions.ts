@@ -19,6 +19,7 @@ import {
   adminHideFoodPlace,
   adminSoftDeleteFoodRecommendation,
 } from "@/lib/db/food";
+import { adminHideMarketListing } from "@/lib/db/market";
 import {
   addEmailToWhitelist,
   removeUnusedWhitelistEntry,
@@ -37,6 +38,10 @@ import {
   approveArchiveAppeal,
   rejectArchiveAppealReview,
 } from "@/lib/moderation/reportWorkflow";
+import {
+  approveMessageAppeal,
+  rejectMessageAppeal,
+} from "@/lib/db/messages";
 import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { type TargetType } from "@/constants/reportReasons";
@@ -57,6 +62,7 @@ const previewSchema = z.object({
     TARGET_TYPES.course,
     TARGET_TYPES.buddy_post,
     TARGET_TYPES.profile,
+    TARGET_TYPES.message,
   ]),
   targetId: z.string().uuid(),
 });
@@ -145,7 +151,9 @@ export async function getAdminContentPreviewAction(input: {
           ? `课程评价：${snapshot.excerpt ?? "（无摘要）"}`
           : parsed.data.targetType === "food_recommendation"
             ? `美食推荐：${snapshot.excerpt ?? "（无摘要）"}`
-            : null);
+            : parsed.data.targetType === "message"
+              ? "私信消息"
+              : null);
 
     return {
       data: {
@@ -531,6 +539,30 @@ export async function adminHideFoodPlaceAction(
   }
 }
 
+export async function adminHideMarketListingAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const listingId = String(formData.get("listingId") ?? "");
+
+  if (!listingId) {
+    return { error: "无效的闲置 ID" };
+  }
+
+  try {
+    await adminHideMarketListing(listingId, admin.id);
+    revalidatePath(ROUTES.admin);
+    revalidatePath(ROUTES.market.list);
+    revalidatePath(ROUTES.market.detail(listingId));
+    return { success: "闲置已隐藏" };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "操作失败，请稍后重试",
+    };
+  }
+}
+
 export async function adminDeleteFoodRecommendationAction(
   _prevState: AdminActionState,
   formData: FormData,
@@ -659,6 +691,64 @@ export async function rejectArchiveAppealAction(
     return runAdminAction(
       () => rejectArchiveAppealReview(archiveId, admin.id, reason),
       "申诉已驳回，已通知作者",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
+}
+
+export async function approveMessageAppealAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const messageId = String(formData.get("messageId") ?? "");
+
+  if (!messageId) {
+    return { error: "无效的消息 ID" };
+  }
+
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () =>
+        approveMessageAppeal({
+          messageId,
+          adminId: admin.id,
+          reason,
+        }),
+      "私信申诉已通过，消息已恢复显示",
+    );
+  } catch (error) {
+    return {
+      error: error instanceof DbError ? error.message : "请填写审核理由",
+    };
+  }
+}
+
+export async function rejectMessageAppealAction(
+  _prevState: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const messageId = String(formData.get("messageId") ?? "");
+
+  if (!messageId) {
+    return { error: "无效的消息 ID" };
+  }
+
+  try {
+    const reason = readReviewReason(formData);
+    return runAdminAction(
+      () =>
+        rejectMessageAppeal({
+          messageId,
+          adminId: admin.id,
+          reason,
+        }),
+      "私信申诉已驳回，已通知发送者",
     );
   } catch (error) {
     return {

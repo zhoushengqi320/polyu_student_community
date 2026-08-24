@@ -8,6 +8,9 @@ import { HomeSectionShell } from "@/components/home/HomeSectionShell";
 
 export function CoreModuleGrid() {
   const showSeasonalGuides = isFeatureEnabled("seasonalGuides");
+  const permanentModules = isFeatureEnabled("marketplace")
+    ? PERMANENT_MODULES
+    : PERMANENT_MODULES.filter((module) => module.key !== "market");
 
   return (
     <div className="space-y-10">
@@ -33,10 +36,10 @@ export function CoreModuleGrid() {
 
       <HomeSectionShell
         title="核心模块"
-        description="课程评价、吃喝玩乐、学习指南、生活指南、自由讨论区（含找搭子）。"
+        description="课程评价、吃喝玩乐、学习指南、生活指南、二手市集、自由讨论区（含找搭子）。"
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PERMANENT_MODULES.map((module) => (
+          {permanentModules.map((module) => (
             <ModuleCard
               key={module.key}
               moduleKey={module.key}

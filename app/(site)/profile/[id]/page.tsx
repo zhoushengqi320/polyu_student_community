@@ -5,6 +5,7 @@ import { TagBadge } from "@/components/common/TagBadge";
 import { ProfileFavoritesSection } from "@/components/profile/ProfileFavoritesSection";
 import { ProfileWorksSection } from "@/components/profile/ProfileWorksSection";
 import { ProfileEditPanel } from "@/components/profile/ProfileEditPanel";
+import { isFeatureEnabled } from "@/constants/features";
 import { getSessionUser } from "@/lib/auth/session";
 import { getUserFavorites } from "@/lib/db/favorites";
 import { listProfileWorks } from "@/lib/db/profileWorks";
@@ -14,6 +15,7 @@ import { USER_ROLE_LABELS } from "@/constants/userRoles";
 import { getStudentGradeLabel } from "@/constants/profileOptions";
 import { formatDate } from "@/lib/utils/formatDate";
 import { buildLoginHref } from "@/lib/utils/authPrompts";
+import { can, isBanned } from "@/lib/utils/permissions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -87,9 +89,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               加入时间：{formatDate(profile.createdAt)}
             </p>
             {sessionUser && !isOwnProfile ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={ROUTES.profile(sessionUser.id)}>返回我的主页</Link>
-              </Button>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {isFeatureEnabled("messaging") &&
+                can(sessionUser, "interaction:message:send") &&
+                !isBanned(sessionUser) ? (
+                  <Button size="sm" asChild>
+                    <Link href={ROUTES.messages.withUser(profile.id)}>发私信</Link>
+                  </Button>
+                ) : null}
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={ROUTES.profile(sessionUser.id)}>返回我的主页</Link>
+                </Button>
+              </div>
             ) : null}
             {!sessionUser ? (
               <Button variant="outline" size="sm" asChild>

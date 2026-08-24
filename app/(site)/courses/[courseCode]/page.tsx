@@ -5,7 +5,6 @@ import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { getSessionUser } from "@/lib/auth/session";
 import { getCourseDetailByCode } from "@/lib/db/courses";
 import { hasReaction } from "@/lib/db/reactions";
-import { isAdmin } from "@/lib/utils/permissions";
 import { TARGET_TYPES } from "@/constants/reportReasons";
 
 type CourseDetailPageProps = {
@@ -42,7 +41,6 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
         user={user}
         isFavorited={isFavorited}
         currentUserId={user?.id ?? null}
-        isAdminUser={isAdmin(user)}
       />
     </ModulePageShell>
   );

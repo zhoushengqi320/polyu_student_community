@@ -44,8 +44,10 @@ export const TARGET_TYPES = {
   course_review: "course_review",
   food_place: "food_place",
   food_recommendation: "food_recommendation",
+  market_listing: "market_listing",
   buddy_post: "buddy_post",
   profile: "profile",
+  message: "message",
 } as const;
 
 export type TargetType = (typeof TARGET_TYPES)[keyof typeof TARGET_TYPES];

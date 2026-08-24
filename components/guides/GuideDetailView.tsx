@@ -29,7 +29,6 @@ type GuideDetailViewProps = {
   canComment: boolean;
   canFavorite: boolean;
   canLike: boolean;
-  isAdmin: boolean;
   currentUserId?: string;
   revalidatePath: string;
   commentReactionMap: Record<string, CommentReactionSummary>;
@@ -46,7 +45,6 @@ export function GuideDetailView({
   canComment,
   canFavorite,
   canLike,
-  isAdmin,
   currentUserId,
   revalidatePath,
   commentReactionMap,
@@ -152,7 +150,6 @@ export function GuideDetailView({
         canComment={canComment}
         canLike={canLike}
         currentUserId={currentUserId}
-        isAdmin={isAdmin}
         revalidatePath={revalidatePath}
         reactionMap={commentReactionMap}
       />

@@ -15,6 +15,7 @@ const viewSchema = z.object({
     "course_review",
     "food_place",
     "food_recommendation",
+    "market_listing",
     "buddy_post",
     "profile",
   ]),

@@ -59,6 +59,13 @@ function shouldNavigate(link: string | null): boolean {
   return true;
 }
 
+function interactionHint(item: Notification): string | null {
+  if (!INTERACTION_TYPES.has(item.type) || !shouldNavigate(item.link)) {
+    return null;
+  }
+  return item.body || "点击查看原帖";
+}
+
 function appealHref(item: Notification): string | null {
   if (item.link && item.link.includes("#works")) {
     return item.link;
@@ -137,6 +144,7 @@ export function NotificationList({ notifications }: NotificationListProps) {
           const expanded = expandedId === item.id;
           const showAppealCta = APPEAL_CTA_TYPES.has(item.type);
           const worksLink = appealHref(item);
+          const clickHint = interactionHint(item);
 
           return (
             <li key={item.id}>
@@ -152,7 +160,13 @@ export function NotificationList({ notifications }: NotificationListProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.body}</p>
+                    {isInteraction ? (
+                      clickHint ? (
+                        <p className="text-sm text-primary">{clickHint}</p>
+                      ) : null
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{item.body}</p>
+                    )}
                   </div>
                   {!item.readAt ? (
                     <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />

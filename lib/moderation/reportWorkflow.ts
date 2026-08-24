@@ -7,6 +7,7 @@ import {
 } from "@/constants/moderation";
 import {
   REPORT_STATUS,
+  TARGET_TYPES,
   type ReportReasonId,
   type TargetType,
 } from "@/constants/reportReasons";
@@ -284,21 +285,44 @@ export async function confirmReportViolation(
   const notifications = [];
 
   if (ownerId) {
-    notifications.push({
-      userId: ownerId,
-      type: NOTIFICATION_TYPES.contentRemoved,
-      title: "您的内容因违规已下架",
-      body: `经管理员审核，${targetLabel}已下架并进入封存库。您可在 ${ARCHIVE_APPEAL_DAYS} 天内于「我的作品」提交申诉说明。`,
-      link: profileWorksLink(ownerId),
-      metadata: {
-        targetType: report.target_type,
-        targetId: report.target_id,
-        reportId,
-        archived: true,
-        appealDays: ARCHIVE_APPEAL_DAYS,
-        canAppeal: true,
-      },
-    });
+    if (report.target_type === TARGET_TYPES.message) {
+      const conversationId =
+        typeof snapshot?.raw?.conversation_id === "string"
+          ? snapshot.raw.conversation_id
+          : null;
+      notifications.push({
+        userId: ownerId,
+        type: NOTIFICATION_TYPES.contentRemoved,
+        title: "您的私信因违规已被处理",
+        body: "经管理员审核，您发送的私信已被隐藏。如对处理有异议，可在会话中该消息旁点击问号提交申诉。",
+        link: conversationId
+          ? ROUTES.messages.conversation(conversationId)
+          : ROUTES.messages.list,
+        metadata: {
+          targetType: report.target_type,
+          targetId: report.target_id,
+          reportId,
+          canAppeal: true,
+          appealInConversation: true,
+        },
+      });
+    } else {
+      notifications.push({
+        userId: ownerId,
+        type: NOTIFICATION_TYPES.contentRemoved,
+        title: "您的内容因违规已下架",
+        body: `经管理员审核，${targetLabel}已下架并进入封存库。您可在 ${ARCHIVE_APPEAL_DAYS} 天内于「我的作品」提交申诉说明。`,
+        link: profileWorksLink(ownerId),
+        metadata: {
+          targetType: report.target_type,
+          targetId: report.target_id,
+          reportId,
+          archived: true,
+          appealDays: ARCHIVE_APPEAL_DAYS,
+          canAppeal: true,
+        },
+      });
+    }
   }
 
   for (const reporterId of reporterIds) {

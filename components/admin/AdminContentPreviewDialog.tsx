@@ -7,7 +7,7 @@ import {
 } from "@/lib/admin/actions";
 import { RichContent } from "@/components/common/RichContent";
 import { TARGET_TYPE_LABELS } from "@/constants/admin";
-import { type TargetType } from "@/constants/reportReasons";
+import { TARGET_TYPES, type TargetType } from "@/constants/reportReasons";
 import { formatDate } from "@/lib/utils/formatDate";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,13 +151,19 @@ export function AdminContentPreviewDialog({
               <p className="text-muted-foreground">（无正文）</p>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <EngagementList title="点赞用户" users={preview.likeUsers} />
-              <EngagementList title="收藏用户" users={preview.favoriteUsers} />
-              <div className="sm:col-span-2">
-                <EngagementList title="浏览用户" users={preview.viewUsers} />
+            {preview.targetType === TARGET_TYPES.message ? (
+              <p className="text-xs text-muted-foreground">
+                若举报人勾选了附带上下文，请在举报列表的「说明」列查看完整记录。
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <EngagementList title="点赞用户" users={preview.likeUsers} />
+                <EngagementList title="收藏用户" users={preview.favoriteUsers} />
+                <div className="sm:col-span-2">
+                  <EngagementList title="浏览用户" users={preview.viewUsers} />
+                </div>
               </div>
-            </div>
+            )}
 
             <p className="text-xs text-muted-foreground">
               ID: {preview.targetId}

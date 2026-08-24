@@ -6,6 +6,7 @@ export const MODULE_ICON_NAMES = [
   "UtensilsCrossed",
   "NotebookPen",
   "House",
+  "ShoppingBag",
   "MessageSquare",
   "CircleHelp",
 ] as const;
@@ -56,6 +57,14 @@ export const MODULE_REGISTRY = {
     requiresVerification: true,
     icon: "House",
   },
+  market: {
+    key: "market" as const,
+    route: "/market",
+    label: "二手市集",
+    description: "教材、电子、家具等校园闲置转让与求购信息",
+    requiresVerification: true,
+    icon: "ShoppingBag",
+  },
   forum: {
     key: "forum" as const,
     route: "/forum",
@@ -84,13 +93,17 @@ export const MODULE_REGISTRY = {
 } as const satisfies Record<ModuleKey, ModuleConfig>;
 
 /** 常驻模块（导航与首页主网格），不含开学季临时板块 */
-export const PERMANENT_MODULES = [
+const BASE_PERMANENT_MODULES = [
   MODULE_REGISTRY.courses,
   MODULE_REGISTRY.food,
   MODULE_REGISTRY.study,
   MODULE_REGISTRY.life,
+  MODULE_REGISTRY.market,
   MODULE_REGISTRY.forum,
 ] as const;
+
+/** 常驻模块；二手市集可由 FEATURES.marketplace 关闭 */
+export const PERMANENT_MODULES = BASE_PERMANENT_MODULES;
 
 /** 开学季临时板块；默认置于导航最右侧 */
 export const SEASONAL_MODULES = [MODULE_REGISTRY.guides] as const;

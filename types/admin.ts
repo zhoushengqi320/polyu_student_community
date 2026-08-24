@@ -7,6 +7,7 @@ import {
   type ReportWithReporter,
 } from "@/types/report";
 import { type ProfileListItem } from "@/types/user";
+import { type MessageAppealListItem } from "@/types/message";
 import { type UserActivitySnapshot } from "@/types/userActivity";
 import { type UserRole, type UserStatus } from "@/constants/userRoles";
 
@@ -16,6 +17,7 @@ export type AdminStats = {
   pendingReportCount: number;
   pendingProfileReviewCount: number;
   pendingArchiveAppealCount: number;
+  pendingMessageAppealCount: number;
   postCount: number;
 };
 
@@ -117,6 +119,7 @@ export type AdminDashboardData = {
   reports: ReportWithReporter[];
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
+  marketListings: import("@/types/market").MarketListingWithAuthor[];
   courseReviews: AdminCourseReviewListItem[];
   courses: CourseWithStats[];
   guides: AdminGuideDetail[];
@@ -130,6 +133,7 @@ export type AdminDashboardData = {
   adminActionsQuery?: string;
   contentArchives?: ContentArchiveRow[];
   pendingArchiveAppeals?: ContentArchiveRow[];
+  pendingMessageAppeals?: MessageAppealListItem[];
   expiredArchiveCount?: number;
   emailWhitelist?: import("@/lib/db/emailWhitelist").EmailWhitelistRow[];
   isDatabaseConfigured: boolean;

@@ -49,7 +49,10 @@ export async function uploadUserImageAction(
 
   const moduleRaw = String(formData.get("module") ?? "");
   const uploadModule: UserUploadModule | null =
-    moduleRaw === "feedback" || moduleRaw === "forum" || moduleRaw === "food"
+    moduleRaw === "feedback" ||
+    moduleRaw === "forum" ||
+    moduleRaw === "food" ||
+    moduleRaw === "market"
       ? moduleRaw
       : null;
 
@@ -62,6 +65,8 @@ export async function uploadUserImageAction(
       assertCan(user, "content:create:feedback");
     } else if (uploadModule === "forum") {
       assertCan(user, "content:create:forum");
+    } else if (uploadModule === "market") {
+      assertCan(user, "content:create:market");
     } else {
       assertCan(user, "content:create:food");
     }

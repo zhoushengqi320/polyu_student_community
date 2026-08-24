@@ -13,6 +13,11 @@ export const ROUTES = {
   onboarding: "/onboarding",
   profile: (id: string) => `/profile/${id}`,
   notifications: "/notifications",
+  messages: {
+    list: "/messages",
+    conversation: (id: string) => `/messages/${id}`,
+    withUser: (userId: string) => `/messages?user=${userId}`,
+  },
   admin: "/admin",
   adminCourses: (params?: { editCourseId?: string }) => {
     const search = new URLSearchParams({ tab: "courses" });
@@ -54,6 +59,12 @@ export const ROUTES = {
     list: MODULE_REGISTRY.life.route,
     detail: (id: string) => `/life/${id}`,
   },
+  market: {
+    list: MODULE_REGISTRY.market.route,
+    detail: (id: string) => `/market/${id}`,
+    new: `${MODULE_REGISTRY.market.route}/new`,
+    edit: (id: string) => `/market/${id}/edit`,
+  },
   forum: {
     list: MODULE_REGISTRY.forum.route,
     detail: (id: string) => `/forum/${id}`,
@@ -72,9 +83,15 @@ export const ROUTES = {
 } as const;
 
 /** 顶栏 / 移动端导航：常驻模块 +（可选）开学季临时板块置右 */
-export const NAV_ITEMS = isFeatureEnabled("seasonalGuides")
-  ? [...PERMANENT_MODULES, ...SEASONAL_MODULES]
-  : [...PERMANENT_MODULES];
+export const NAV_ITEMS = (() => {
+  const permanent = isFeatureEnabled("marketplace")
+    ? [...PERMANENT_MODULES]
+    : PERMANENT_MODULES.filter((module) => module.key !== "market");
+
+  return isFeatureEnabled("seasonalGuides")
+    ? [...permanent, ...SEASONAL_MODULES]
+    : permanent;
+})();
 
 export const AUTH_NAV_ITEMS = [
   { label: "理大邮箱登录", href: ROUTES.login },

@@ -27,7 +27,6 @@ type CourseDetailViewProps = {
   user: SessionUser | null;
   isFavorited: boolean;
   currentUserId?: string | null;
-  isAdminUser?: boolean;
 };
 
 export function CourseDetailView({
@@ -35,7 +34,6 @@ export function CourseDetailView({
   user,
   isFavorited,
   currentUserId = null,
-  isAdminUser = false,
 }: CourseDetailViewProps) {
   const displayCode = normalizeDisplayCode(course.code);
   const displayName = normalizeDisplayName(course.name, course.code);
@@ -100,7 +98,6 @@ export function CourseDetailView({
                 course={course}
                 isLoggedIn={isLoggedIn}
                 currentUserId={currentUserId}
-                isAdminUser={isAdminUser}
               />
             ),
           },

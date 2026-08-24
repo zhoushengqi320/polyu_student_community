@@ -11,6 +11,6 @@ export const USER_UPLOAD_ALLOWED_MIME = [
   "image/gif",
 ] as const;
 
-export type UserUploadModule = "feedback" | "forum" | "food";
+export type UserUploadModule = "feedback" | "forum" | "food" | "market";
 
 export type UserUploadStatus = "pending" | "attached" | "deleted";

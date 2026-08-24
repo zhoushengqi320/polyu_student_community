@@ -2,14 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
-import { adminDeleteForumComment } from "@/lib/db/admin";
 import { softDeleteComment } from "@/lib/db/comments";
 import { toggleReaction, type ReactionType } from "@/lib/db/reactions";
 import { getContentOwnerId } from "@/lib/db/moderation";
 import { notifyContentInteraction } from "@/lib/notifications/interactionNotifications";
 import { createReport } from "@/lib/db/reports";
 import { reportSchema } from "@/lib/validations/reportSchema";
-import { assertCan, isAdmin, isBanned } from "@/lib/utils/permissions";
+import { assertCan, isBanned } from "@/lib/utils/permissions";
 import { safeRevalidatePath } from "@/lib/utils/safeRevalidatePath";
 import { type TargetType, type ReportReasonId } from "@/constants/reportReasons";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -184,20 +183,12 @@ export async function deleteCommentAction(
   }
 
   try {
-    if (isAdmin(user)) {
-      await adminDeleteForumComment(
-        commentId,
-        user.id,
-        "管理员于前台删除评论",
-      );
-    } else {
-      try {
-        assertCan(user, "interaction:comment");
-      } catch {
-        return { error: "当前账号无法删除评论" };
-      }
-      await softDeleteComment(commentId, user.id);
+    try {
+      assertCan(user, "interaction:comment");
+    } catch {
+      return { error: "当前账号无法删除评论" };
     }
+    await softDeleteComment(commentId, user.id);
 
     revalidatePath(revalidatePathValue);
     return { success: "评论已删除" };

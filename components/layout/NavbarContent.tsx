@@ -7,6 +7,7 @@ import { SiteLogo } from "@/components/brand/SiteLogo";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { MessageInboxIcon } from "@/components/messages/MessageInboxIcon";
 import { isFeatureEnabled } from "@/constants/features";
 import { AUTH_NAV_ITEMS, NAV_ITEMS, ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { type SessionUser } from "@/types/user";
 type NavbarContentProps = {
   user: SessionUser | null;
   unreadNotificationCount?: number;
+  unreadMessageCount?: number;
   unreadFeedbackCount?: number;
 };
 
@@ -26,6 +28,7 @@ const NAV_LINK_CLASS =
 export function NavbarContent({
   user,
   unreadNotificationCount = 0,
+  unreadMessageCount = 0,
   unreadFeedbackCount = 0,
 }: NavbarContentProps) {
   return (
@@ -92,6 +95,12 @@ export function NavbarContent({
                     className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   />
                 ) : null}
+                {isFeatureEnabled("messaging") ? (
+                  <MessageInboxIcon
+                    unreadCount={unreadMessageCount}
+                    className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  />
+                ) : null}
                 <UserMenu
                   user={user}
                   variant="header"
@@ -128,6 +137,12 @@ export function NavbarContent({
             {user && isFeatureEnabled("notifications") ? (
               <NotificationBell
                 unreadCount={unreadNotificationCount}
+                className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              />
+            ) : null}
+            {user && isFeatureEnabled("messaging") ? (
+              <MessageInboxIcon
+                unreadCount={unreadMessageCount}
                 className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
               />
             ) : null}

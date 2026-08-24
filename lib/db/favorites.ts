@@ -5,10 +5,15 @@ import {
   mapForumPostListItem,
   type ForumPostWithProfileRow,
 } from "@/lib/db/mappers/forum";
+import {
+  mapMarketListing,
+  type MarketListingRow,
+} from "@/lib/db/mappers/market";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { type Course } from "@/types/course";
 import { type FoodPlace } from "@/types/food";
+import { type MarketListing } from "@/types/market";
 
 export type FavoriteCourseItem = {
   favoritedAt: string;
@@ -32,10 +37,19 @@ export type FavoriteForumPostItem = {
   };
 };
 
+export type FavoriteMarketListingItem = {
+  favoritedAt: string;
+  listing: Pick<
+    MarketListing,
+    "id" | "title" | "priceHkd" | "listingStatus"
+  >;
+};
+
 export type UserFavorites = {
   courses: FavoriteCourseItem[];
   foodPlaces: FavoriteFoodPlaceItem[];
   forumPosts: FavoriteForumPostItem[];
+  marketListings: FavoriteMarketListingItem[];
 };
 
 type ReactionRow = {
@@ -46,7 +60,12 @@ type ReactionRow = {
 
 export async function getUserFavorites(userId: string): Promise<UserFavorites> {
   if (!isSupabaseConfigured()) {
-    return { courses: [], foodPlaces: [], forumPosts: [] };
+    return {
+      courses: [],
+      foodPlaces: [],
+      forumPosts: [],
+      marketListings: [],
+    };
   }
 
   const supabase = await createClient();
@@ -59,12 +78,18 @@ export async function getUserFavorites(userId: string): Promise<UserFavorites> {
       TARGET_TYPES.course,
       TARGET_TYPES.food_place,
       TARGET_TYPES.post,
+      TARGET_TYPES.market_listing,
     ])
     .order("created_at", { ascending: false });
 
   if (error || !data) {
     console.error("Failed to list user favorites:", error);
-    return { courses: [], foodPlaces: [], forumPosts: [] };
+    return {
+      courses: [],
+      foodPlaces: [],
+      forumPosts: [],
+      marketListings: [],
+    };
   }
 
   const rows = data as ReactionRow[];
@@ -77,35 +102,49 @@ export async function getUserFavorites(userId: string): Promise<UserFavorites> {
   const postIds = rows
     .filter((row) => row.target_type === TARGET_TYPES.post)
     .map((row) => row.target_id);
+  const marketIds = rows
+    .filter((row) => row.target_type === TARGET_TYPES.market_listing)
+    .map((row) => row.target_id);
 
   const favoritedAtById = new Map(
     rows.map((row) => [row.target_id, row.created_at]),
   );
 
-  const [coursesResult, foodResult, postsResult] = await Promise.all([
-    courseIds.length > 0
-      ? supabase
-          .from("courses")
-          .select("id, code, name, department")
-          .in("id", courseIds)
-      : Promise.resolve({ data: [], error: null }),
-    foodIds.length > 0
-      ? supabase
-          .from("food_places")
-          .select("id, name, area, address, tags, status, created_at, updated_at")
-          .in("id", foodIds)
-          .eq("status", CONTENT_STATUS.published)
-      : Promise.resolve({ data: [], error: null }),
-    postIds.length > 0
-      ? supabase
-          .from("posts")
-          .select("*, profiles(*)")
-          .in("id", postIds)
-          .eq("module", "forum")
-          .eq("status", CONTENT_STATUS.published)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  const [coursesResult, foodResult, postsResult, marketResult] =
+    await Promise.all([
+      courseIds.length > 0
+        ? supabase
+            .from("courses")
+            .select("id, code, name, department")
+            .in("id", courseIds)
+        : Promise.resolve({ data: [], error: null }),
+      foodIds.length > 0
+        ? supabase
+            .from("food_places")
+            .select(
+              "id, name, area, address, tags, status, created_at, updated_at",
+            )
+            .in("id", foodIds)
+            .eq("status", CONTENT_STATUS.published)
+        : Promise.resolve({ data: [], error: null }),
+      postIds.length > 0
+        ? supabase
+            .from("posts")
+            .select("*, profiles(*)")
+            .in("id", postIds)
+            .eq("module", "forum")
+            .eq("status", CONTENT_STATUS.published)
+            .is("deleted_at", null)
+        : Promise.resolve({ data: [], error: null }),
+      marketIds.length > 0
+        ? supabase
+            .from("marketplace_listings")
+            .select("*")
+            .in("id", marketIds)
+            .eq("status", CONTENT_STATUS.published)
+            .is("deleted_at", null)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
   if (coursesResult.error) {
     console.error("Failed to load favorite courses:", coursesResult.error);
@@ -115,6 +154,12 @@ export async function getUserFavorites(userId: string): Promise<UserFavorites> {
   }
   if (postsResult.error) {
     console.error("Failed to load favorite forum posts:", postsResult.error);
+  }
+  if (marketResult.error) {
+    console.error(
+      "Failed to load favorite market listings:",
+      marketResult.error,
+    );
   }
 
   const courseById = new Map(
@@ -134,6 +179,12 @@ export async function getUserFavorites(userId: string): Promise<UserFavorites> {
     ((postsResult.data ?? []) as ForumPostWithProfileRow[]).map((row) => [
       row.id,
       mapForumPostListItem(row),
+    ]),
+  );
+  const marketById = new Map(
+    ((marketResult.data ?? []) as MarketListingRow[]).map((row) => [
+      row.id,
+      mapMarketListing(row),
     ]),
   );
 
@@ -185,5 +236,20 @@ export async function getUserFavorites(userId: string): Promise<UserFavorites> {
     });
   }
 
-  return { courses, foodPlaces, forumPosts };
+  const marketListings: FavoriteMarketListingItem[] = [];
+  for (const id of marketIds) {
+    const listing = marketById.get(id);
+    if (!listing) continue;
+    marketListings.push({
+      favoritedAt: favoritedAtById.get(id) ?? new Date(0).toISOString(),
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        priceHkd: listing.priceHkd,
+        listingStatus: listing.listingStatus,
+      },
+    });
+  }
+
+  return { courses, foodPlaces, forumPosts, marketListings };
 }

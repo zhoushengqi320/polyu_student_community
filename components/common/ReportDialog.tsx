@@ -80,8 +80,10 @@ export function ReportDialog({
     [TARGET_TYPES.course_review]: "课程评价",
     [TARGET_TYPES.food_place]: "地点",
     [TARGET_TYPES.food_recommendation]: "推荐",
+    [TARGET_TYPES.market_listing]: "闲置",
     [TARGET_TYPES.buddy_post]: "找搭子内容",
     [TARGET_TYPES.profile]: "用户资料",
+    [TARGET_TYPES.message]: "私信",
   };
   const targetLabel = targetLabelMap[targetType];
 

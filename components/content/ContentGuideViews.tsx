@@ -71,7 +71,6 @@ type ContentGuideDetailViewProps = {
   canLike: boolean;
   canFavorite: boolean;
   canComment: boolean;
-  isAdmin: boolean;
   currentUserId?: string;
   revalidatePath: string;
   commentReactionMap: Record<string, CommentReactionSummary>;
@@ -90,7 +89,6 @@ export function ContentGuideDetailView({
   canLike,
   canFavorite,
   canComment,
-  isAdmin,
   currentUserId,
   revalidatePath,
   commentReactionMap,
@@ -158,7 +156,6 @@ export function ContentGuideDetailView({
         canComment={canComment}
         canLike={canLike}
         currentUserId={currentUserId}
-        isAdmin={isAdmin}
         revalidatePath={revalidatePath}
         reactionMap={commentReactionMap}
       />

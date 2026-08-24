@@ -10,12 +10,17 @@ import {
 } from "@/components/ui/card";
 import { getDepartmentCode } from "@/constants/courseOptions";
 import { FOOD_AREAS } from "@/constants/categories";
+import {
+  formatMarketPrice,
+  getMarketListingStatusLabel,
+} from "@/constants/marketOptions";
 import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
 import {
   type FavoriteCourseItem,
   type FavoriteFoodPlaceItem,
   type FavoriteForumPostItem,
+  type FavoriteMarketListingItem,
   type UserFavorites,
 } from "@/lib/db/favorites";
 
@@ -105,20 +110,44 @@ function FavoriteForumPostRow({ item }: { item: FavoriteForumPostItem }) {
   );
 }
 
+function FavoriteMarketRow({ item }: { item: FavoriteMarketListingItem }) {
+  return (
+    <Link
+      href={ROUTES.market.detail(item.listing.id)}
+      className="block rounded-lg border px-4 py-3 transition-colors hover:bg-muted/40"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p className="font-medium">{item.listing.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {formatMarketPrice(item.listing.priceHkd)}
+            {" · "}
+            {getMarketListingStatusLabel(item.listing.listingStatus)}
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {formatRelativeTime(item.favoritedAt)}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 export function ProfileFavoritesSection({
   favorites,
 }: ProfileFavoritesSectionProps) {
   const isEmpty =
     favorites.courses.length === 0 &&
     favorites.foodPlaces.length === 0 &&
-    favorites.forumPosts.length === 0;
+    favorites.forumPosts.length === 0 &&
+    favorites.marketListings.length === 0;
 
   return (
     <Card id="favorites" className="scroll-mt-24">
       <CardHeader>
         <CardTitle>我的收藏</CardTitle>
         <CardDescription>
-          仅自己可见。可从自由讨论区、课程评价、吃喝玩乐页面添加收藏。
+          仅自己可见。可从自由讨论区、课程评价、吃喝玩乐、二手市集页面添加收藏。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -126,7 +155,7 @@ export function ProfileFavoritesSection({
           <EmptyState
             icon={Bookmark}
             title="还没有收藏"
-            description="去自由讨论区、课程评价或吃喝玩乐逛逛，点收藏后会显示在这里。"
+            description="去自由讨论区、课程评价、吃喝玩乐或二手市集逛逛，点收藏后会显示在这里。"
             action={
               <div className="flex flex-wrap justify-center gap-2">
                 <Link
@@ -148,6 +177,13 @@ export function ProfileFavoritesSection({
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   吃喝玩乐
+                </Link>
+                <span className="text-sm text-muted-foreground">·</span>
+                <Link
+                  href={ROUTES.market.list}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  二手市集
                 </Link>
               </div>
             }
@@ -194,6 +230,21 @@ export function ProfileFavoritesSection({
                 <div className="space-y-2">
                   {favorites.foodPlaces.map((item) => (
                     <FavoriteFoodRow key={item.place.id} item={item} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                二手市集（{favorites.marketListings.length}）
+              </h3>
+              {favorites.marketListings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">暂无收藏闲置</p>
+              ) : (
+                <div className="space-y-2">
+                  {favorites.marketListings.map((item) => (
+                    <FavoriteMarketRow key={item.listing.id} item={item} />
                   ))}
                 </div>
               )}

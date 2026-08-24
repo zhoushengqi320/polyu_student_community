@@ -8,12 +8,15 @@ export type Permission =
   | "interaction:like"
   | "interaction:favorite"
   | "interaction:comment"
+  | "interaction:message:send"
+  | "interaction:message:view"
   | "content:create:forum"
   | "content:create:guide"
   | "content:create:study"
   | "content:create:life"
   | "content:create:course_review"
   | "content:create:food"
+  | "content:create:market"
   | "content:create:feedback"
   | "admin:access"
   | "admin:manage_users"
@@ -37,7 +40,10 @@ const ROLE_PERMISSIONS: Record<
     "interaction:like",
     "interaction:favorite",
     "interaction:comment",
+    "interaction:message:send",
+    "interaction:message:view",
     "content:create:food",
+    "content:create:market",
     "content:create:forum",
     "content:create:guide",
     "content:create:study",
@@ -50,7 +56,10 @@ const ROLE_PERMISSIONS: Record<
     "interaction:like",
     "interaction:favorite",
     "interaction:comment",
+    "interaction:message:send",
+    "interaction:message:view",
     "content:create:food",
+    "content:create:market",
     "content:create:forum",
     "content:create:guide",
     "content:create:study",
@@ -70,6 +79,7 @@ const MODULE_CREATE_PERMISSION: Partial<Record<ModuleKey, Permission>> = {
   study: "content:create:study",
   life: "content:create:life",
   food: "content:create:food",
+  market: "content:create:market",
   forum: "content:create:forum",
   feedback: "content:create:feedback",
 };
@@ -168,7 +178,7 @@ export function canManageOwnContent(
   user: SessionUser | null,
   ownerId: string,
 ): boolean {
-  return Boolean(user && (user.id === ownerId || isAdmin(user)));
+  return Boolean(user && user.id === ownerId);
 }
 
 export function isBanned(user: SessionUser | null): boolean {

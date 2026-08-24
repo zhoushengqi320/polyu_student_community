@@ -9,14 +9,12 @@ type CourseReviewsProps = {
   course: CourseDetail;
   isLoggedIn: boolean;
   currentUserId?: string | null;
-  isAdminUser?: boolean;
 };
 
 export function CourseReviews({
   course,
   isLoggedIn,
   currentUserId = null,
-  isAdminUser = false,
 }: CourseReviewsProps) {
   return (
     <section className="space-y-4">
@@ -37,10 +35,7 @@ export function CourseReviews({
               review={review}
               courseCode={course.code}
               isLoggedIn={isLoggedIn}
-              canManage={
-                Boolean(currentUserId && currentUserId === review.userId) ||
-                isAdminUser
-              }
+              canManage={Boolean(currentUserId && currentUserId === review.userId)}
               currentUserId={currentUserId}
             />
           ))}

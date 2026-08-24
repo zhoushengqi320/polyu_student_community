@@ -13,6 +13,7 @@ const APPEALABLE_TARGET_TYPES = [
   TARGET_TYPES.course_review,
   TARGET_TYPES.food_place,
   TARGET_TYPES.food_recommendation,
+  TARGET_TYPES.market_listing,
 ] as const;
 
 const appealSchema = z.object({

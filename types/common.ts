@@ -3,6 +3,7 @@ export type ModuleKey =
   | "food"
   | "study"
   | "life"
+  | "market"
   | "forum"
   | "guides"
   | "feedback";

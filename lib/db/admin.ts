@@ -11,6 +11,7 @@ import { computeActivityForUsers } from "@/lib/db/userActivity";
 import { mapAdminUserListItem } from "@/lib/db/mappers/admin";
 import { mapProfileListItemOrFallback, type ProfileRow } from "@/lib/db/mappers/profile";
 import { getContentSnapshot } from "@/lib/db/moderation";
+import { countPendingMessageAppeals } from "@/lib/db/messages";
 import { createAdminAction, logAdminAction, resolveReportsForTarget } from "@/lib/db/reports";
 import { createNotification } from "@/lib/db/notifications";
 import { NOTIFICATION_TYPES } from "@/constants/moderation";
@@ -38,6 +39,7 @@ const EMPTY_STATS: AdminStats = {
   pendingReportCount: 0,
   pendingProfileReviewCount: 0,
   pendingArchiveAppealCount: 0,
+  pendingMessageAppealCount: 0,
   postCount: 0,
 };
 
@@ -58,6 +60,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     { count: pendingProfileReviewCount },
     { count: pendingArchiveAppealCount },
     { count: postCount },
+    pendingMessageAppealCount,
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase
@@ -83,6 +86,7 @@ export async function getAdminStats(): Promise<AdminStats> {
       .select("*", { count: "exact", head: true })
       .eq("status", CONTENT_STATUS.published)
       .is("deleted_at", null),
+    countPendingMessageAppeals(),
   ]);
 
   return {
@@ -91,6 +95,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     pendingReportCount: pendingReportCount ?? 0,
     pendingProfileReviewCount: pendingProfileReviewCount ?? 0,
     pendingArchiveAppealCount: pendingArchiveAppealCount ?? 0,
+    pendingMessageAppealCount,
     postCount: postCount ?? 0,
   };
 }

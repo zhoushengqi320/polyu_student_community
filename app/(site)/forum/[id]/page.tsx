@@ -18,7 +18,7 @@ import {
 import { getReactionSummariesForTargets, hasReaction } from "@/lib/db/reactions";
 import { ROUTES } from "@/constants/routes";
 import { TARGET_TYPES } from "@/constants/reportReasons";
-import { can, canManageOwnContent, isAdmin } from "@/lib/utils/permissions";
+import { can, canManageOwnContent } from "@/lib/utils/permissions";
 import { getVisitorId } from "@/lib/guest/visitorId";
 
 type ForumDetailPageProps = {
@@ -123,7 +123,6 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
             canLike={canLikeComments}
             totalCount={totalCommentCount}
             currentUserId={user?.id ?? null}
-            isAdmin={isAdmin(user)}
             reactionMap={reactionMap}
           />
         </section>

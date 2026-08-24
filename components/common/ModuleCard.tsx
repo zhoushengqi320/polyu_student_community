@@ -6,6 +6,7 @@ import {
   House,
   MessageSquare,
   NotebookPen,
+  ShoppingBag,
   UtensilsCrossed,
 } from "lucide-react";
 import { type ModuleIconName } from "@/constants/modules";
@@ -25,6 +26,7 @@ const MODULE_ICONS = {
   UtensilsCrossed,
   NotebookPen,
   House,
+  ShoppingBag,
   MessageSquare,
   CircleHelp,
 } as const satisfies Record<ModuleIconName, typeof BookOpen>;

@@ -21,6 +21,8 @@ import {
   syncAnnouncementLifecycle,
 } from "@/lib/db/announcements";
 import { getReports } from "@/lib/db/reports";
+import { listMarketListingsForAdmin } from "@/lib/db/market";
+import { listPendingMessageAppeals } from "@/lib/db/messages";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { resolveAdminTab, type AdminTabId } from "@/constants/admin";
 import { type AdminDashboardData } from "@/types/admin";
@@ -32,6 +34,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
     pendingReportCount: 0,
     pendingProfileReviewCount: 0,
     pendingArchiveAppealCount: 0,
+    pendingMessageAppealCount: 0,
     postCount: 0,
   },
   users: [],
@@ -39,6 +42,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   reports: [],
   forumPosts: [],
   forumComments: [],
+  marketListings: [],
   courseReviews: [],
   courses: [],
   guides: [],
@@ -48,6 +52,7 @@ const EMPTY_DASHBOARD: AdminDashboardData = {
   adminActions: [],
   contentArchives: [],
   pendingArchiveAppeals: [],
+  pendingMessageAppeals: [],
   expiredArchiveCount: 0,
   emailWhitelist: [],
   isDatabaseConfigured: false,
@@ -64,8 +69,13 @@ async function loadTabData(
   switch (tab) {
     case "overview":
       return {};
-    case "reports":
-      return { reports: await getReports({ pageSize: 100 }) };
+    case "reports": {
+      const [reports, pendingMessageAppeals] = await Promise.all([
+        getReports({ pageSize: 100 }),
+        listPendingMessageAppeals(100),
+      ]);
+      return { reports, pendingMessageAppeals };
+    }
     case "archives": {
       const expiredArchiveCount = await expireDueArchives();
       const [contentArchives, pendingArchiveAppeals] = await Promise.all([
@@ -77,11 +87,12 @@ async function loadTabData(
     case "profile-reviews":
       return { profileReviews: await listPendingProfileReviews(100) };
     case "content": {
-      const [forumPosts, forumComments] = await Promise.all([
+      const [forumPosts, forumComments, marketListings] = await Promise.all([
         getAllForumPosts({ pageSize: 100 }),
         getAllForumComments({ pageSize: 100 }),
+        listMarketListingsForAdmin(100),
       ]);
-      return { forumPosts, forumComments };
+      return { forumPosts, forumComments, marketListings };
     }
     case "courses":
       return { courseReviews: await getAllCourseReviews({ pageSize: 100 }) };

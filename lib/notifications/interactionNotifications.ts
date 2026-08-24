@@ -5,6 +5,22 @@ import { createNotification } from "@/lib/db/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
+async function getActorDisplayName(actorUserId: string): Promise<string> {
+  if (!isSupabaseConfigured()) {
+    return "某位同学";
+  }
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("display_name, username")
+    .eq("id", actorUserId)
+    .maybeSingle();
+
+  const name = data?.display_name?.trim() || data?.username?.trim();
+  return name || "某位同学";
+}
+
 async function getPostDetailLink(postId: string): Promise<string | null> {
   if (!isSupabaseConfigured()) {
     return null;
@@ -94,6 +110,10 @@ async function resolveTargetLink(
     return ROUTES.food.detail(String(data.place_id));
   }
 
+  if (targetType === TARGET_TYPES.market_listing) {
+    return ROUTES.market.detail(targetId);
+  }
+
   return null;
 }
 
@@ -109,19 +129,20 @@ export async function notifyContentInteraction(input: {
   }
 
   const link = await resolveTargetLink(input.targetType, input.targetId);
+  const actorName = await getActorDisplayName(input.actorUserId);
 
   const titles: Record<typeof input.kind, string> = {
-    like: "收到新的点赞",
-    favorite: "收到新的收藏",
-    comment: "收到新的评论",
-    reply: "收到新的回复",
+    like: `${actorName}点赞了你的内容`,
+    favorite: `${actorName}收藏了你的内容`,
+    comment: `${actorName}评论了你的内容`,
+    reply: `${actorName}回复了你的评论`,
   };
 
   const bodies: Record<typeof input.kind, string> = {
-    like: "有人赞了你的内容，点击查看详情。",
-    favorite: "有人收藏了你的内容，点击查看详情。",
-    comment: "有人评论了你的内容，点击查看详情。",
-    reply: "有人回复了你的评论，点击查看详情。",
+    like: "点击查看原帖",
+    favorite: "点击查看原帖",
+    comment: "点击查看原帖",
+    reply: "点击查看原帖",
   };
 
   const types: Record<typeof input.kind, NotificationType> = {
@@ -141,6 +162,7 @@ export async function notifyContentInteraction(input: {
       targetType: input.targetType,
       targetId: input.targetId,
       actorUserId: input.actorUserId,
+      actorDisplayName: actorName,
     },
   });
 }

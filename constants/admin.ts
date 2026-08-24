@@ -61,8 +61,10 @@ export const TARGET_TYPE_LABELS: Record<
   course_review: "课程评价",
   food_place: "吃喝玩乐地点",
   food_recommendation: "吃喝玩乐推荐",
+  market_listing: "二手市集闲置",
   buddy_post: "找搭子帖",
   profile: "用户资料",
+  message: "私信消息",
 };
 
 export const ADMIN_ACTION_LABELS: Record<string, string> = {
@@ -77,6 +79,7 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   delete_course_review: "删除课程评价",
   hide_food_place: "隐藏吃喝玩乐地点",
   delete_food_recommendation: "删除吃喝玩乐推荐",
+  hide_market_listing: "隐藏二手市集闲置",
   create_course: "创建课程",
   update_course: "更新课程",
   delete_course: "删除课程",
@@ -109,6 +112,8 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   archive_appeal_submitted: "作者提交封存申诉",
   archive_appeal_approved: "通过封存申诉",
   archive_appeal_rejected: "驳回封存申诉",
+  approve_message_appeal: "通过私信申诉",
+  reject_message_appeal: "驳回私信申诉",
   archive_expired_permanent: "封存逾期永久删除",
 };
 

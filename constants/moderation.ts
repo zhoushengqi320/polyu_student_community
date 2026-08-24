@@ -35,6 +35,10 @@ export const NOTIFICATION_TYPES = {
   contentCommented: "content_commented",
   contentReplied: "content_replied",
   profileRejected: "profile_rejected",
+  directMessage: "direct_message",
+  messageAppealPending: "message_appeal_pending",
+  messageAppealApproved: "message_appeal_approved",
+  messageAppealRejected: "message_appeal_rejected",
 } as const;
 
 export type NotificationType =

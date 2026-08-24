@@ -10,7 +10,6 @@ type GuideCommentSectionProps = {
   canComment: boolean;
   canLike: boolean;
   currentUserId?: string;
-  isAdmin: boolean;
   revalidatePath: string;
   reactionMap: Record<string, CommentReactionSummary>;
 };
@@ -23,7 +22,6 @@ export function GuideCommentSection({
   canComment,
   canLike,
   currentUserId,
-  isAdmin,
   revalidatePath,
   reactionMap,
 }: GuideCommentSectionProps) {
@@ -45,7 +43,6 @@ export function GuideCommentSection({
         totalCount={totalCommentCount}
         revalidatePath={revalidatePath}
         currentUserId={currentUserId}
-        isAdmin={isAdmin}
         reactionMap={reactionMap}
       />
     </section>

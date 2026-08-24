@@ -13,6 +13,7 @@ import { AdminActionsTable } from "@/components/admin/AdminActionsTable";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { ProfileReviewTable } from "@/components/admin/ProfileReviewTable";
 import { ReportTable } from "@/components/admin/ReportTable";
+import { MessageAppealsTable } from "@/components/admin/MessageAppealsTable";
 import { ContentArchivePanel } from "@/components/admin/ContentArchivePanel";
 import { CommunityContentTabs } from "@/components/admin/CommunityContentTabs";
 import { CoursesAdminPanel } from "@/components/admin/courses/CoursesAdminPanel";
@@ -56,6 +57,9 @@ function AdminDashboardContent({
   const searchParams = useSearchParams();
   const activeTab = resolveAdminTab(searchParams.get("tab"));
   const pendingAppealCount = data.stats.pendingArchiveAppealCount ?? 0;
+  const pendingMessageAppealCount = data.stats.pendingMessageAppealCount ?? 0;
+  const reportsTabBadgeCount =
+    data.stats.pendingReportCount + pendingMessageAppealCount;
 
   function selectTab(tab: AdminTabId) {
     router.replace(buildAdminUrl(tab, searchParams));
@@ -83,9 +87,9 @@ function AdminDashboardContent({
             )}
           >
             {tab.label}
-            {tab.id === "reports" && data.stats.pendingReportCount > 0 ? (
+            {tab.id === "reports" && reportsTabBadgeCount > 0 ? (
               <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                {data.stats.pendingReportCount}
+                {reportsTabBadgeCount}
               </span>
             ) : null}
             {tab.id === "archives" && pendingAppealCount > 0 ? (
@@ -111,7 +115,7 @@ function AdminDashboardContent({
             <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>在「资料审核」中按用户复核昵称与头像；前台已即时展示，驳回时将重置并通知用户。</li>
               <li>
-                在「举报中心」：首次举报仅标注待审；第二名举报人触发自动隐藏并复制封存；确认违规会隐藏并封存（作者可申诉）；驳回会警告/失信标记，再次驳回则封禁 30 天。
+                在「举报中心」处理用户举报；私信被确认违规后，发送者可在会话内点击问号申诉，待审申诉显示在举报页顶部。
               </li>
               <li>
                 在「封存申诉」审核作者申诉（通过则恢复并删除封存；驳回则通知作者）。打开概览或封存页会自动处理逾期封存。
@@ -127,7 +131,12 @@ function AdminDashboardContent({
       ) : null}
 
       {activeTab === "reports" ? (
-        <ReportTable reports={data.reports} />
+        <div className="space-y-8">
+          <MessageAppealsTable
+            appeals={data.pendingMessageAppeals ?? []}
+          />
+          <ReportTable reports={data.reports} />
+        </div>
       ) : null}
 
       {activeTab === "archives" ? (
@@ -146,6 +155,7 @@ function AdminDashboardContent({
         <CommunityContentTabs
           forumPosts={data.forumPosts}
           forumComments={data.forumComments}
+          marketListings={data.marketListings}
         />
       ) : null}
 

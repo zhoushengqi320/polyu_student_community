@@ -18,7 +18,7 @@ import {
   hasReaction,
 } from "@/lib/db/reactions";
 import { getVisitorId } from "@/lib/guest/visitorId";
-import { can, isAdmin } from "@/lib/utils/permissions";
+import { can } from "@/lib/utils/permissions";
 
 type GuideDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -95,7 +95,6 @@ export default async function GuideDetailPage({ params }: GuideDetailPageProps) 
         canComment={canComment}
         canFavorite={canFavorite}
         canLike={canLike}
-        isAdmin={isAdmin(user)}
         currentUserId={user?.id}
         revalidatePath={revalidatePath}
         commentReactionMap={commentReactionMap}

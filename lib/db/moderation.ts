@@ -1,4 +1,5 @@
 import { CONTENT_STATUS } from "@/constants/contentStatus";
+import { ARCHIVE_APPEAL_STATUS } from "@/constants/moderation";
 import { REPORT_STATUS, TARGET_TYPES, type TargetType } from "@/constants/reportReasons";
 import { DbError } from "@/lib/db/shared";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -92,6 +93,24 @@ export async function getContentOwnerId(
     return data?.user_id ?? null;
   }
 
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data } = await supabase
+      .from("marketplace_listings")
+      .select("user_id")
+      .eq("id", targetId)
+      .maybeSingle();
+    return data?.user_id ?? null;
+  }
+
+  if (targetType === TARGET_TYPES.message) {
+    const { data } = await supabase
+      .from("messages")
+      .select("sender_id")
+      .eq("id", targetId)
+      .maybeSingle();
+    return data?.sender_id ?? null;
+  }
+
   return null;
 }
 
@@ -168,6 +187,42 @@ export async function hideContentByTarget(
       .from("food_recommendations")
       .update({ status: CONTENT_STATUS.hidden })
       .eq("id", targetId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data, error } = await supabase
+      .from("marketplace_listings")
+      .update({ status: CONTENT_STATUS.hidden })
+      .eq("id", targetId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
+  if (targetType === TARGET_TYPES.message) {
+    const { data, error } = await supabase
+      .from("messages")
+      .update({
+        moderation_hidden_at: new Date().toISOString(),
+        appeal_status: ARCHIVE_APPEAL_STATUS.none,
+        appeal_note: null,
+        appeal_submitted_at: null,
+      })
+      .eq("id", targetId)
+      .is("moderation_hidden_at", null)
       .is("deleted_at", null)
       .select("id")
       .maybeSingle();
@@ -260,6 +315,40 @@ export async function restoreContentByTarget(
       .eq("id", targetId)
       .eq("status", CONTENT_STATUS.hidden)
       .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data, error } = await supabase
+      .from("marketplace_listings")
+      .update({ status: CONTENT_STATUS.published })
+      .eq("id", targetId)
+      .eq("status", CONTENT_STATUS.hidden)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
+  if (targetType === TARGET_TYPES.message) {
+    const { data, error } = await supabase
+      .from("messages")
+      .update({
+        moderation_hidden_at: null,
+        appeal_status: ARCHIVE_APPEAL_STATUS.none,
+      })
+      .eq("id", targetId)
+      .not("moderation_hidden_at", "is", null)
       .select("id")
       .maybeSingle();
 
@@ -500,10 +589,83 @@ export async function getContentSnapshot(
     };
   }
 
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data } = await supabase
+      .from("marketplace_listings")
+      .select(
+        "id, title, description, user_id, price_hkd, category, status, deleted_at",
+      )
+      .eq("id", targetId)
+      .maybeSingle();
+    if (!data) {
+      return null;
+    }
+    const row = data as {
+      title: string;
+      description: string;
+      user_id: string;
+      price_hkd: number;
+      category: string;
+      status: string;
+      deleted_at: string | null;
+    };
+    return {
+      title: row.title,
+      body: row.description,
+      excerpt: excerptOf(row.description),
+      module: "market",
+      ownerId: row.user_id,
+      deletedAt: row.deleted_at,
+      status: row.status,
+      raw: row as unknown as Record<string, unknown>,
+    };
+  }
+
+  if (targetType === TARGET_TYPES.message) {
+    const { data } = await supabase
+      .from("messages")
+      .select(
+        "id, body, sender_id, conversation_id, content_type, attachment_urls, attachment_mime_types, created_at, deleted_at, moderation_hidden_at",
+      )
+      .eq("id", targetId)
+      .maybeSingle();
+    if (!data) {
+      return null;
+    }
+    const row = data as {
+      body: string | null;
+      sender_id: string;
+      conversation_id: string;
+      content_type: string;
+      attachment_urls: string[];
+      attachment_mime_types: string[];
+      created_at: string;
+      deleted_at: string | null;
+      moderation_hidden_at: string | null;
+    };
+    const attachmentNote =
+      row.attachment_urls.length > 0
+        ? `[附件 ${row.attachment_urls.length} 个]`
+        : null;
+    const body = [row.body?.trim(), attachmentNote].filter(Boolean).join("\n");
+    return {
+      title: "私信消息",
+      body: body || null,
+      excerpt: excerptOf(body),
+      module: "message",
+      ownerId: row.sender_id,
+      deletedAt: row.deleted_at,
+      status: row.moderation_hidden_at
+        ? CONTENT_STATUS.hidden
+        : CONTENT_STATUS.published,
+      raw: row as unknown as Record<string, unknown>,
+    };
+  }
+
   return null;
 }
 
-/** 软删除（deleted_at）；无 deleted_at 的类型改为 hidden。 */
+/** 软删除目标内容（写入 deleted_at + hidden）。 */
 export async function softDeleteContentByTarget(
   targetType: TargetType,
   targetId: string,
@@ -584,6 +746,20 @@ export async function softDeleteContentByTarget(
     return Boolean(data);
   }
 
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data, error } = await supabase
+      .from("marketplace_listings")
+      .update({ deleted_at: deletedAt, status: CONTENT_STATUS.hidden })
+      .eq("id", targetId)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
   throw new DbError("暂不支持软删除该类型内容");
 }
 
@@ -654,6 +830,19 @@ export async function restoreSoftDeletedContentByTarget(
     const { data, error } = await supabase
       .from("food_places")
       .update({ status: CONTENT_STATUS.published })
+      .eq("id", targetId)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      throw new DbError(error.message);
+    }
+    return Boolean(data);
+  }
+
+  if (targetType === TARGET_TYPES.market_listing) {
+    const { data, error } = await supabase
+      .from("marketplace_listings")
+      .update({ deleted_at: null, status: CONTENT_STATUS.published })
       .eq("id", targetId)
       .select("id")
       .maybeSingle();

@@ -3,17 +3,24 @@
 import { useState } from "react";
 import { ForumPostsTable } from "@/components/admin/ForumPostsTable";
 import { ForumCommentsTable } from "@/components/admin/ForumCommentsTable";
+import { MarketListingsTable } from "@/components/admin/MarketListingsTable";
 import { cn } from "@/lib/utils/cn";
-import { type AdminForumCommentListItem, type AdminForumPostListItem } from "@/types/admin";
+import {
+  type AdminForumCommentListItem,
+  type AdminForumPostListItem,
+} from "@/types/admin";
+import { type MarketListingWithAuthor } from "@/types/market";
 
 type CommunityContentTabsProps = {
   forumPosts: AdminForumPostListItem[];
   forumComments: AdminForumCommentListItem[];
+  marketListings?: MarketListingWithAuthor[];
 };
 
 const SECTIONS = [
   { id: "posts", label: "帖子" },
   { id: "comments", label: "评论" },
+  { id: "market", label: "二手市集" },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -21,6 +28,7 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 export function CommunityContentTabs({
   forumPosts,
   forumComments,
+  marketListings = [],
 }: CommunityContentTabsProps) {
   const [active, setActive] = useState<SectionId>("posts");
 
@@ -47,6 +55,9 @@ export function CommunityContentTabs({
       {active === "posts" ? <ForumPostsTable posts={forumPosts} /> : null}
       {active === "comments" ? (
         <ForumCommentsTable comments={forumComments} />
+      ) : null}
+      {active === "market" ? (
+        <MarketListingsTable listings={marketListings} />
       ) : null}
     </div>
   );
