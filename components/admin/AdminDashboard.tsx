@@ -21,6 +21,7 @@ import { ContentCmsPanel } from "@/components/admin/content/ContentCmsPanel";
 import { AnnouncementPanel } from "@/components/admin/announcements/AnnouncementPanel";
 import { type AdminDashboardData } from "@/types/admin";
 import { cn } from "@/lib/utils/cn";
+import { usePostgresChanges } from "@/hooks/usePostgresChanges";
 
 type AdminDashboardProps = {
   data: AdminDashboardData;
@@ -64,6 +65,27 @@ function AdminDashboardContent({
   function selectTab(tab: AdminTabId) {
     router.replace(buildAdminUrl(tab, searchParams));
   }
+
+  usePostgresChanges(
+    activeTab === "reports" && data.isDatabaseConfigured,
+    "admin-reports",
+    [
+      { table: "reports", event: "INSERT" },
+      { table: "reports", event: "UPDATE" },
+      { table: "messages", event: "UPDATE" },
+    ],
+    () => router.refresh(),
+  );
+
+  usePostgresChanges(
+    activeTab === "overview" && data.isDatabaseConfigured,
+    "admin-overview-stats",
+    [
+      { table: "reports", event: "INSERT" },
+      { table: "reports", event: "UPDATE" },
+    ],
+    () => router.refresh(),
+  );
 
   return (
     <div className="space-y-6">

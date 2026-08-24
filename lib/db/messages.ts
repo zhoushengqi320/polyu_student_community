@@ -607,20 +607,6 @@ export async function sendMessage(input: {
     })
     .eq("id", input.conversationId);
 
-  const senderProfile = message.sender;
-  await createNotification({
-    userId: recipientId,
-    type: NOTIFICATION_TYPES.directMessage,
-    title: `${senderProfile.displayName ?? senderProfile.username ?? "同学"} 发来私信`,
-    body: preview,
-    link: ROUTES.messages.conversation(input.conversationId),
-    metadata: {
-      conversationId: input.conversationId,
-      messageId: message.id,
-      senderId: input.senderId,
-    },
-  });
-
   return message;
 }
 

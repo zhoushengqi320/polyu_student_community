@@ -13,9 +13,11 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { CommunityRulesDialog } from "@/components/legal/CommunityRulesDialog";
 import { cn } from "@/lib/utils/cn";
+import { usePostgresChanges } from "@/hooks/usePostgresChanges";
 
 type NotificationListProps = {
   notifications: Notification[];
+  userId: string;
 };
 
 const INLINE_DETAIL_TYPES = new Set<string>([
@@ -77,11 +79,18 @@ function appealHref(item: Notification): string | null {
   return item.link;
 }
 
-export function NotificationList({ notifications }: NotificationListProps) {
+export function NotificationList({ notifications, userId }: NotificationListProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const unreadCount = notifications.filter((item) => !item.readAt).length;
+
+  usePostgresChanges(
+    true,
+    `notifications:${userId}`,
+    [{ table: "notifications", filter: `user_id=eq.${userId}` }],
+    () => router.refresh(),
+  );
 
   function handleMarkAllRead() {
     startTransition(async () => {

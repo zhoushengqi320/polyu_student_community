@@ -25,7 +25,10 @@ import {
   unblockUserForMessages,
 } from "@/lib/db/messageBlocks";
 import { createReport } from "@/lib/db/reports";
-import { formatMessageReportDescription } from "@/lib/messages/formatMessageReport";
+import {
+  buildMessageReportMetadata,
+  formatMessageReportDescription,
+} from "@/lib/messages/formatMessageReport";
 import { uploadMessageMediaToStorage } from "@/lib/messages/uploadMessageMedia";
 import { DbError } from "@/lib/db/shared";
 import { getSessionUser } from "@/lib/auth/session";
@@ -322,8 +325,11 @@ export async function createMessageReportAction(
 
     const description = formatMessageReportDescription({
       userDescription: parsed.data.description,
+    });
+    const metadata = buildMessageReportMetadata({
       reportedMessage: window.reported,
       contextMessages: parsed.data.includeContext ? window.context : [],
+      includeContext: parsed.data.includeContext,
     });
 
     await createReport({
@@ -332,6 +338,7 @@ export async function createMessageReportAction(
       targetId: parsed.data.messageId,
       reason: parsed.data.reason,
       description,
+      metadata,
     });
 
     return { success: "举报已提交，管理员将尽快处理" };

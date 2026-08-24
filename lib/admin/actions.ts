@@ -30,7 +30,7 @@ import {
   listReactionUsersForAdmin,
   type ContentEngagementUser,
 } from "@/lib/db/contentViews";
-import { logAdminAction, updateReportStatus } from "@/lib/db/reports";
+import { logAdminAction, updateReportStatus, getReportById } from "@/lib/db/reports";
 import { DbError } from "@/lib/db/shared";
 import {
   confirmReportViolation,
@@ -46,6 +46,11 @@ import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { type TargetType } from "@/constants/reportReasons";
 import { parseAdminReviewReason } from "@/lib/admin/reviewReason";
+import {
+  parseLegacyMessageReportThread,
+  parseMessageReportMetadata,
+  type MessageReportSnapshot,
+} from "@/lib/messages/formatMessageReport";
 import {
   resolveAdminActionLogDetail,
   type AdminActionLogDetail,
@@ -65,6 +70,7 @@ const previewSchema = z.object({
     TARGET_TYPES.message,
   ]),
   targetId: z.string().uuid(),
+  reportId: z.string().uuid().optional(),
 });
 
 export type AdminContentPreview = {
@@ -81,11 +87,13 @@ export type AdminContentPreview = {
   likeUsers: ContentEngagementUser[];
   favoriteUsers: ContentEngagementUser[];
   viewUsers: ContentEngagementUser[];
+  messageThread?: MessageReportSnapshot[];
 };
 
 export async function getAdminContentPreviewAction(input: {
   targetType: string;
   targetId: string;
+  reportId?: string;
 }): Promise<{ data?: AdminContentPreview; error?: string }> {
   try {
     await requireAdmin();
@@ -155,6 +163,22 @@ export async function getAdminContentPreviewAction(input: {
               ? "私信消息"
               : null);
 
+    let messageThread: MessageReportSnapshot[] | undefined;
+    if (parsed.data.targetType === TARGET_TYPES.message && parsed.data.reportId) {
+      const report = await getReportById(parsed.data.reportId);
+      if (report && report.targetId === parsed.data.targetId) {
+        const fromMetadata = parseMessageReportMetadata(report.metadata);
+        if (fromMetadata) {
+          messageThread = fromMetadata.messageReport.messages;
+        } else if (report.description) {
+          const legacyThread = parseLegacyMessageReportThread(report.description);
+          if (legacyThread.length > 0) {
+            messageThread = legacyThread;
+          }
+        }
+      }
+    }
+
     return {
       data: {
         targetType: parsed.data.targetType,
@@ -170,6 +194,7 @@ export async function getAdminContentPreviewAction(input: {
         likeUsers,
         favoriteUsers,
         viewUsers,
+        messageThread,
       },
     };
   } catch (error) {

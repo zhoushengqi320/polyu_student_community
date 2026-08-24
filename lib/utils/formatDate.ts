@@ -24,6 +24,17 @@ export function formatDateTime(value: string | Date): string {
   return DATETIME_FORMATTER.format(date);
 }
 
+export function formatDateTimeSafe(
+  value: string | Date,
+  fallback = "—",
+): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) {
+    return typeof value === "string" && value.trim() ? value.trim() : fallback;
+  }
+  return DATETIME_FORMATTER.format(date);
+}
+
 export function formatRelativeTime(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
   const diffMs = Date.now() - date.getTime();

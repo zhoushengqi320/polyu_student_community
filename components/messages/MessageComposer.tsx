@@ -32,6 +32,7 @@ type MessageComposerProps = {
   quoteRequest?: MessageWithSender | null;
   onQuoteConsumed?: () => void;
   currentUserId?: string;
+  onSent?: () => void;
 };
 
 const initialSendState: MessageActionState = {};
@@ -42,6 +43,7 @@ export function MessageComposer({
   quoteRequest = null,
   onQuoteConsumed,
   currentUserId,
+  onSent,
 }: MessageComposerProps) {
   const [state, formAction, pending] = useActionState(
     sendMessageAction,
@@ -86,9 +88,10 @@ export function MessageComposer({
     if (state.success) {
       savedDraftRef.current = null;
       setActiveQuote(null);
+      onSent?.();
       router.refresh();
     }
-  }, [state.error, state.success, router]);
+  }, [state.error, state.success, router, onSent]);
 
   useEffect(() => {
     if (!quoteRequest) {

@@ -17,6 +17,7 @@ export type ReportRow = {
   target_id: string;
   reason: ReportReasonId;
   description: string | null;
+  metadata: Record<string, unknown> | null;
   status: ReportStatus;
   resolved_by: string | null;
   resolved_at: string | null;
@@ -36,6 +37,7 @@ export function mapReport(row: ReportRow): Report {
     targetId: row.target_id,
     reason: row.reason,
     description: row.description,
+    metadata: row.metadata ?? null,
     status: row.status,
     resolvedBy: row.resolved_by,
     resolvedAt: row.resolved_at,

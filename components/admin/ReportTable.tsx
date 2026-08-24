@@ -21,6 +21,8 @@ import { TagBadge } from "@/components/common/TagBadge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { AdminContentPreviewDialog } from "@/components/admin/AdminContentPreviewDialog";
 import { ADMIN_TABLE, adminTruncateCell } from "@/components/admin/adminTableClasses";
+import { TARGET_TYPES } from "@/constants/reportReasons";
+import { getLegacyMessageReportUserDescription } from "@/lib/messages/formatMessageReport";
 
 type ReportTableProps = {
   reports: ReportWithReporter[];
@@ -44,6 +46,16 @@ function statusBadgeClass(status: string): string | undefined {
   }
 
   return undefined;
+}
+
+function getReportDescriptionLabel(report: ReportWithReporter): string {
+  if (
+    report.targetType === TARGET_TYPES.message &&
+    report.description?.includes("--- 被举报消息 ---")
+  ) {
+    return getLegacyMessageReportUserDescription(report.description) || "—";
+  }
+  return report.description?.trim() || "—";
 }
 
 export function ReportTable({ reports }: ReportTableProps) {
@@ -88,6 +100,7 @@ export function ReportTable({ reports }: ReportTableProps) {
                     <AdminContentPreviewDialog
                       targetType={report.targetType}
                       targetId={report.targetId}
+                      reportId={report.id}
                     />
                   </div>
                 </td>
@@ -97,9 +110,13 @@ export function ReportTable({ reports }: ReportTableProps) {
                 <td className={adminTruncateCell("max-w-[220px]")}>
                   <span
                     className="text-xs text-muted-foreground"
-                    title={report.description || undefined}
+                    title={
+                      getReportDescriptionLabel(report) === "—"
+                        ? undefined
+                        : getReportDescriptionLabel(report)
+                    }
                   >
-                    {report.description || "—"}
+                    {getReportDescriptionLabel(report)}
                   </span>
                 </td>
                 <td className={adminTruncateCell("max-w-[160px]")}>

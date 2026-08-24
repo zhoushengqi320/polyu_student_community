@@ -25,7 +25,7 @@ export default async function NotificationsPage() {
           互动消息（点赞、评论、回复、收藏）与系统处理结果
         </p>
       </div>
-      <NotificationList notifications={notifications} />
+      <NotificationList notifications={notifications} userId={user.id} />
     </div>
   );
 }

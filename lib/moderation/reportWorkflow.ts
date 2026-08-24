@@ -119,6 +119,7 @@ export async function processNewReport(input: {
   targetId: string;
   reason: ReportReasonId;
   description?: string | null;
+  metadata?: Record<string, unknown> | null;
 }): Promise<CreateReportResult> {
   if (!isSupabaseConfigured()) {
     throw new DbError("数据库未配置");
@@ -145,6 +146,7 @@ export async function processNewReport(input: {
     target_id: input.targetId,
     reason: input.reason,
     description: input.description ?? null,
+    metadata: input.metadata ?? null,
     status: REPORT_STATUS.pending,
   });
 

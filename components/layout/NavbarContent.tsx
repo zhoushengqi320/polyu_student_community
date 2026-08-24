@@ -8,6 +8,7 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { MessageInboxIcon } from "@/components/messages/MessageInboxIcon";
+import { NavbarLiveSync } from "@/components/layout/NavbarLiveSync";
 import { isFeatureEnabled } from "@/constants/features";
 import { AUTH_NAV_ITEMS, NAV_ITEMS, ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,11 @@ export function NavbarContent({
 }: NavbarContentProps) {
   return (
     <header className="site-header sticky top-0 z-50 border-b border-primary/20 bg-primary text-primary-foreground shadow-sm backdrop-blur supports-[backdrop-filter]:bg-primary/95">
+      <NavbarLiveSync
+        userId={user?.id ?? null}
+        messagingEnabled={isFeatureEnabled("messaging")}
+        notificationsEnabled={isFeatureEnabled("notifications")}
+      />
       <div className="container flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <SiteLogo priority className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.18)]" />

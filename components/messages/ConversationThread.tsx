@@ -44,6 +44,7 @@ type ConversationThreadProps = {
   currentUserId: string;
   otherUser: ProfileListItem;
   initialMessages: MessageWithSender[];
+  onInboxChange?: () => void;
 };
 
 export function ConversationThread({
@@ -51,6 +52,7 @@ export function ConversationThread({
   currentUserId,
   otherUser,
   initialMessages,
+  onInboxChange,
 }: ConversationThreadProps) {
   const [messages, setMessages] = useState(initialMessages);
   const [otherReadAt, setOtherReadAt] = useState<string | null>(null);
@@ -109,7 +111,8 @@ export function ConversationThread({
       }
       return synced;
     });
-  }, [conversationId]);
+    onInboxChange?.();
+  }, [conversationId, onInboxChange]);
 
   const refreshReadReceipt = useCallback(async () => {
     const readAt = await getOtherMemberReadAtAction(conversationId);
@@ -419,6 +422,9 @@ export function ConversationThread({
         onQuoteConsumed={() => setQuoteRequest(null)}
         disabled={composerDisabled}
         currentUserId={currentUserId}
+        onSent={() => {
+          void syncMessages();
+        }}
       />
     </div>
   );

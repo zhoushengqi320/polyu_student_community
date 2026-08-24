@@ -1,4 +1,4 @@
-import { type NotificationType } from "@/constants/moderation";
+import { NOTIFICATION_TYPES, type NotificationType } from "@/constants/moderation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -106,6 +106,7 @@ export async function getUnreadNotificationCount(userId: string): Promise<number
     .from("notifications")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
+    .neq("type", NOTIFICATION_TYPES.directMessage)
     .is("read_at", null);
 
   if (error) {
@@ -128,6 +129,7 @@ export async function listNotifications(
     .from("notifications")
     .select("*")
     .eq("user_id", userId)
+    .neq("type", NOTIFICATION_TYPES.directMessage)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -164,5 +166,6 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("user_id", userId)
+    .neq("type", NOTIFICATION_TYPES.directMessage)
     .is("read_at", null);
 }

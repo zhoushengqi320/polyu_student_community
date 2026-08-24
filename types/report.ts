@@ -12,6 +12,7 @@ export type Report = {
   targetId: string;
   reason: ReportReasonId;
   description: string | null;
+  metadata: Record<string, unknown> | null;
   status: ReportStatus;
   resolvedBy: string | null;
   resolvedAt: string | null;

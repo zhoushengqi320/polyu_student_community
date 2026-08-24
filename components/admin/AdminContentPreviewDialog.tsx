@@ -6,6 +6,7 @@ import {
   type AdminContentPreview,
 } from "@/lib/admin/actions";
 import { RichContent } from "@/components/common/RichContent";
+import { AdminMessageThreadPreview } from "@/components/admin/AdminMessageThreadPreview";
 import { TARGET_TYPE_LABELS } from "@/constants/admin";
 import { TARGET_TYPES, type TargetType } from "@/constants/reportReasons";
 import { formatDate } from "@/lib/utils/formatDate";
@@ -22,6 +23,7 @@ import {
 type AdminContentPreviewDialogProps = {
   targetType: TargetType;
   targetId: string;
+  reportId?: string;
 };
 
 function EngagementList({
@@ -69,6 +71,7 @@ function EngagementList({
 export function AdminContentPreviewDialog({
   targetType,
   targetId,
+  reportId,
 }: AdminContentPreviewDialogProps) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<AdminContentPreview | null>(null);
@@ -85,6 +88,7 @@ export function AdminContentPreviewDialog({
       const result = await getAdminContentPreviewAction({
         targetType,
         targetId,
+        reportId,
       });
       if (result.error || !result.data) {
         setPreview(null);
@@ -93,9 +97,12 @@ export function AdminContentPreviewDialog({
       }
       setPreview(result.data);
     });
-  }, [open, targetType, targetId]);
+  }, [open, targetType, targetId, reportId]);
 
   const body = preview?.body || preview?.excerpt || "";
+  const messageThread = preview?.messageThread ?? [];
+  const showMessageThread =
+    preview?.targetType === TARGET_TYPES.message && messageThread.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -145,17 +152,15 @@ export function AdminContentPreviewDialog({
             {preview.title ? (
               <h3 className="text-base font-semibold">{preview.title}</h3>
             ) : null}
-            {body ? (
+            {showMessageThread ? (
+              <AdminMessageThreadPreview messages={messageThread} />
+            ) : body ? (
               <RichContent content={body} className="leading-relaxed" />
             ) : (
               <p className="text-muted-foreground">（无正文）</p>
             )}
 
-            {preview.targetType === TARGET_TYPES.message ? (
-              <p className="text-xs text-muted-foreground">
-                若举报人勾选了附带上下文，请在举报列表的「说明」列查看完整记录。
-              </p>
-            ) : (
+            {preview.targetType === TARGET_TYPES.message ? null : (
               <div className="grid gap-3 sm:grid-cols-2">
                 <EngagementList title="点赞用户" users={preview.likeUsers} />
                 <EngagementList title="收藏用户" users={preview.favoriteUsers} />

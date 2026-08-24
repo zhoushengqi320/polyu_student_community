@@ -1,6 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ConversationThread } from "@/components/messages/ConversationThread";
 import { cn } from "@/lib/utils/cn";
+import { fetchConversationsAction } from "@/lib/messages/actions";
+import { usePostgresChanges } from "@/hooks/usePostgresChanges";
 import { type ConversationListItem, type MessageWithSender } from "@/types/message";
 import { type ProfileListItem } from "@/types/user";
 
@@ -13,13 +19,41 @@ type MessageInboxShellProps = {
 };
 
 export function MessageInboxShell({
-  conversations,
+  conversations: initialConversations,
   activeConversationId,
   currentUserId,
   otherUser,
   initialMessages = [],
 }: MessageInboxShellProps) {
+  const router = useRouter();
+  const [conversations, setConversations] = useState(initialConversations);
   const showThread = Boolean(activeConversationId && otherUser);
+
+  useEffect(() => {
+    setConversations(initialConversations);
+  }, [initialConversations]);
+
+  async function refreshConversations() {
+    const next = await fetchConversationsAction();
+    setConversations(next);
+    router.refresh();
+  }
+
+  usePostgresChanges(
+    true,
+    `inbox:${currentUserId}`,
+    [
+      { table: "messages", event: "INSERT" },
+      { table: "messages", event: "UPDATE" },
+      {
+        table: "conversation_members",
+        filter: `user_id=eq.${currentUserId}`,
+      },
+    ],
+    () => {
+      void refreshConversations();
+    },
+  );
 
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 overflow-hidden overscroll-contain rounded-xl border bg-background shadow-sm">
@@ -52,6 +86,9 @@ export function MessageInboxShell({
             currentUserId={currentUserId}
             otherUser={otherUser}
             initialMessages={initialMessages}
+            onInboxChange={() => {
+              void refreshConversations();
+            }}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-8 text-center text-sm text-muted-foreground">

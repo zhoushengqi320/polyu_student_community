@@ -8,6 +8,7 @@ import {
 import {
   mapReport,
   mapReportWithReporter,
+  type ReportRow,
   type ReportWithProfileRow,
 } from "@/lib/db/mappers/report";
 import { DbError } from "@/lib/db/shared";
@@ -208,7 +209,7 @@ export async function getReportById(reportId: string): Promise<Report | null> {
     return null;
   }
 
-  return mapReport(data as ReportWithProfileRow);
+  return mapReport(data as ReportRow);
 }
 
 export async function updateReportStatus(
@@ -297,6 +298,7 @@ export async function createReport(input: {
   targetId: string;
   reason: ReportReasonId;
   description?: string | null;
+  metadata?: Record<string, unknown> | null;
 }): Promise<import("@/lib/moderation/reportWorkflow").CreateReportResult> {
   const { processNewReport } = await import("@/lib/moderation/reportWorkflow");
   return processNewReport(input);
