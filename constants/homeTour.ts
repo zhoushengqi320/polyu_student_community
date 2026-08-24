@@ -64,10 +64,10 @@ export const HOME_TOUR_STEPS: HomeTourStep[] = [
     description: MODULE_TOUR_COPY[module.key].description,
   })),
   {
-    id: "latest-forum",
-    target: "home-latest-forum",
-    title: "最新讨论",
-    description: "看看同学们最近在讨论什么，随时加入交流或发布新帖。",
+    id: "hottest-forum",
+    target: "home-hottest-forum",
+    title: "最热讨论",
+    description: "看看自由讨论区里当前最热的帖子，随时加入交流或发布新帖。",
   },
   {
     id: "finish",

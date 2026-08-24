@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { deleteForumPostAction } from "@/lib/forum/actions";
 import { formatDateTime } from "@/lib/utils/formatDate";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { type ForumPostDetail } from "@/types/forum";
 
 type ForumPostDetailViewProps = {
@@ -43,6 +45,7 @@ export function ForumPostDetailView({
   currentUserId,
 }: ForumPostDetailViewProps) {
   return (
+    <Highlightable id={contentHighlightId("post", post.id)}>
     <Card>
       <CardHeader className="space-y-4">
         <span className="text-sm text-muted-foreground">
@@ -121,5 +124,6 @@ export function ForumPostDetailView({
         <div className="whitespace-pre-wrap text-sm leading-7">{post.content}</div>
       </CardContent>
     </Card>
+    </Highlightable>
   );
 }

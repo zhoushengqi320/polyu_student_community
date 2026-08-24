@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ConversationThread } from "@/components/messages/ConversationThread";
+import { HiddenMessagesPanel } from "@/components/messages/HiddenMessagesPanel";
 import { cn } from "@/lib/utils/cn";
 import { fetchConversationsAction } from "@/lib/messages/actions";
 import { usePostgresChanges } from "@/hooks/usePostgresChanges";
-import { type ConversationListItem, type MessageWithSender } from "@/types/message";
+import { type ConversationListItem, type MessageWithSender, type OwnHiddenMessageItem } from "@/types/message";
 import { type ProfileListItem } from "@/types/user";
 
 type MessageInboxShellProps = {
@@ -16,6 +17,7 @@ type MessageInboxShellProps = {
   currentUserId: string;
   otherUser?: ProfileListItem;
   initialMessages?: MessageWithSender[];
+  hiddenMessages?: OwnHiddenMessageItem[];
 };
 
 export function MessageInboxShell({
@@ -24,6 +26,7 @@ export function MessageInboxShell({
   currentUserId,
   otherUser,
   initialMessages = [],
+  hiddenMessages = [],
 }: MessageInboxShellProps) {
   const router = useRouter();
   const [conversations, setConversations] = useState(initialConversations);
@@ -66,6 +69,7 @@ export function MessageInboxShell({
         <div className="shrink-0 border-b px-4 py-3">
           <h2 className="text-lg font-semibold tracking-tight">我的私信</h2>
         </div>
+        <HiddenMessagesPanel items={hiddenMessages} />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <ConversationList
             conversations={conversations}

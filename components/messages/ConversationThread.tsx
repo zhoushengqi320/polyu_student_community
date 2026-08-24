@@ -24,9 +24,8 @@ import {
 } from "@/lib/messages/formatMessageQuote";
 import { formatDateTime } from "@/lib/utils/formatDate";
 import { cn } from "@/lib/utils/cn";
-import {
-  useConversationChannel,
-} from "@/hooks/useConversationChannel";
+import { useConversationChannel } from "@/hooks/useConversationChannel";
+import { useHighlightTargetId } from "@/hooks/useContentHighlight";
 import {
   blockUserMessagesAction,
   fetchConversationMessagesAction,
@@ -63,6 +62,7 @@ export function ConversationThread({
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
     null,
   );
+  const urlHighlightId = useHighlightTargetId();
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blockStatus, setBlockStatus] = useState({
     blockedByMe: false,
@@ -135,10 +135,14 @@ export function ConversationThread({
     if (!container) {
       return;
     }
+    if (urlHighlightId?.startsWith("message-")) {
+      shouldInstantScrollRef.current = false;
+      return;
+    }
     const behavior = shouldInstantScrollRef.current ? "auto" : "smooth";
     container.scrollTo({ top: container.scrollHeight, behavior });
     shouldInstantScrollRef.current = false;
-  }, [messages.length]);
+  }, [messages.length, urlHighlightId]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -183,6 +187,19 @@ export function ConversationThread({
     }, MESSAGE_LIMITS.searchHighlightMs);
     return () => window.clearTimeout(timer);
   }, [highlightedMessageId]);
+
+  useEffect(() => {
+    if (!urlHighlightId?.startsWith("message-")) {
+      return;
+    }
+    const messageId = urlHighlightId.slice("message-".length);
+    setHighlightedMessageId(messageId);
+    window.setTimeout(() => {
+      document
+        .getElementById(`message-${messageId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  }, [urlHighlightId]);
 
   function jumpToSearchResult(messageId: string) {
     setSearchOpen(false);

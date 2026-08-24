@@ -257,9 +257,9 @@ export function ForumPostForm({
               ) : null}
             </div>
 
-            <div className="space-y-2">
-              <Label>
-                话题（最多 {FORUM_MAX_TOPICS} 个，每个最多 30 字）
+            <div className="space-y-4">
+              <Label className="block leading-normal">
+                话题（最多{FORUM_MAX_TOPICS}个）
               </Label>
               <div className="flex flex-wrap items-center gap-2">
                 {(popularTopics.length > 0 ? popularTopics : []).slice(0, 5).map((suggestion) => (
@@ -297,7 +297,7 @@ export function ForumPostForm({
                     id="topicInput"
                     value={topicInput}
                     onChange={(event) => setTopicInput(event.target.value)}
-                    placeholder="输入 #话题 后按添加"
+                    placeholder="输入“#”后编辑话题，不超过30字"
                     maxLength={30}
                     autoFocus
                     onKeyDown={(event) => {

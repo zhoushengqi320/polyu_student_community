@@ -9,6 +9,7 @@ import {
   getConversationById,
   listConversations,
   listMessages,
+  listOwnHiddenMessages,
 } from "@/lib/db/messages";
 import { getProfileById } from "@/lib/db/profiles";
 import { can, isBanned } from "@/lib/utils/permissions";
@@ -39,10 +40,11 @@ export default async function MessageConversationPage({
   }
 
   const otherUserId = getOtherUserId(conversation, user.id);
-  const [conversations, messages, otherUser] = await Promise.all([
+  const [conversations, messages, otherUser, hiddenMessages] = await Promise.all([
     listConversations(user.id),
     listMessages(id, user.id),
     getProfileById(otherUserId),
+    listOwnHiddenMessages(user.id),
   ]);
 
   if (!otherUser) {
@@ -69,6 +71,7 @@ export default async function MessageConversationPage({
           role: otherUser.role,
         }}
         initialMessages={messages}
+        hiddenMessages={hiddenMessages}
       />
     </ModulePageShell>
   );

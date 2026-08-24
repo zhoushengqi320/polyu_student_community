@@ -4,7 +4,7 @@ import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { isFeatureEnabled } from "@/constants/features";
 import { ROUTES } from "@/constants/routes";
 import { getSessionUser } from "@/lib/auth/session";
-import { listConversations } from "@/lib/db/messages";
+import { listConversations, listOwnHiddenMessages } from "@/lib/db/messages";
 import { redirectToConversationWithUser } from "@/lib/messages/actions";
 import { can, isBanned } from "@/lib/utils/permissions";
 
@@ -30,7 +30,10 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     await redirectToConversationWithUser(params.user);
   }
 
-  const conversations = await listConversations(user.id);
+  const [conversations, hiddenMessages] = await Promise.all([
+    listConversations(user.id),
+    listOwnHiddenMessages(user.id),
+  ]);
 
   return (
     <ModulePageShell
@@ -43,6 +46,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       <MessageInboxShell
         conversations={conversations}
         currentUserId={user.id}
+        hiddenMessages={hiddenMessages}
       />
     </ModulePageShell>
   );

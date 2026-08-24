@@ -5,22 +5,22 @@ import { ROUTES } from "@/constants/routes";
 import { type HomeSectionResult } from "@/types/home";
 import { type ForumPostListItem } from "@/types/forum";
 
-type LatestForumPostsSectionProps = {
+type HottestForumPostsSectionProps = {
   result: HomeSectionResult<ForumPostListItem>;
 };
 
-export function LatestForumPostsSection({ result }: LatestForumPostsSectionProps) {
+export function HottestForumPostsSection({ result }: HottestForumPostsSectionProps) {
   return (
     <HomeSectionShell
-      title="最新讨论"
-      description="自由讨论区里刚刚发生的新鲜事。"
+      title="最热讨论"
+      description="自由讨论区里当前最热的帖子。"
       href={ROUTES.forum.list}
-      tourId="home-latest-forum"
+      tourId="home-hottest-forum"
     >
       {result.error ? (
         <HomeEmptyState
           error
-          title="最新讨论加载失败"
+          title="最热讨论加载失败"
           description="请稍后刷新页面重试。"
         />
       ) : result.items.length === 0 ? (

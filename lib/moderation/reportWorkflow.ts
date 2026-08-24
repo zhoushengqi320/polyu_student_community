@@ -205,19 +205,33 @@ export async function processNewReport(input: {
     });
 
     if (ownerId) {
+      const isMessage = input.targetType === TARGET_TYPES.message;
+      const conversationId =
+        isMessage && typeof snapshot?.raw?.conversation_id === "string"
+          ? snapshot.raw.conversation_id
+          : null;
       await createNotifications([
         {
           userId: ownerId,
           type: NOTIFICATION_TYPES.contentAutoHidden,
-          title: "您的内容已被暂时隐藏",
-          body: `因收到第 ${reporterCount} 名用户举报，${targetLabel}已暂时从前台隐藏并进入封存库。您可在 ${ARCHIVE_APPEAL_DAYS} 天内于「我的作品」提交申诉。`,
-          link: profileWorksLink(ownerId),
+          title: isMessage
+            ? "您的私信已被暂时隐藏"
+            : "您的内容已被暂时隐藏",
+          body: isMessage
+            ? "因收到多名用户举报，该私信已暂时隐藏。可在「我的私信」左侧「违规私信」进入会话，点击消息旁「申诉」提交。"
+            : `因收到第 ${reporterCount} 名用户举报，${targetLabel}已暂时从前台隐藏并进入封存库。您可在 ${ARCHIVE_APPEAL_DAYS} 天内于「我的作品」提交申诉。`,
+          link: isMessage
+            ? conversationId
+              ? ROUTES.messages.conversation(conversationId)
+              : ROUTES.messages.list
+            : profileWorksLink(ownerId),
           metadata: {
             targetType: input.targetType,
             targetId: input.targetId,
             appealDays: ARCHIVE_APPEAL_DAYS,
             archived: true,
             canAppeal: true,
+            appealInConversation: isMessage,
           },
         },
       ]);
@@ -296,7 +310,7 @@ export async function confirmReportViolation(
         userId: ownerId,
         type: NOTIFICATION_TYPES.contentRemoved,
         title: "您的私信因违规已被处理",
-        body: "经管理员审核，您发送的私信已被隐藏。如对处理有异议，可在会话中该消息旁点击问号提交申诉。",
+        body: "经管理员审核，您发送的私信已被隐藏。如对处理有异议，可在会话中该消息旁点击「申诉」提交。",
         link: conversationId
           ? ROUTES.messages.conversation(conversationId)
           : ROUTES.messages.list,

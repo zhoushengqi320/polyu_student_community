@@ -2,18 +2,89 @@ import { type MessageWithSender } from "@/types/message";
 
 const QUOTE_LINE_PREFIX = "> ";
 const PREVIEW_MAX_LENGTH = 80;
+const NAME_AND_CONTENT = /^(.+?)\s*[:：]\s*([\s\S]*)$/;
+const READABLE_QUOTE_BLOCK =
+  /^\[引用\s+(.+?)\s*[:：]\s*([\s\S]*?)\](?:\s*\n+([\s\S]*))?$/;
+const READABLE_QUOTE_UNCLOSED = /^\[引用\s+(.+?)\s*[:：]\s*([\s\S]*?)\s*\]?\s*$/;
 
 function truncatePreview(text: string, max = PREVIEW_MAX_LENGTH): string {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
+function isQuoteLine(line: string): boolean {
+  return line.startsWith(">");
+}
+
+function stripQuotePrefix(line: string): string {
+  if (line.startsWith(QUOTE_LINE_PREFIX)) {
+    return line.slice(QUOTE_LINE_PREFIX.length);
+  }
+  if (line.startsWith(">")) {
+    return line.slice(1).replace(/^\s*/, "");
+  }
+  return line;
+}
+
 export function stripLeadingQuoteLines(text: string): string {
   const lines = text.split("\n");
   let index = 0;
-  while (index < lines.length && lines[index].startsWith(QUOTE_LINE_PREFIX)) {
+  while (index < lines.length && isQuoteLine(lines[index])) {
     index += 1;
   }
   return lines.slice(index).join("\n").trim();
+}
+
+function parseReadableQuoteWrapper(text: string): {
+  senderName: string;
+  previewText: string;
+  replyText: string;
+} | null {
+  const trimmed = text.trim();
+  const closed = trimmed.match(READABLE_QUOTE_BLOCK);
+  if (closed) {
+    return {
+      senderName: closed[1].trim(),
+      previewText: closed[2].trim(),
+      replyText: (closed[3] ?? "").trim(),
+    };
+  }
+  const unclosed = trimmed.match(READABLE_QUOTE_UNCLOSED);
+  if (!unclosed || !trimmed.startsWith("[引用")) {
+    return null;
+  }
+  return {
+    senderName: unclosed[1].trim(),
+    previewText: unclosed[2].replace(/\]\s*$/, "").trim(),
+    replyText: "",
+  };
+}
+
+function flattenQuotePreview(preview: string, senderName?: string): string {
+  let text = preview.trim();
+  for (let step = 0; step < 6 && text; step += 1) {
+    const wrapped = parseReadableQuoteWrapper(text);
+    if (wrapped && !wrapped.replyText) {
+      text = wrapped.previewText;
+      continue;
+    }
+    const lines = text.split("\n");
+    if (lines.some((line) => isQuoteLine(line))) {
+      text = lines.map((line) => stripQuotePrefix(line)).join("\n").trim();
+      continue;
+    }
+    const named = text.match(NAME_AND_CONTENT);
+    if (
+      named &&
+      senderName &&
+      named[1].trim() === senderName &&
+      named[2].trim()
+    ) {
+      text = named[2].trim();
+      continue;
+    }
+    break;
+  }
+  return text;
 }
 
 export function getMessageSenderLabel(message: MessageWithSender): string {
@@ -207,15 +278,27 @@ export function parseMessageBodyWithQuote(body: string | null): {
     return { quote: null, replyText: body ?? "" };
   }
 
+  const wrapped = parseReadableQuoteWrapper(body);
+  if (wrapped) {
+    return {
+      quote: {
+        senderName: wrapped.senderName,
+        previewText:
+          flattenQuotePreview(wrapped.previewText, wrapped.senderName) || "…",
+      },
+      replyText: stripLeadingQuoteLines(wrapped.replyText),
+    };
+  }
+
   const lines = body.split("\n");
-  if (!lines[0]?.startsWith(QUOTE_LINE_PREFIX)) {
+  if (!isQuoteLine(lines[0] ?? "")) {
     return { quote: null, replyText: body };
   }
 
   const quoteRawLines: string[] = [];
   let index = 0;
-  while (index < lines.length && lines[index].startsWith(QUOTE_LINE_PREFIX)) {
-    quoteRawLines.push(lines[index].slice(QUOTE_LINE_PREFIX.length));
+  while (index < lines.length && isQuoteLine(lines[index])) {
+    quoteRawLines.push(stripQuotePrefix(lines[index]));
     index += 1;
   }
   while (index < lines.length && lines[index].trim() === "") {
@@ -228,23 +311,25 @@ export function parseMessageBodyWithQuote(body: string | null): {
   }
 
   const firstLine = quoteRawLines[0];
-  const colonIndex = firstLine.indexOf("：");
-  if (colonIndex === -1) {
+  const named = firstLine.match(NAME_AND_CONTENT);
+  if (!named) {
+    const previewText = flattenQuotePreview(quoteRawLines.join("\n").trim());
     return {
       quote: {
         senderName: "引用",
-        previewText: quoteRawLines.join("\n").trim(),
+        previewText: previewText || "…",
       },
       replyText,
     };
   }
 
-  const senderName = firstLine.slice(0, colonIndex).trim();
-  const firstContent = firstLine.slice(colonIndex + 1);
+  const senderName = named[1].trim();
+  const firstContent = named[2];
   const previewParts = [firstContent, ...quoteRawLines.slice(1)].filter(
     (part) => part.length > 0,
   );
-  const previewText = previewParts.join("\n").trim() || "…";
+  const previewText =
+    flattenQuotePreview(previewParts.join("\n").trim(), senderName) || "…";
 
   return {
     quote: { senderName, previewText },

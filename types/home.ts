@@ -7,7 +7,7 @@ export type HomeSectionResult<T> = {
 };
 
 export type HomePageData = {
-  latestPosts: HomeSectionResult<ForumPostListItem>;
+  hottestPosts: HomeSectionResult<ForumPostListItem>;
   announcements: SiteAnnouncement[];
   isDatabaseConfigured: boolean;
 };

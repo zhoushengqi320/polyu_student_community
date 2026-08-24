@@ -1,7 +1,7 @@
 import { ROUTES } from "@/constants/routes";
 
 export const HOME_LIMITS = {
-  latestPosts: 5,
+  hottestPosts: 4,
 } as const;
 
 export const HOME_HERO = {

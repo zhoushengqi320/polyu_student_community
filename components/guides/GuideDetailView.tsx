@@ -15,6 +15,8 @@ import { TARGET_TYPES } from "@/constants/reportReasons";
 import { OFFICIAL_CONTENT_AUTHOR_NAME } from "@/constants/site";
 import { formatDate } from "@/lib/utils/formatDate";
 import { isSafeHref } from "@/lib/utils/safeUrl";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { type GuideDetail } from "@/types/guide";
 import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
 
@@ -53,6 +55,7 @@ export function GuideDetailView({
 
   return (
     <div className="space-y-6">
+      <Highlightable id={contentHighlightId("post", guide.id)} className="space-y-6">
       <Card>
         <CardHeader className="space-y-3">
           {guide.isFavorited ? (
@@ -141,6 +144,7 @@ export function GuideDetailView({
           triggerSize="default"
         />
       </div>
+      </Highlightable>
 
       <GuideCommentSection
         guideId={guide.id}

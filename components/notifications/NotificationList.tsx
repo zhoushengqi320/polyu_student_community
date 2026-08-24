@@ -61,11 +61,14 @@ function shouldNavigate(link: string | null): boolean {
   return true;
 }
 
-function interactionHint(item: Notification): string | null {
-  if (!INTERACTION_TYPES.has(item.type) || !shouldNavigate(item.link)) {
-    return null;
+function isMessageModerationNotice(item: Notification): boolean {
+  const meta = item.metadata;
+  if (meta && typeof meta === "object") {
+    if (meta.appealInConversation === true || meta.targetType === "message") {
+      return true;
+    }
   }
-  return item.body || "点击查看原帖";
+  return Boolean(item.link?.startsWith(ROUTES.messages.list));
 }
 
 function appealHref(item: Notification): string | null {
@@ -105,7 +108,7 @@ export function NotificationList({ notifications, userId }: NotificationListProp
         await markNotificationReadAction(item.id);
       }
 
-      if (INLINE_DETAIL_TYPES.has(item.type)) {
+      if (INLINE_DETAIL_TYPES.has(item.type) && !isMessageModerationNotice(item)) {
         setExpandedId((current) => (current === item.id ? null : item.id));
         router.refresh();
         return;
@@ -153,7 +156,6 @@ export function NotificationList({ notifications, userId }: NotificationListProp
           const expanded = expandedId === item.id;
           const showAppealCta = APPEAL_CTA_TYPES.has(item.type);
           const worksLink = appealHref(item);
-          const clickHint = interactionHint(item);
 
           return (
             <li key={item.id}>
@@ -170,9 +172,14 @@ export function NotificationList({ notifications, userId }: NotificationListProp
                   <div className="min-w-0 space-y-1">
                     <p className="font-medium">{item.title}</p>
                     {isInteraction ? (
-                      clickHint ? (
-                        <p className="text-sm text-primary">{clickHint}</p>
-                      ) : null
+                      <>
+                        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                          {item.body}
+                        </p>
+                        {item.link ? (
+                          <p className="text-xs text-primary">点击定位到对应内容</p>
+                        ) : null}
+                      </>
                     ) : (
                       <p className="text-sm text-muted-foreground">{item.body}</p>
                     )}

@@ -7,6 +7,7 @@ import {
 } from "@/lib/admin/actions";
 import { RichContent } from "@/components/common/RichContent";
 import { AdminMessageThreadPreview } from "@/components/admin/AdminMessageThreadPreview";
+import { QuotedMessageBody } from "@/components/messages/QuotedMessageBody";
 import { TARGET_TYPE_LABELS } from "@/constants/admin";
 import { TARGET_TYPES, type TargetType } from "@/constants/reportReasons";
 import { formatDate } from "@/lib/utils/formatDate";
@@ -111,7 +112,7 @@ export function AdminContentPreviewDialog({
           查看内容
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {TARGET_TYPE_LABELS[targetType] ?? "内容"}预览
@@ -154,6 +155,8 @@ export function AdminContentPreviewDialog({
             ) : null}
             {showMessageThread ? (
               <AdminMessageThreadPreview messages={messageThread} />
+            ) : preview.targetType === TARGET_TYPES.message && body ? (
+              <QuotedMessageBody body={body} />
             ) : body ? (
               <RichContent content={body} className="leading-relaxed" />
             ) : (

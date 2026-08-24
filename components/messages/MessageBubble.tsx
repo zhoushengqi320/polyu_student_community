@@ -278,46 +278,27 @@ export function MessageBubble({
         >
           <div
             className={cn(
-              "inline-block rounded-2xl px-3 py-2 text-sm leading-6",
-              isHidden
-                ? "border border-dashed border-muted-foreground/30 bg-muted/40 text-muted-foreground"
-                : isOwn
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground",
+              "flex items-center gap-2",
+              isOwn ? "flex-row-reverse" : "flex-row",
             )}
-            onContextMenu={handleContextMenu}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={clearLongPress}
-            onTouchMove={clearLongPress}
-            onTouchCancel={clearLongPress}
           >
+            <div
+              className={cn(
+                "inline-block rounded-2xl px-3 py-2 text-sm leading-6",
+                isHidden
+                  ? "border border-dashed border-muted-foreground/30 bg-muted/40 text-muted-foreground"
+                  : isOwn
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground",
+              )}
+              onContextMenu={handleContextMenu}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={clearLongPress}
+              onTouchMove={clearLongPress}
+              onTouchCancel={clearLongPress}
+            >
             {isHidden ? (
-              <div
-                className={cn(
-                  "flex items-center gap-1.5",
-                  isOwn ? "flex-row-reverse" : "flex-row",
-                )}
-              >
-                <span className="italic">{MESSAGE_VIOLATION_LABEL}</span>
-                {canAppeal ? (
-                  <button
-                    type="button"
-                    onClick={() => setAppealOpen(true)}
-                    className={cn(
-                      "inline-flex shrink-0 rounded-full p-0.5 transition-colors",
-                      "text-muted-foreground hover:bg-background/60 hover:text-foreground",
-                    )}
-                    title={
-                      message.appealStatus === ARCHIVE_APPEAL_STATUS.rejected
-                        ? "申诉被驳回，点击可再次申诉"
-                        : "对此处理有疑问？点击申诉"
-                    }
-                    aria-label="申诉违规处理"
-                  >
-                    <CircleHelp className="h-3.5 w-3.5" />
-                  </button>
-                ) : null}
-              </div>
+              <span className="italic">{MESSAGE_VIOLATION_LABEL}</span>
             ) : (
               <>
                 {parsedBody.quote ? (
@@ -386,6 +367,26 @@ export function MessageBubble({
                 ) : null}
               </>
             )}
+            </div>
+            {canAppeal ? (
+              <button
+                type="button"
+                onClick={() => setAppealOpen(true)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium transition-colors",
+                  "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+                title={
+                  message.appealStatus === ARCHIVE_APPEAL_STATUS.rejected
+                    ? "申诉被驳回，点击可再次申诉"
+                    : "对此处理有疑问？点击申诉"
+                }
+                aria-label="申诉违规处理"
+              >
+                申诉
+                <CircleHelp className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            ) : null}
           </div>
 
           {!isHidden && translationVisible ? (
@@ -421,7 +422,7 @@ export function MessageBubble({
           isHidden &&
           message.appealStatus === ARCHIVE_APPEAL_STATUS.rejected ? (
             <p className="text-xs text-muted-foreground">
-              申诉未通过，可点击问号再次申诉
+              申诉未通过，可再次点击申诉
             </p>
           ) : null}
 

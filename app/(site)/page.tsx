@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { shouldShowHomeTour } from "@/lib/auth/homeTour";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CoreModuleGrid } from "@/components/home/CoreModuleGrid";
-import { LatestForumPostsSection } from "@/components/home/LatestForumPostsSection";
+import { HottestForumPostsSection } from "@/components/home/HottestForumPostsSection";
 import { HomeValueSection } from "@/components/home/HomeValueSection";
 import { HomeProductTour } from "@/components/home/HomeProductTour";
 
@@ -29,7 +29,7 @@ export default async function HomePage() {
 
         <HomeValueSection />
         <CoreModuleGrid />
-        <LatestForumPostsSection result={data.latestPosts} />
+        <HottestForumPostsSection result={data.hottestPosts} />
       </div>
 
       <HomeProductTour enabled={showHomeTour} />

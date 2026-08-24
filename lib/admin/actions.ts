@@ -40,6 +40,7 @@ import {
 } from "@/lib/moderation/reportWorkflow";
 import {
   approveMessageAppeal,
+  getMessageContextWindowForAdmin,
   rejectMessageAppeal,
 } from "@/lib/db/messages";
 import { REPORT_STATUS, TARGET_TYPES } from "@/constants/reportReasons";
@@ -49,8 +50,10 @@ import { parseAdminReviewReason } from "@/lib/admin/reviewReason";
 import {
   parseLegacyMessageReportThread,
   parseMessageReportMetadata,
+  toMessageReportSnapshot,
   type MessageReportSnapshot,
 } from "@/lib/messages/formatMessageReport";
+import { MESSAGE_REPORT_CONTEXT_RADIUS } from "@/constants/messaging";
 import {
   resolveAdminActionLogDetail,
   type AdminActionLogDetail,
@@ -164,16 +167,26 @@ export async function getAdminContentPreviewAction(input: {
               : null);
 
     let messageThread: MessageReportSnapshot[] | undefined;
-    if (parsed.data.targetType === TARGET_TYPES.message && parsed.data.reportId) {
-      const report = await getReportById(parsed.data.reportId);
-      if (report && report.targetId === parsed.data.targetId) {
-        const fromMetadata = parseMessageReportMetadata(report.metadata);
-        if (fromMetadata) {
-          messageThread = fromMetadata.messageReport.messages;
-        } else if (report.description) {
-          const legacyThread = parseLegacyMessageReportThread(report.description);
-          if (legacyThread.length > 0) {
-            messageThread = legacyThread;
+    if (parsed.data.targetType === TARGET_TYPES.message) {
+      const liveThread = await getMessageContextWindowForAdmin(
+        parsed.data.targetId,
+        MESSAGE_REPORT_CONTEXT_RADIUS,
+      ).catch(() => null);
+      if (liveThread && liveThread.length > 0) {
+        messageThread = liveThread.map((message) =>
+          toMessageReportSnapshot(message, message.id === parsed.data.targetId),
+        );
+      } else if (parsed.data.reportId) {
+        const report = await getReportById(parsed.data.reportId);
+        if (report && report.targetId === parsed.data.targetId) {
+          const fromMetadata = parseMessageReportMetadata(report.metadata);
+          if (fromMetadata) {
+            messageThread = fromMetadata.messageReport.messages;
+          } else if (report.description) {
+            const legacyThread = parseLegacyMessageReportThread(report.description);
+            if (legacyThread.length > 0) {
+              messageThread = legacyThread;
+            }
           }
         }
       }

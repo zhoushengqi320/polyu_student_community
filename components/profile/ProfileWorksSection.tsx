@@ -156,7 +156,8 @@ export function ProfileWorksSection({ works }: ProfileWorksSectionProps) {
       <CardHeader>
         <CardTitle>我的作品</CardTitle>
         <CardDescription>
-          仅自己可见。封禁中的内容可在申诉期内提交理由，审核通过后可恢复展示。
+          仅自己可见：讨论区帖子、评论、课程评价等公开内容。被隐藏的内容可在申诉期内提交理由。
+          违规私信请到「我的私信」查看并申诉，不会出现在这里。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

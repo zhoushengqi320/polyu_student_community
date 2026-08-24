@@ -34,6 +34,25 @@ export const FORUM_SEARCH_FETCH_LIMIT = 500;
 export const FORUM_DESCRIPTION =
   "课程求助、考试复习、实习 RA、租房二手、找搭子、校园生活都可以在这里讨论。找学习搭子、约饭、组队或室友，请带上「找搭子」话题。";
 
+/** 热度 = 点赞×3 + 评论×5 + 浏览×1（浏览仅进入详情页后累计） */
+export const FORUM_HOT_SCORE_WEIGHTS = {
+  like: 3,
+  comment: 5,
+  view: 1,
+} as const;
+
+export function computeForumPostHotScore(input: {
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
+}): number {
+  return (
+    input.likeCount * FORUM_HOT_SCORE_WEIGHTS.like +
+    input.commentCount * FORUM_HOT_SCORE_WEIGHTS.comment +
+    input.viewCount * FORUM_HOT_SCORE_WEIGHTS.view
+  );
+}
+
 export function isForumSortId(value: string): value is ForumSortId {
   return FORUM_SORT_OPTIONS.some((item) => item.id === value);
 }

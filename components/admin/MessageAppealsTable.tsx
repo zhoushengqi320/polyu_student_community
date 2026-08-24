@@ -10,6 +10,7 @@ import { ARCHIVE_APPEAL_STATUS_LABELS } from "@/constants/moderation";
 import { ROUTES } from "@/constants/routes";
 import { formatMessageBodyForReport } from "@/lib/messages/formatMessageReport";
 import { getMessageSenderLabel } from "@/lib/messages/formatMessageQuote";
+import { QuotedMessageBody } from "@/components/messages/QuotedMessageBody";
 import { formatDateTime } from "@/lib/utils/formatDate";
 import { type MessageAppealListItem } from "@/types/message";
 import { TagBadge } from "@/components/common/TagBadge";
@@ -103,9 +104,9 @@ export function MessageAppealsTable({ appeals }: MessageAppealsTableProps) {
                   </div>
                   <div className="mt-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
                     <p className="text-xs text-muted-foreground">原消息内容</p>
-                    <p className="mt-1 whitespace-pre-wrap break-words">
-                      {preview}
-                    </p>
+                    <div className="mt-2">
+                      <QuotedMessageBody body={appeal.body ?? preview} />
+                    </div>
                   </div>
                   {appeal.appealNote ? (
                     <p className="mt-2 rounded-md bg-muted/50 px-3 py-2 text-sm">

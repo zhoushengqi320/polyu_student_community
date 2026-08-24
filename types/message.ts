@@ -45,3 +45,11 @@ export type MessageAppealListItem = MessageWithSender & {
   appealNote: string | null;
   appealSubmittedAt: string | null;
 };
+
+export type OwnHiddenMessageItem = {
+  id: string;
+  conversationId: string;
+  createdAt: string;
+  appealStatus: ArchiveAppealStatus;
+  otherUser: ProfileListItem;
+};

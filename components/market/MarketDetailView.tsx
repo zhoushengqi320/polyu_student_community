@@ -31,6 +31,8 @@ import {
   type MarketFormState,
 } from "@/lib/market/actions";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { type MarketListingWithAuthor } from "@/types/market";
 
 type MarketDetailViewProps = {
@@ -62,6 +64,7 @@ export function MarketDetailView({
 
   return (
     <div className="space-y-6">
+      <Highlightable id={contentHighlightId("listing", listing.id)}>
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -165,6 +168,7 @@ export function MarketDetailView({
           </div>
         </CardContent>
       </Card>
+      </Highlightable>
 
       {isOwner ? (
         <Card>

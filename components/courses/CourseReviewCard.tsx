@@ -20,6 +20,8 @@ import { TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { deleteOwnCourseReviewAction } from "@/lib/course/actions";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { type CourseReviewWithAuthor } from "@/types/course";
 
 type CourseReviewCardProps = {
@@ -59,6 +61,7 @@ export function CourseReviewCard({
   ].filter(Boolean);
 
   return (
+    <Highlightable id={contentHighlightId("review", review.id)}>
     <Card>
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -182,5 +185,6 @@ export function CourseReviewCard({
         ) : null}
       </CardContent>
     </Card>
+    </Highlightable>
   );
 }

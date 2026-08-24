@@ -5,6 +5,8 @@ import { ForumPostViewTracker } from "@/components/forum/ForumPostViewTracker";
 import { ModulePageShell } from "@/components/common/ModulePageShell";
 import { CommentForm } from "@/components/posts/CommentForm";
 import { ForumCommentList } from "@/components/forum/ForumCommentList";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   countCommentsInThread,
@@ -102,7 +104,9 @@ export default async function ForumDetailPage({ params }: ForumDetailPageProps) 
             <h2 className="text-lg font-semibold">相关帖子</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               {filteredRelated.map((item) => (
-                <ForumPostCard key={item.id} post={item} />
+                <Highlightable key={item.id} id={contentHighlightId("post", item.id)}>
+                  <ForumPostCard post={item} />
+                </Highlightable>
               ))}
             </div>
           </section>

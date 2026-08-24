@@ -17,6 +17,8 @@ import { TARGET_TYPES } from "@/constants/reportReasons";
 import { ROUTES } from "@/constants/routes";
 import { deleteOwnFoodRecommendationAction } from "@/lib/food/actions";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
+import { Highlightable } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import { type FoodPlaceDetail } from "@/types/food";
 
 type FoodDetailViewProps = {
@@ -46,6 +48,7 @@ export function FoodDetailView({
 
   return (
     <div className="space-y-6">
+      <Highlightable id={contentHighlightId("place", place.id)}>
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -102,6 +105,7 @@ export function FoodDetailView({
           ) : null}
         </CardContent>
       </Card>
+      </Highlightable>
 
       <FoodRecommendSection placeId={place.id} canRecommend={canRecommend} />
 
@@ -111,7 +115,8 @@ export function FoodDetailView({
           <p className="text-sm text-muted-foreground">暂无推荐，来写第一条吧。</p>
         ) : (
           place.recommendations.map((item) => (
-            <Card key={item.id}>
+            <Highlightable key={item.id} id={contentHighlightId("rec", item.id)}>
+            <Card>
               <CardHeader className="space-y-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="space-y-1">
@@ -155,6 +160,7 @@ export function FoodDetailView({
                 <p className="whitespace-pre-wrap text-sm leading-6">{item.content}</p>
               </CardContent>
             </Card>
+            </Highlightable>
           ))
         )}
       </section>

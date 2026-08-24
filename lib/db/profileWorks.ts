@@ -155,8 +155,15 @@ export async function listProfileWorks(
 
   const seen = new Set(items.map((item) => `${item.targetType}:${item.id}`));
 
-  // 活跃封存：含已软删原文，以及评论/课评/推荐等非帖类型
+  // 活跃封存：含已软删原文，以及评论/课评/推荐等非帖类型（不含私信）
   for (const archive of archives) {
+    if (
+      archive.target_type === TARGET_TYPES.message ||
+      archive.module === "message"
+    ) {
+      continue;
+    }
+
     const key = `${archive.target_type}:${archive.target_id}`;
     if (seen.has(key)) {
       continue;

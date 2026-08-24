@@ -60,15 +60,16 @@ export function getLegacyMessageReportUserDescription(
   return description.slice(0, markerIndex).trim() || null;
 }
 
-function toMessageReportSnapshot(
+export function toMessageReportSnapshot(
   message: MessageWithSender,
   isReported: boolean,
 ): MessageReportSnapshot {
+  const rawBody = message.body?.trim() ?? "";
   return {
     id: message.id,
     senderId: message.senderId,
     senderLabel: getMessageSenderLabel(message),
-    body: formatMessageBodyForReport(message),
+    body: rawBody || formatMessageBodyForReport(message),
     createdAt: message.createdAt,
     isReported,
   };

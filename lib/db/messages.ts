@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/messageBlocks";
 import {
   buildConversationListItem,
+  getOtherUserId,
   mapConversation,
   mapMessageWithSender,
   orderedUserPair,
@@ -18,7 +19,10 @@ import {
   type MessageRow,
   type MessageWithProfileRow,
 } from "@/lib/db/mappers/message";
-import { type ProfileRow } from "@/lib/db/mappers/profile";
+import {
+  mapProfileListItemOrFallback,
+  type ProfileRow,
+} from "@/lib/db/mappers/profile";
 import { createNotification } from "@/lib/db/notifications";
 import { getProfileById } from "@/lib/db/profiles";
 import { DbError } from "@/lib/db/shared";
@@ -29,6 +33,7 @@ import {
   type ConversationListItem,
   type MessageAppealListItem,
   type MessageWithSender,
+  type OwnHiddenMessageItem,
 } from "@/types/message";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveReportsForTarget } from "@/lib/db/reports";
@@ -744,13 +749,13 @@ export async function listMessagesSince(
 
 async function mapMessageRowsWithProfiles(
   rows: MessageRow[],
-  options: { revealHiddenContent?: boolean } = {},
+  options: { revealHiddenContent?: boolean; useAdmin?: boolean } = {},
 ): Promise<MessageWithSender[]> {
   if (rows.length === 0) {
     return [];
   }
 
-  const supabase = await createClient();
+  const supabase = options.useAdmin ? createAdminClient() : await createClient();
   const senderIds = [...new Set(rows.map((row) => row.sender_id))];
   const { data: profiles, error: profileError } = await supabase
     .from("profiles")
@@ -855,6 +860,155 @@ export async function getMessageContextWindow(
   ]);
 
   return { reported, context };
+}
+
+/** 后台预览：不依赖会话成员身份，固定取被举报消息前后各 radius 条，并展示隐藏正文。 */
+export async function getMessageContextWindowForAdmin(
+  messageId: string,
+  radius = 5,
+): Promise<MessageWithSender[] | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("messages")
+    .select("*")
+    .eq("id", messageId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const reported = data as MessageRow;
+  const [beforeResult, afterResult] = await Promise.all([
+    admin
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", reported.conversation_id)
+      .is("deleted_at", null)
+      .lt("created_at", reported.created_at)
+      .order("created_at", { ascending: false })
+      .limit(radius),
+    admin
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", reported.conversation_id)
+      .is("deleted_at", null)
+      .gt("created_at", reported.created_at)
+      .order("created_at", { ascending: true })
+      .limit(radius),
+  ]);
+
+  if (beforeResult.error || afterResult.error) {
+    throw new DbError(
+      beforeResult.error?.message ??
+        afterResult.error?.message ??
+        "加载上下文失败",
+    );
+  }
+
+  const beforeRows = ((beforeResult.data ?? []) as MessageRow[]).reverse();
+  const afterRows = (afterResult.data ?? []) as MessageRow[];
+  const merged: MessageRow[] = [];
+  const seen = new Set<string>();
+  for (const row of [...beforeRows, reported, ...afterRows]) {
+    if (seen.has(row.id)) {
+      continue;
+    }
+    seen.add(row.id);
+    merged.push(row);
+  }
+
+  return mapMessageRowsWithProfiles(merged, {
+    revealHiddenContent: true,
+    useAdmin: true,
+  });
+}
+
+export async function listOwnHiddenMessages(
+  userId: string,
+  limit = 20,
+): Promise<OwnHiddenMessageItem[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, conversation_id, created_at, appeal_status")
+    .eq("sender_id", userId)
+    .not("moderation_hidden_at", "is", null)
+    .is("deleted_at", null)
+    .order("moderation_hidden_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    return [];
+  }
+
+  const rows = data as Array<{
+    id: string;
+    conversation_id: string;
+    created_at: string;
+    appeal_status: string | null;
+  }>;
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const conversationIds = [...new Set(rows.map((row) => row.conversation_id))];
+  const { data: conversationRows } = await supabase
+    .from("conversations")
+    .select("*")
+    .in("id", conversationIds);
+
+  const conversationById = new Map(
+    ((conversationRows ?? []) as ConversationRow[]).map((row) => [
+      row.id,
+      mapConversation(row),
+    ]),
+  );
+  const otherUserIds = [
+    ...new Set(
+      [...conversationById.values()].map((conversation) =>
+        getOtherUserId(conversation, userId),
+      ),
+    ),
+  ];
+  const { data: profiles } =
+    otherUserIds.length > 0
+      ? await supabase.from("profiles").select("*").in("id", otherUserIds)
+      : { data: [] };
+  const profileById = new Map(
+    ((profiles ?? []) as ProfileRow[]).map((row) => [row.id, row]),
+  );
+
+  return rows.flatMap((row) => {
+    const conversation = conversationById.get(row.conversation_id);
+    if (!conversation) {
+      return [];
+    }
+    const otherUserId = getOtherUserId(conversation, userId);
+    return [
+      {
+        id: row.id,
+        conversationId: row.conversation_id,
+        createdAt: row.created_at,
+        appealStatus:
+          (row.appeal_status as OwnHiddenMessageItem["appealStatus"] | null) ??
+          ARCHIVE_APPEAL_STATUS.none,
+        otherUser: mapProfileListItemOrFallback(
+          profileById.get(otherUserId) ?? null,
+          otherUserId,
+          "PolyU 同学",
+        ),
+      },
+    ];
+  });
 }
 
 export async function submitMessageAppeal(input: {

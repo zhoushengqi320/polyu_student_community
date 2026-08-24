@@ -14,6 +14,8 @@ import { ROUTES } from "@/constants/routes";
 import { formatRelativeTime } from "@/lib/utils/formatDate";
 import { cn } from "@/lib/utils/cn";
 import { type CommentReactionSummary, type CommentThreadItem } from "@/types/post";
+import { useHighlightItem } from "@/components/common/Highlightable";
+import { contentHighlightId } from "@/constants/contentHighlight";
 
 type ForumCommentListProps = {
   comments: CommentThreadItem[];
@@ -64,6 +66,8 @@ function CommentItem({
   nested = false,
 }: CommentItemProps) {
   const [replyOpen, setReplyOpen] = useState(false);
+  const highlightId = contentHighlightId("comment", comment.id);
+  const highlight = useHighlightItem(highlightId);
   const reaction = reactionMap[comment.id] ?? { count: 0, isLiked: false };
   const canDelete =
     isLoggedIn &&
@@ -72,9 +76,12 @@ function CommentItem({
 
   return (
     <li
+      id={highlightId}
+      ref={highlight.ref as React.RefObject<HTMLLIElement>}
       className={cn(
         "rounded-lg border px-4 py-3",
         nested ? "ml-4 border-l-2 border-l-primary/20 bg-background sm:ml-6" : "bg-muted/20",
+        highlight.className,
       )}
     >
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2 text-sm">

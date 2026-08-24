@@ -7,6 +7,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { createComment, getCommentById } from "@/lib/db/comments";
 import { getContentOwnerId } from "@/lib/db/moderation";
 import { notifyContentInteraction } from "@/lib/notifications/interactionNotifications";
+import { contentHighlightId } from "@/constants/contentHighlight";
 import {
   createForumPost,
   deleteForumPost,
@@ -267,7 +268,7 @@ export async function createCommentAction(
   try {
     const risk = assessContentRisk(parsed.data.content);
 
-    await createComment({
+    const comment = await createComment({
       targetType: "post",
       targetId: postId,
       userId: user.id,
@@ -286,6 +287,8 @@ export async function createCommentAction(
           targetType: "comment",
           targetId: parentId,
           kind: "reply",
+          highlightId: contentHighlightId("comment", comment.id),
+          actorExcerpt: comment.content,
         });
       } else {
         const ownerId = await getContentOwnerId("post", postId);
@@ -295,6 +298,8 @@ export async function createCommentAction(
           targetType: "post",
           targetId: postId,
           kind: "comment",
+          highlightId: contentHighlightId("comment", comment.id),
+          actorExcerpt: comment.content,
         });
       }
     }
