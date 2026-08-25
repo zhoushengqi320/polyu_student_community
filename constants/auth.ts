@@ -63,4 +63,4 @@ export const REGISTRATION_DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
 export const RESET_PASSWORD_COOKIE = "polyuhub_reset_email";
 
 export const OTP_SPAM_HINT =
-  "验证码已发至你的理大邮箱，若未收到请检查垃圾邮件文件夹";
+  "验证码将发送至你的理大邮箱，若未收到请检查垃圾邮件文件夹";

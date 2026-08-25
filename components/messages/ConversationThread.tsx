@@ -2,9 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Ban, Search, X } from "lucide-react";
 import { MessageBubble } from "@/components/messages/MessageBubble";
 import { MessageComposer } from "@/components/messages/MessageComposer";
+import { MessageAppealDialog } from "@/components/messages/MessageAppealDialog";
+import {
+  clearPendingMessageAppealId,
+  peekPendingMessageAppealId,
+} from "@/components/messages/HiddenMessagesPanel";
 import { UserAvatar } from "@/components/common/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +69,10 @@ export function ConversationThread({
     null,
   );
   const urlHighlightId = useHighlightTargetId();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [appealMessageId, setAppealMessageId] = useState<string | null>(null);
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blockStatus, setBlockStatus] = useState({
     blockedByMe: false,
@@ -123,6 +133,13 @@ export function ConversationThread({
     setMessages(initialMessages);
     shouldInstantScrollRef.current = true;
   }, [conversationId, initialMessages]);
+
+  useEffect(() => {
+    const pendingAppealId = peekPendingMessageAppealId();
+    if (pendingAppealId) {
+      setAppealMessageId(pendingAppealId);
+    }
+  }, [conversationId]);
 
   useEffect(() => {
     void markConversationReadAction(conversationId);
@@ -189,17 +206,35 @@ export function ConversationThread({
   }, [highlightedMessageId]);
 
   useEffect(() => {
-    if (!urlHighlightId?.startsWith("message-")) {
+    const highlightParam = searchParams.get("highlight")?.trim() ?? "";
+    const messageId = highlightParam.startsWith("message-")
+      ? highlightParam.slice("message-".length)
+      : urlHighlightId?.startsWith("message-")
+        ? urlHighlightId.slice("message-".length)
+        : null;
+
+    if (!messageId) {
       return;
     }
-    const messageId = urlHighlightId.slice("message-".length);
+
     setHighlightedMessageId(messageId);
+
+    if (searchParams.get("appeal") === "1") {
+      setAppealMessageId(messageId);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("appeal");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    }
+
     window.setTimeout(() => {
       document
         .getElementById(`message-${messageId}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 80);
-  }, [urlHighlightId]);
+    }, 120);
+  }, [urlHighlightId, searchParams, pathname, router]);
 
   function jumpToSearchResult(messageId: string) {
     setSearchOpen(false);
@@ -443,6 +478,20 @@ export function ConversationThread({
           void syncMessages();
         }}
       />
+
+      {appealMessageId ? (
+        <MessageAppealDialog
+          messageId={appealMessageId}
+          conversationId={conversationId}
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              clearPendingMessageAppealId();
+              setAppealMessageId(null);
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -10,12 +10,15 @@ import {
   verifyRegisterOtpAction,
   type AuthFormState,
 } from "@/lib/auth/actions";
-import { PASSWORD_MIN_LENGTH, POLYU_EMAIL_SUFFIX } from "@/constants/auth";
+import {
+  OTP_SPAM_HINT,
+  PASSWORD_MIN_LENGTH,
+  POLYU_EMAIL_SUFFIX,
+} from "@/constants/auth";
 import { EMAIL_PLACEHOLDER, SITE_NAME } from "@/constants/site";
 import { STUDENT_GRADES } from "@/constants/profileOptions";
 import { ROUTES } from "@/constants/routes";
 import { AvatarCropField } from "@/components/common/AvatarCropField";
-import { OtpSentHintDialog } from "@/components/auth/OtpSentHintDialog";
 import { CommunityRulesNotice } from "@/components/legal/CommunityRulesNotice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,7 +79,6 @@ export function SignupWizard({
   const [step, setStep] = useState<Step>(initialStep);
   const [email, setEmail] = useState(draftEmail);
   const [whitelisted, setWhitelisted] = useState(initialWhitelisted);
-  const [otpHintOpen, setOtpHintOpen] = useState(false);
   /** 用户主动返回改邮箱时，避免旧的 emailState.success 再次把步骤推到验证码 */
   const holdOnEmailStepRef = useRef(false);
 
@@ -117,7 +119,6 @@ export function SignupWizard({
     }
     if (emailState.success || emailState.devInfo) {
       setStep("otp");
-      setOtpHintOpen(true);
     }
   }, [emailState]);
 
@@ -152,7 +153,6 @@ export function SignupWizard({
 
   return (
     <Card className="mx-auto w-full max-w-md">
-      <OtpSentHintDialog open={otpHintOpen} onOpenChange={setOtpHintOpen} />
       <CardHeader>
         <CardTitle>注册 {SITE_NAME}</CardTitle>
         <CardDescription>
@@ -191,6 +191,7 @@ export function SignupWizard({
                 </p>
               ) : null}
             </div>
+            <p className="text-xs text-muted-foreground">{OTP_SPAM_HINT}</p>
             {emailState.error ? (
               <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {emailState.error}
@@ -228,6 +229,7 @@ export function SignupWizard({
               <p className="text-muted-foreground">验证码已发送至</p>
               <p className="break-all font-medium">{email || "当前邮箱"}</p>
             </div>
+            <p className="text-xs text-muted-foreground">{OTP_SPAM_HINT}</p>
             <div className="space-y-2">
               <Label htmlFor="signup-otp">邮箱验证码</Label>
               <Input
