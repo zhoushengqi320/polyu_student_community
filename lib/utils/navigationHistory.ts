@@ -163,9 +163,9 @@ export function pageNameFromPath(fullPath: string): string {
   const modules = Object.values(MODULE_REGISTRY).sort(
     (a, b) => b.route.length - a.route.length,
   );
-  for (const module of modules) {
-    if (pathname === module.route || pathname.startsWith(`${module.route}/`)) {
-      return module.label;
+  for (const entry of modules) {
+    if (pathname === entry.route || pathname.startsWith(`${entry.route}/`)) {
+      return entry.label;
     }
   }
 
