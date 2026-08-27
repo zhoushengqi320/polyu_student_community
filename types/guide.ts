@@ -24,6 +24,8 @@ export type GuideListItem = PostListItem & {
   meta: GuideMeta | null;
   excerpt: string | null;
   isFavorited: boolean;
+  /** 仅搜索场景附带，用于抽出关键词所在句 */
+  content?: string | null;
 };
 
 export type GuideDetail = PostDetail & {

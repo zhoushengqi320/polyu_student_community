@@ -10,6 +10,7 @@ type SearchPageProps = {
   searchParams: Promise<{
     q?: string;
     type?: string;
+    page?: string;
   }>;
 };
 
@@ -18,13 +19,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const parsed = searchQuerySchema.safeParse({
     q: params.q ?? "",
     type: params.type ?? "all",
+    page: params.page ?? "1",
   });
 
   const query = parsed.success ? parsed.data.q : "";
   const type = parsed.success ? parsed.data.type : "all";
+  const page = parsed.success ? parsed.data.page : 1;
   const result = await searchGlobal({
     query,
     type: type as SearchResultTypeFilter,
+    page,
   });
 
   return (

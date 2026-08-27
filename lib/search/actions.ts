@@ -8,6 +8,12 @@ export async function searchSuggestAction(query: string): Promise<SearchHit[]> {
     return [];
   }
 
-  const result = await searchGlobal({ query: q, type: "all" });
-  return result.hits.slice(0, 8);
+  const result = await searchGlobal({
+    query: q,
+    type: "all",
+    page: 1,
+    pageSize: 8,
+    mergeCap: 8,
+  });
+  return result.hits;
 }

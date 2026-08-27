@@ -111,7 +111,10 @@ export async function getForumPosts(
     // 有关键词时固定按相关度排序，避免点赞/评论排序覆盖检索结果
     const total = rows.length;
     const pageRows = rows.slice(pagination.from, pagination.to + 1);
-    const items = pageRows.map(mapForumPostListItem);
+    const items = pageRows.map((row) => ({
+      ...mapForumPostListItem(row),
+      content: row.content,
+    }));
     return toPaginatedResult(items, total, pagination.page, pagination.pageSize);
   }
 

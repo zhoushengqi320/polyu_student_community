@@ -26,10 +26,11 @@ export const ROUTES = {
     }
     return `/admin?${search.toString()}`;
   },
-  search: (q?: string, type?: string) => {
+  search: (q?: string, type?: string, page?: number) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (type && type !== "all") params.set("type", type);
+    if (page && page > 1) params.set("page", String(page));
     const query = params.toString();
     return query ? `/search?${query}` : "/search";
   },

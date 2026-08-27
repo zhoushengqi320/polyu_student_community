@@ -22,6 +22,8 @@ export type PostListItem = Pick<
   author: ProfileListItem;
   commentCount: number;
   likeCount: number;
+  /** 仅搜索场景附带，用于抽出关键词所在句 */
+  content?: string | null;
 };
 
 export type PostDetail = Post & {

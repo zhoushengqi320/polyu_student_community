@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { searchSuggestAction } from "@/lib/search/actions";
-import { type SearchHit } from "@/lib/db/search";
+import { SearchSnippet } from "@/components/search/SearchSnippet";
+import { type SearchHit } from "@/lib/search/types";
 import { cn } from "@/lib/utils/cn";
 
 const TYPE_LABELS: Record<SearchHit["type"], string> = {
@@ -178,9 +179,11 @@ export function NavbarSearch({ className }: NavbarSearchProps) {
                       <p className="truncate text-sm font-medium">{hit.title}</p>
                     </div>
                     {hit.excerpt ? (
-                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                        {hit.excerpt}
-                      </p>
+                      <SearchSnippet
+                        text={hit.excerpt}
+                        query={query.trim()}
+                        compact
+                      />
                     ) : null}
                   </Link>
                 ))

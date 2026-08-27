@@ -106,9 +106,16 @@ export async function listPosts(
   const postIds = rows.map((row) => row.id);
   const countsMap = await getPostCounts(postIds);
 
-  const items = rows.map((row) =>
-    mapPostListItem(row, countsMap.get(row.id) ?? { commentCount: 0, likeCount: 0 }),
-  );
+  const items = rows.map((row) => {
+    const item = mapPostListItem(
+      row,
+      countsMap.get(row.id) ?? { commentCount: 0, likeCount: 0 },
+    );
+    if (search?.trim()) {
+      return { ...item, content: row.content };
+    }
+    return item;
+  });
 
   return toPaginatedResult(items, count ?? 0, pagination.page, pagination.pageSize);
 }

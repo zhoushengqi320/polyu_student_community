@@ -22,6 +22,7 @@ export const searchQuerySchema = z.object({
     .optional()
     .default(""),
   type: z.enum(typeIds).optional().default("all"),
+  page: z.coerce.number().int().min(1).optional().default(1),
 });
 
 export type SearchQueryValues = z.infer<typeof searchQuerySchema>;

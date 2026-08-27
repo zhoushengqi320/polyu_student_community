@@ -189,6 +189,7 @@ export async function listGuides(
       meta: metaMap.get(row.id) ?? null,
       excerpt: row.excerpt ?? getExcerpt(row.content),
       isFavorited: favoritePostIds.has(row.id),
+      ...(search?.trim() ? { content: row.content } : {}),
     }))
     .sort((left, right) =>
       compareByGuideListOrder(GUIDE_MODULE, left.title, right.title),

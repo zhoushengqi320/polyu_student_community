@@ -32,6 +32,8 @@ export type ForumPostListItem = Pick<
   | "createdAt"
 > & {
   author: ProfileListItem;
+  /** 仅搜索场景附带，用于抽出关键词所在句 */
+  content?: string | null;
 };
 
 export type ForumPostDetail = ForumPost & {
