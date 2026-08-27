@@ -48,7 +48,7 @@ function windowAroundMatch(text: string, query: string, max = MAX_SNIPPET_LENGTH
 
   const idealStart = Math.max(0, index - Math.floor((max - q.length) / 2));
   let start = idealStart;
-  let end = Math.min(text.length, start + max);
+  const end = Math.min(text.length, start + max);
 
   if (end - start < max && start > 0) {
     start = Math.max(0, end - max);
